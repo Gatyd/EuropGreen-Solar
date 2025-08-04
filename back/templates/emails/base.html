@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EuropGreen Solar{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="mx-auto max-w-2xl bg-white shadow-lg rounded-lg overflow-hidden m-4 sm:m-8">
+        
+        <!-- Header avec logo -->
+        <div class="inline-block bg-gray-800 p-4 shadow-lg">
+            <img src="{% static 'images/logo.png' %}" 
+                 alt="EuropGreen Solar" 
+                 class="h-auto w-auto mx-auto"
+                 onerror="this.style.display='none'; this.parentElement.nextElementSibling.style.display='block';">
+        </div>
+
+        <!-- Contenu principal -->
+        <div class="p-4 sm:p-6 lg:p-8">
+            {% block content %}
+            <p class="text-gray-700 text-base leading-relaxed mb-4">
+                Contenu de l'email...
+            </p>
+            {% endblock %}
+        </div>
+
+        <!-- Pied de page professionnel -->
+        <div class="bg-gray-50 border-t border-gray-200 p-4 sm:p-6">
+            <div class="text-center">
+                {% block footer_content %}
+                <div class="mb-4">
+                    <p class="text-gray-800 font-medium text-sm mb-1">
+                        EuropGreen Solar
+                    </p>
+                    <p class="text-gray-600 text-xs">
+                        Installations photovoltaïques • Solutions énergétiques durables
+                    </p>
+                </div>
+                
+                <div class="border-t border-gray-300 pt-4">
+                    <p class="text-gray-500 text-xs">
+                        Ce message est envoyé automatiquement par notre système de gestion.<br>
+                        Veuillez ne pas répondre directement à cet email.
+                    </p>
+                </div>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

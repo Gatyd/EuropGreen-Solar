@@ -67,7 +67,7 @@ ROOT_URLCONF = 'EuropGreenSolar.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -144,18 +144,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "users.User"
 
-REST_AUTH = {
-    'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'access-token',
-    'JWT_AUTH_REFRESH_COOKIE': 'refresh-token',
-    'JWT_AUTH_HTTPONLY': True,
-    'JWT_AUTH_SECURE': False,  # À mettre sur True en production avec HTTPS
-    'JWT_AUTH_SAMESITE': 'Lax',
-    'REGISTER_SERIALIZER': 'authentication.serializers.CustomRegisterSerializer',
-    'USER_DETAILS_SERIALIZER': 'users.serializers.CustomUserDetailsSerializer',
-    'PASSWORD_RESET_SERIALIZER': 'authentication.serializers.CustomPasswordResetSerializer',
-}
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(weeks=10),
@@ -177,10 +165,10 @@ CSRF_COOKIE_SECURE = False if DEBUG else True  # True en prod
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'authentification.auth_method.CookieJWTAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
-    )
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     # 'authentification.auth_method.CookieJWTAuthentication',
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication'
+    # )
 }
 
 SPECTACULAR_SETTINGS = {
