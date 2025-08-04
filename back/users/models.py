@@ -17,14 +17,15 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
 
-class UserRoles(models.TextChoices):
-    EMPLOYEE = "employee", "Employee"
-    INSTALLER = "installer", "Installer"
-    SECRETARY = "secretary", "Secretary"
-    CUSTOMER = "customer", "Customer"
-    ADMIN = "admin", "Administrateur"
-
 class User(AbstractBaseUser, PermissionsMixin):
+
+    class UserRoles(models.TextChoices):
+        EMPLOYEE = "employee", "Employee"
+        INSTALLER = "installer", "Installer"
+        SECRETARY = "secretary", "Secretary"
+        CUSTOMER = "customer", "Customer"
+        ADMIN = "admin", "Administrateur"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
