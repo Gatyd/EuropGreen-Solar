@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnement virtuel
+env/
+venv/
+ENV/
+.venv/
+.env/
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+media/
+staticfiles/
+static_root/
+static/
+local_settings.py
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Systèmes Linux
+*.swp
+*.swo
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Migrations compilées (pas les fichiers migrations eux-mêmes, attention)
+**/migrations/__pycache__/
+
+# MyPy
+.mypy_cache/
+
+# Docker
+*.pid
+
+# dotenv (si vous utilisez des fichiers .env)
+.env
+.env.*
+
+# fichiers secrets de production
+secrets.json
+
+# Celery
+celerybeat-schedule
