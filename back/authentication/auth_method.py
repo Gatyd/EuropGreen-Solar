@@ -1,0 +1,1 @@
+# Méthode d'authentification personnalisée pour les cookies JWT

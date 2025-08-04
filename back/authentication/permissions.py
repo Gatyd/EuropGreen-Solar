@@ -1,0 +1,1 @@
+# Permissions personnalisées pour les utilisateurs

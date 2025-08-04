@@ -1,0 +1,1 @@
+# Sérializers personnalisés pour l'authentification
