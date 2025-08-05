@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # Application tierces
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_spectacular',
     'drf_spectacular_sidecar',
@@ -163,12 +164,19 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = False if DEBUG else True  # True en prod
 
+# JWT Token Cookies Configuration
+ACCESS_TOKEN_COOKIE_NAME = 'access_token'
+REFRESH_TOKEN_COOKIE_NAME = 'refresh_token'
+TOKEN_COOKIE_HTTPONLY = True
+TOKEN_COOKIE_SAMESITE = 'Lax'
+TOKEN_COOKIE_SECURE = False if DEBUG else True  # True en prod
+
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    # 'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     # 'authentification.auth_method.CookieJWTAuthentication',
-    #     'rest_framework_simplejwt.authentication.JWTAuthentication'
-    # )
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'authentication.auth_method.CookieJWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
+    )
 }
 
 SPECTACULAR_SETTINGS = {

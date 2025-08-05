@@ -32,6 +32,7 @@ urlpatterns = [
     
     # Users URLs
     path('', include('users.urls')),
+    path('', include('authentication.urls')),
 ]
 
 # Serving media files during development
