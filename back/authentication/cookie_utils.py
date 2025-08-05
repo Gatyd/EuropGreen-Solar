@@ -8,13 +8,12 @@ def set_jwt_access_cookie(response, access_token):
     Définit le cookie d'access token JWT dans la réponse.
     """
     cookie_name = settings.ACCESS_TOKEN_COOKIE_NAME
-    access_token_expiration = timezone.now() + jwt_settings.ACCESS_TOKEN_LIFETIME
+    max_age = int(jwt_settings.ACCESS_TOKEN_LIFETIME.total_seconds())
     
     response.set_cookie(
         cookie_name,
         access_token,
-        expires=access_token_expiration,
-        max_age=settings.ACCESS_TOKEN_MAX_AGE,
+        max_age=max_age,
         secure=settings.TOKEN_COOKIE_SECURE,
         httponly=settings.TOKEN_COOKIE_HTTPONLY,
         samesite=settings.TOKEN_COOKIE_SAMESITE,
@@ -26,13 +25,12 @@ def set_jwt_refresh_cookie(response, refresh_token):
     Définit le cookie de refresh token JWT dans la réponse.
     """
     refresh_cookie_name = settings.REFRESH_TOKEN_COOKIE_NAME
-    refresh_token_expiration = timezone.now() + jwt_settings.REFRESH_TOKEN_LIFETIME
+    max_age = int(jwt_settings.REFRESH_TOKEN_LIFETIME.total_seconds())
     
     response.set_cookie(
         refresh_cookie_name,
         refresh_token,
-        expires=refresh_token_expiration,
-        max_age=settings.REFRESH_TOKEN_MAX_AGE,
+        max_age=max_age,
         secure=settings.TOKEN_COOKIE_SECURE,
         httponly=settings.TOKEN_COOKIE_HTTPONLY,
         samesite=settings.TOKEN_COOKIE_SAMESITE,
