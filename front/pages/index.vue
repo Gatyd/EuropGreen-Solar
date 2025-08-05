@@ -4,6 +4,11 @@ definePageMeta({
     layout: false
 })
 
+useSeoMeta({
+    title: "Europ'Green Solar Application",
+    description: "Logiciel de gestion des projets d'installation solaire visant à optimiser et à centraliser la gestion des différentes étapes du projet."
+});
+
 const versions = [
     {
         title: 'Authentification et gestion des utilisateurs',
@@ -33,7 +38,7 @@ const versions = [
                 badge: ['API'],
                 link: {
                     label: 'Voir la documentation',
-                    url: '/api/api/docs'
+                    url: `${process.env.PROXY_URL || "http://localhost:8000/"}api/docs/`
                 }
             }
         ]
@@ -106,7 +111,7 @@ const versions = [
                                         </div>
                                         <p class="text-sm text-gray-600">{{ feature.description }}</p>
                                         <UButton v-if="'link' in feature" :label="feature.link?.label" :to="feature.link?.url"
-                                            variant="ghost" trailing-icon="i-heroicons-arrow-right" />
+                                            variant="ghost" target="_blank" trailing-icon="i-heroicons-arrow-top-right-on-square" />
                                     </div>
                                 </div>
                             </div>
