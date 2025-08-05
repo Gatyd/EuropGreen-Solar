@@ -1,1 +1,19 @@
-# Sérializers personnalisés pour l'authentification
+from django.contrib.auth import authenticate
+from rest_framework import serializers
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.CharField(required=True)
+    password = serializers.CharField(write_only = True)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+        user = authenticate(username=email, password=password)
+
+        if user is None:
+            raise serializers.ValidationError({
+                "Connexion impossible": "Identifiants invalides"
+            })
+        
+        data['user'] = user
+        return data
