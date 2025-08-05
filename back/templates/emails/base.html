@@ -4,14 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'favicon.ico' %}" />
     <title>{% block title %}EuropGreen Solar{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 font-sans">
-    <div class="mx-auto max-w-2xl bg-white shadow-lg rounded-lg overflow-hidden m-4 sm:m-8">
+    <div class="mx-auto max-w-2xl bg-white sm:shadow-lg sm:rounded-lg sm:my-5 overflow-hidden">
         
         <!-- Header avec logo -->
-        <div class="inline-block bg-gray-800 p-4 shadow-lg">
+        <div class="inline-block bg-gray-800 shadow-lg">
             <img src="{% static 'images/logo.png' %}" 
                  alt="EuropGreen Solar" 
                  class="h-auto w-auto mx-auto"
