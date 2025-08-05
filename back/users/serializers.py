@@ -57,7 +57,6 @@ class UserSerializer(serializers.ModelSerializer):
                 'frontend_url': settings.FRONTEND_URL,
             }
             
-            # Rendu du template HTML
             html_message = render_to_string('emails/welcome_user.html', context)
             plain_message = strip_tags(html_message)
             
@@ -93,7 +92,6 @@ class UserSerializer(serializers.ModelSerializer):
         if user.role not in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN]:
             UserAccess.objects.create(user=user)
         
-        # Envoi de l'email de bienvenue
         self.send_welcome_email(user, password)
         
         return user
@@ -108,15 +106,10 @@ class UserSerializer(serializers.ModelSerializer):
             if attr != 'password':
                 setattr(instance, attr, value)
         
-        # Gestion du mot de passe si fourni
-        if 'password' in validated_data:
-            instance.set_password(validated_data['password'])
-        
         # Définition des permissions selon le nouveau rôle
         self._set_user_permissions(instance)
         instance.save()
         
-        # Gestion des accès selon le nouveau rôle
         new_role = instance.role
         
         # Si le nouveau rôle est client ou admin, supprime les accès existants
@@ -172,13 +165,3 @@ class UserAccessUpdateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-
-
-class CustomUserDetailsSerializer(serializers.ModelSerializer):
-    """Serializer pour les détails utilisateur (compatible avec django-rest-auth)"""
-    access = UserAccessSerializer(source='useraccess', read_only=True)
-    
-    class Meta:
-        model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'is_active', 'is_staff', 'is_superuser', 'access']
-        read_only_fields = ['id', 'email', 'is_staff', 'is_superuser']

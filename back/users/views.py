@@ -4,89 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from authentication.permissions import IsAdmin
 from .models import User, UserAccess
 from .serializers import UserSerializer, UserAccessUpdateSerializer, ChangePasswordSerializer
-
-def test_mail(request):
-    """Test function to render a template for email testing"""
-    from django.shortcuts import render
-    from django.conf import settings
-    
-    # Paramètre pour tester différents types d'utilisateurs
-    user_type = request.GET.get('type', 'employee')
-    
-    if user_type == 'admin':
-        context = {
-            'user': {
-                'first_name': 'Marie',
-                'last_name': 'Dupont',
-                'email': 'marie.dupont@europgreensolar.com',
-                'role': 'admin',
-                'is_superuser': True,
-                'get_role_display': 'Administrateur',
-            },
-            'password': 'Temp2024@Admin',
-            'frontend_url': settings.FRONTEND_URL,
-        }
-    elif user_type == 'secretary':
-        context = {
-            'user': {
-                'first_name': 'Sophie',
-                'last_name': 'Martin',
-                'email': 'sophie.martin@europgreensolar.com',
-                'role': 'secretary',
-                'is_superuser': False,
-                'get_role_display': 'Secrétaire',
-                'useraccess': {
-                    'installation': False,
-                    'offers': True,
-                    'requests': True,
-                    'administrative_procedures': True
-                },
-            },
-            'password': 'Temp2024@Sec',
-            'frontend_url': settings.FRONTEND_URL,
-        }
-    elif user_type == 'installer':
-        context = {
-            'user': {
-                'first_name': 'Pierre',
-                'last_name': 'Leroy',
-                'email': 'pierre.leroy@europgreensolar.com',
-                'role': 'installer',
-                'is_superuser': False,
-                'get_role_display': 'Installateur',
-                'useraccess': {
-                    'installation': True,
-                    'offers': False,
-                    'requests': True,
-                    'administrative_procedures': False
-                },
-            },
-            'password': 'Temp2024@Install',
-            'frontend_url': settings.FRONTEND_URL,
-        }
-    else:  # employee par défaut
-        context = {
-            'user': {
-                'first_name': 'Jean',
-                'last_name': 'Moreau',
-                'email': 'jean.moreau@europgreensolar.com',
-                'role': 'employee',
-                'is_superuser': False,
-                'get_role_display': 'Employé',
-                'useraccess': {
-                    'installation': True,
-                    'offers': True,
-                    'requests': False,
-                    'administrative_procedures': False
-                },
-            },
-            'password': 'Temp2024@Emp',
-            'frontend_url': settings.FRONTEND_URL,
-        }
-    
-    return render(request, 'emails/welcome_user.html', context)
 
 @extend_schema_view(
     list=extend_schema(
@@ -122,7 +42,7 @@ class UserViewSet(mixins.ListModelMixin,
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin]
     http_method_names = ['get', 'post', 'patch']  # Limite aux méthodes autorisées
     
     def get_queryset(self):
