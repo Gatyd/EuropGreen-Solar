@@ -1,2 +1,30 @@
 @import "tailwindcss";
 @import "@nuxt/ui-pro";
+
+@theme static {
+  /* Redéfinition de la palette green avec votre couleur #4AAB3D */
+  --color-green-50: #f0fbee;
+  --color-green-100: #dcf4d4;
+  --color-green-200: #bbe9ae;
+  --color-green-300: #92da7d;
+  --color-green-400: #6bc653;
+  --color-green-500: #4AAB3D; /* Votre couleur principale */
+  --color-green-600: #3d8f32;
+  --color-green-700: #32722a;
+  --color-green-800: #2b5b25;
+  --color-green-900: #244d21;
+  --color-green-950: #0f2a0e;
+
+  /* Redéfinition de la palette blue avec le bleu du drapeau français #0055A4 */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #0055A4; /* Bleu du drapeau français */
+  --color-blue-600: #004d93;
+  --color-blue-700: #003d75;
+  --color-blue-800: #002f5c;
+  --color-blue-900: #00254a;
+  --color-blue-950: #001833;
+}
