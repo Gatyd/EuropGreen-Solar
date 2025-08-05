@@ -1,7 +1,7 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  modules: ["@nuxt/eslint", "@nuxt/icon", "@nuxt/ui-pro"],
+  modules: ["@nuxt/eslint", "@nuxt/icon", "@nuxt/ui-pro", "@pinia/nuxt"],
   css: ["~/assets/css/main.css"],
   ui: {
     colorMode: false,

@@ -1,0 +1,96 @@
+// stores/auth.ts
+import { defineStore } from "pinia";
+import type { LoginResponse, User } from "~/types";
+import { useRequestHeaders } from "nuxt/app";
+
+export const useAuthStore = defineStore("auth", {
+  state: () => ({
+    user: null as null | User,
+  }),
+
+  actions: {
+    setUser(user: User) {
+      this.user = user;
+    },
+    clearUser() {
+      this.user = null;
+    },
+    // async registerUser(credentials: any, toast: any): Promise<LoginResponse> {
+    //   try {
+    //     const res = await $fetch("/api/registration/", {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //       },
+    //       body: credentials,
+    //       credentials: "include",
+    //     });
+    //     this.user = (res as any).user as User;
+    //     return { success: true, message: "Compte créé avec succès" };
+    //   } catch (err: any) {
+    //     catchErrors(err, toast);
+    //     return { success: false, message: "Erreur lors de la création du compte" };
+    //   }
+    // },
+    async loginUser(credentials: any): Promise<LoginResponse> {
+      try {
+        const res = await $fetch("/api/login/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: credentials,
+          credentials: "include",
+        });
+        this.user = (res as any).user as User;
+        return { success: true, message: "Connecté avec succès" };
+      } catch (err: any) {
+        let errorMessage = "Identifiants de connexion invalides.";
+        if (err.response) {
+          const status = err.response.status;
+          if (status >= 500) {
+            errorMessage = "Erreur du serveur, réessayez plus tard.";
+          } else if (status === 400) {
+            errorMessage = "Identifiants de connexion invalides.";
+          }
+        } else if (err.message) {
+          errorMessage = "Problème de connexion au serveur.";
+        }
+        return { success: false, message: errorMessage };
+      }
+    },
+    async fetchUser() {
+      try {
+        const headers = useRequestHeaders(["cookie"]);
+        const data = await $fetch("/api/users/me/", {
+          credentials: "include",
+          headers,
+        });
+        if (data) this.setUser(data as User);
+      } catch {
+        this.clearUser();
+        throw new Error("User fetch failed");
+      }
+    },
+    async refreshToken() {
+      try {
+        const headers = useRequestHeaders(["cookie"]);
+        await $fetch("/api/token/refresh/", {
+          method: "POST",
+          credentials: "include",
+          headers,
+        });
+      } catch {
+        this.clearUser();
+        throw new Error("Refresh failed");
+      }
+    },
+    async logout() {
+      await $fetch("/api/logout/", {
+        method: "POST",
+        credentials: "include",
+      });
+      this.clearUser();
+    },
+  },
+});
