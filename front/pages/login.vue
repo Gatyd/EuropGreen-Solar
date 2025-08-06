@@ -60,7 +60,7 @@ async function onSubmit(event: any) {
     loading.value = true;
     const response = await store.loginUser(event.data);
     if (response.success) {
-        navigateTo(from ? from : '/home', { replace: true });
+        navigateTo(from ? from : store.redirectUser(), { replace: true });
     } else {
         error.value = response.message;
         setTimeout(() => {

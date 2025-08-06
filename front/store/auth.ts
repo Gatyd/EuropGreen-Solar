@@ -92,5 +92,29 @@ export const useAuthStore = defineStore("auth", {
       });
       this.clearUser();
     },
+    redirectUser(): string {
+      const user = this.user;
+      if (user) {
+        if (user.is_superuser) {
+          return "/home";
+        }
+        if (user.is_staff) {
+          // if (user.useraccess?.installation) {
+          //   return "/home/installations";
+          // }
+          // if (user.useraccess?.offers) {
+          //   return "/home/offers";
+          // }
+          // if (user.useraccess?.requests) {
+          //   return "/home/requests";
+          // }
+          // if (user.useraccess?.administrative_procedures) {
+          //   return "/home/administrative_procedures";
+          // }
+          return "/home/settings/account";
+        }
+      }
+      return "/login";
+    },
   },
 });

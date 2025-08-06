@@ -51,6 +51,21 @@ const links = [
     },
 ]
 
+const accessLink = links.map((link: any) => {
+    if (!user.value?.is_superuser) {
+        if (link.id === "users") return null
+    }
+    // if (!user.value?.is_superuser && user.value?.is_staff) {
+    //     const useraccess = user.value?.useraccess || {};
+
+    //     if (link.id === "home") return null
+
+    //     if ((link.label === "Messages" || link.label === "Facturation") && !droits.messages) return null
+    // }
+
+    return link;
+}).filter((link: any) => link !== null);
+
 const logout = async () => {
     const authStore = useAuthStore();
     await authStore.logout();
@@ -74,7 +89,7 @@ const logout = async () => {
 
             <template #default="{ collapsed }">
 
-                <UNavigationMenu :collapsed="collapsed" :items="links" orientation="vertical" :ui="{
+                <UNavigationMenu :collapsed="collapsed" :items="accessLink" orientation="vertical" :ui="{
                     item: 'my-2'
                 }" />
 

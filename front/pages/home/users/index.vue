@@ -5,6 +5,10 @@ import type { Row } from '@tanstack/vue-table'
 import type { User } from '~/types'
 import { getPaginationRowModel } from '@tanstack/vue-table'
 
+definePageMeta({
+    middleware: 'admin'
+})
+
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 const UBadge = resolveComponent('UBadge')
