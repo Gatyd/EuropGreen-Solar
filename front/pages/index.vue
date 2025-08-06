@@ -38,7 +38,7 @@ const versions = [
                 badge: ['API'],
                 link: {
                     label: 'Voir la documentation',
-                    url: `${process.env.PROXY_URL || "http://localhost:8000/"}api/docs/`
+                    url: `${process.env.PROXY_URL || "http://localhost:8000/"}api/docs/#/users`
                 }
             }
         ]

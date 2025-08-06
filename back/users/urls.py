@@ -8,6 +8,6 @@ router.register(r'users', UserViewSet, basename='user')
 app_name = 'users'
 
 urlpatterns = [
+    path('users/me/', CurrentUserView.as_view(), name='current-user'),
     path('', include(router.urls)),
-    path('users/me/', CurrentUserView.as_view(), name='current-user')
 ]

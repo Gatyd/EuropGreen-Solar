@@ -19,6 +19,7 @@ const fields = [
     {
         name: "email",
         type: "email" as 'text',
+        autocomplete: "on",
         icon: "i-heroicons-envelope",
         size: 'xl' as 'xl',
         required: true,
@@ -33,7 +34,7 @@ const fields = [
         label: "Mot de passe",
         type: "password" as 'password',
         placeholder: "Entrez votre mot de passe",
-    },
+    }
 ];
 
 const isValidEmail = (email: string) => {
@@ -98,9 +99,7 @@ async function onSubmit(event: any) {
                     <template #validation>
                         <transition name="fade">
                             <UAlert v-if="error" color="error" icon="i-heroicons-exclamation-triangle" :title="error"
-                                class="mb-4" :ui="{
-                                    icon: 'size-6'
-                                }" />
+                                class="mb-4" />
                         </transition>
                     </template>
                 </UAuthForm>

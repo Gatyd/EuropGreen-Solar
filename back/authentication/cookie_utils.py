@@ -42,7 +42,8 @@ def set_jwt_cookies(response, access_token, refresh_token):
     Définit à la fois les cookies d'access token et de refresh token.
     """
     set_jwt_access_cookie(response, access_token)
-    set_jwt_refresh_cookie(response, refresh_token)
+    if(jwt_settings.ROTATE_REFRESH_TOKENS):
+        set_jwt_refresh_cookie(response, refresh_token)
 
 
 def unset_jwt_cookies(response):
