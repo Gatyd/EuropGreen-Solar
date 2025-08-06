@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  size?: 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -9,6 +9,14 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Configuration des tailles pour chaque variante
 const sizeConfig = {
+  sm: {
+    container: 'gap-2 p-1',
+    icon: 'w-12 h-auto',
+    text: 'leading-none',
+    europ: 'text-sm font-extrabold',
+    green: 'text-md font-extrabold',
+    solar: 'text-xs font-semibold'
+  },
   md: {
     container: 'gap-3',
     icon: 'w-16 h-auto',

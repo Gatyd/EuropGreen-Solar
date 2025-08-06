@@ -67,7 +67,8 @@ const logout = async () => {
             header: 'h-auto lg:pt-2',
         }" toggle-side="right">
             <template #header="{ collapsed }">
-                <Logo v-if="!collapsed" size="md" />
+                <Logo v-if="!collapsed" size="sm" class="lg:hidden" />
+                <Logo v-if="!collapsed" size="md" class="hidden lg:flex" />
                 <img v-else src="/logo_icon.png" alt="Icône Europ'Green Solar" class="h-10 w-auto shrink-0" />
             </template>
 
