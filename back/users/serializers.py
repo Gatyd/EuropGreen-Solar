@@ -15,9 +15,16 @@ class UserAccessSerializer(serializers.ModelSerializer):
         model = UserAccess
         fields = ['installation', 'offers', 'requests', 'administrative_procedures']
 
-
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer principal pour les utilisateurs"""
+    access = UserAccessSerializer(source='useraccess', read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'is_active', 'is_staff', 'is_superuser', 'access']
+        read_only_fields = ['id', 'is_staff', 'is_superuser', 'role']
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Serializer l'administration des utilisateurs"""
     access = UserAccessSerializer(source='useraccess', read_only=True)
     password = serializers.CharField(write_only=True, required=False)
     
@@ -136,11 +143,11 @@ class ChangePasswordSerializer(serializers.Serializer):
     
     def validate_new_password(self, value):
         """Valide le nouveau mot de passe"""
-        from django.contrib.auth.password_validation import validate_password
-        try:
-            validate_password(value)
-        except Exception as e:
-            raise serializers.ValidationError(str(e))
+        # from django.contrib.auth.password_validation import validate_password
+        # try:
+        #     validate_password(value)
+        # except Exception as e:
+        #     raise serializers.ValidationError(str(e))
         return value
     
     def save(self, **kwargs):

@@ -29,31 +29,39 @@
   --color-blue-950: #001833;
 }
 
-/* Correction de la taille des icônes - Force une taille minimum */
-/* .icon,
-[class*="i-"],
-[class*="i-heroicons"] {
-  @apply min-w-5 min-h-5 w-5 h-5;
-} */
+/* Scrollbar très petite et simple */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
 
-/* Icônes spécifiques pour certains composants */
-/* .u-alert .icon,
-.u-alert [class*="i-"] {
-  @apply w-5 h-5 min-w-5 min-h-5;
-} */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-/* .u-button .icon,
-.u-button [class*="i-"] {
-  @apply w-5 h-5 min-w-5 min-h-5;
-} */
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.6);
+  border-radius: 2px;
+}
 
-/* .u-navigation-menu .icon,
-.u-navigation-menu [class*="i-"] {
-  @apply w-5 h-5 min-w-5 min-h-5;
-} */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}
 
-/* Taille d'icône plus grande pour les composants importants */
-/* .u-alert[data-color="error"] .icon,
-.u-alert[data-color="error"] [class*="i-"] {
-  @apply w-6 h-6 min-w-6 min-h-6;
-} */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.6);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}
+
+/* Pour Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.6) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(75, 85, 99, 0.6) transparent;
+}
