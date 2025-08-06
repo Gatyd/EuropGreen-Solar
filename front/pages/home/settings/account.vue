@@ -17,13 +17,13 @@ const state = reactive({
     email: user.value?.email
 })
 
-async function validate(state: any) {
+function validate(state: any) {
     const errors = []
-    if (!state.first_name) errors.push({ path: 'first_name', message: 'Prénom(s) obligatoire(s).' })
-    if (!state.last_name) errors.push({ path: 'last_name', message: 'Nom obligatoire.' })
-    if (!state.email) errors.push({ path: 'email', message: 'Adresse email obligatoire.' })
+    if (!state.first_name) errors.push({ name: 'first_name', message: 'Prénom(s) obligatoire(s).' })
+    if (!state.last_name) errors.push({ name: 'last_name', message: 'Nom obligatoire.' })
+    if (!state.email) errors.push({ name: 'email', message: 'Adresse email obligatoire.' })
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.email))
-        errors.push({ path: 'email', message: 'Adresse email invalide' })
+        errors.push({ name: 'email', message: 'Adresse email invalide' })
     return errors
 }
 
