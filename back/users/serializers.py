@@ -25,13 +25,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """Serializer l'administration des utilisateurs"""
-    access = UserAccessSerializer(source='useraccess', read_only=True)
-    password = serializers.CharField(write_only=True, required=False)
+    useraccess = UserAccessSerializer()
+    # password = serializers.CharField(write_only=True, required=False)
     
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'is_active', 'is_staff', 'is_superuser', 'access', 'password']
-        read_only_fields = ['id', 'is_staff', 'is_superuser']
+        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'accept_invitation', 'is_active', 'is_staff', 'is_superuser', 'useraccess']
+        read_only_fields = ['id', 'accept_invitation', 'is_staff', 'is_superuser']
         
     def _set_user_permissions(self, user):
         """Définit les permissions selon le rôle"""
@@ -82,6 +82,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
         """Création d'un utilisateur avec génération automatique du mot de passe"""
         # Génération du mot de passe sécurisé
         password = self.generate_secure_password()
+        access = validated_data.pop('useraccess')
         
         user = User.objects.create_user(
             email=validated_data['email'],
@@ -97,7 +98,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
         
         # Création des accès par défaut uniquement pour les utilisateurs qui ne sont pas client ou admin
         if user.role not in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN]:
-            UserAccess.objects.create(user=user)
+            UserAccess.objects.create(user=user, **access)
         
         self.send_welcome_email(user, password)
         
@@ -107,11 +108,11 @@ class AdminUserSerializer(serializers.ModelSerializer):
         """Mise à jour d'un utilisateur avec gestion des accès"""
         # Récupération de l'ancien rôle pour comparaison
         old_role = instance.role
+        access = validated_data.pop('useraccess', None)
         
         # Mise à jour des champs de base
         for attr, value in validated_data.items():
-            if attr != 'password':
-                setattr(instance, attr, value)
+            setattr(instance, attr, value)
         
         # Définition des permissions selon le nouveau rôle
         self._set_user_permissions(instance)
@@ -123,8 +124,13 @@ class AdminUserSerializer(serializers.ModelSerializer):
         if new_role in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN]:
             UserAccess.objects.filter(user=instance).delete()
         # Si l'ancien rôle était client/admin et le nouveau ne l'est pas, crée les accès
-        elif old_role in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN] and new_role not in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN]:
-            UserAccess.objects.get_or_create(user=instance)
+        user_access, created = UserAccess.objects.get_or_create(user=instance)
+        if access:
+            print('access', access)
+            # Mise à jour des accès existants
+            for attr, value in access.items():
+                setattr(user_access, attr, value)
+            user_access.save()
         
         return instance
 
@@ -157,18 +163,4 @@ class ChangePasswordSerializer(serializers.Serializer):
             user.set_password(self.validated_data['new_password'])
             user.save()
         return user
-
-
-class UserAccessUpdateSerializer(serializers.ModelSerializer):
-    """Serializer séparé pour la mise à jour des accès utilisateur"""
     
-    class Meta:
-        model = UserAccess
-        fields = ['installation', 'offers', 'requests', 'administrative_procedures']
-        
-    def update(self, instance, validated_data):
-        """Mise à jour des droits d'accès"""
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance

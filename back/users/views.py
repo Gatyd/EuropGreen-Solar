@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from authentication.permissions import IsAdmin
 from .models import User, UserAccess
-from .serializers import UserSerializer, AdminUserSerializer, UserAccessUpdateSerializer, ChangePasswordSerializer
+from .serializers import UserSerializer, AdminUserSerializer, ChangePasswordSerializer
 
 @extend_schema_view(
     list=extend_schema(
@@ -61,23 +61,6 @@ class AdminUserViewSet(mixins.ListModelMixin,
             
         return queryset
     
-    def perform_update(self, serializer):
-        """Gère la mise à jour d'un utilisateur et de ses droits d'accès"""
-        # Récupération des données d'accès depuis la requête
-        access_data = self.request.data.get('access', None)
-        
-        user = serializer.save()
-        
-        # Mise à jour des droits d'accès si fournis et si l'utilisateur n'est pas client ou admin
-        if access_data is not None and user.role not in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN]:
-            user_access, created = UserAccess.objects.get_or_create(user=user)
-            access_serializer = UserAccessUpdateSerializer(user_access, data=access_data, partial=True)
-            if access_serializer.is_valid():
-                access_serializer.save()
-        elif user.role in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN]:
-            # Supprime les accès existants si l'utilisateur devient client ou admin
-            UserAccess.objects.filter(user=user).delete()
-    
     @extend_schema(
         summary="Désactiver un utilisateur",
         description="Désactive un utilisateur (ne le supprime pas définitivement)"
@@ -117,34 +100,6 @@ class AdminUserViewSet(mixins.ListModelMixin,
             },
             status=status.HTTP_200_OK
         )
-    
-    @extend_schema(
-        summary="Changer le mot de passe",
-        description="Permet à un utilisateur de changer son mot de passe en fournissant l'ancien et le nouveau",
-        request=ChangePasswordSerializer,
-        responses={200: {"description": "Mot de passe changé avec succès"}}
-    )
-    @action(detail=True, methods=['patch'], serializer_class=ChangePasswordSerializer)
-    def change_password(self, request, pk=None):
-        """Change le mot de passe d'un utilisateur après validation de l'ancien"""
-        user = self.get_object()
-        
-        # Utilise le serializer dédié au changement de mot de passe
-        serializer = ChangePasswordSerializer(data=request.data, context={'request': request, 'user': user})
-        
-        if serializer.is_valid():
-            # Le serializer gère la validation et la sauvegarde
-            serializer.save()
-            return Response(
-                {"message": "Mot de passe changé avec succès"},
-                status=status.HTTP_200_OK
-            )
-        else:
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
 
 class UserViewSet(viewsets.GenericViewSet):
     """

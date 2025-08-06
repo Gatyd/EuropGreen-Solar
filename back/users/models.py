@@ -32,6 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     username = None
     is_active = models.BooleanField(default=True)
+    accept_invitation = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     role = models.CharField(max_length=10, choices=UserRoles.choices, default=UserRoles.EMPLOYEE)
 

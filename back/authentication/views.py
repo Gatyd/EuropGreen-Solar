@@ -20,6 +20,8 @@ class LoginUser(APIView):
             user = serializer.validated_data['user']
             refresh = RefreshToken.for_user(user)
             user.last_login = now()
+            if not user.accept_invitation:
+                user.accept_invitation = True
             user.save()
             
             response = Response(UserSerializer(user).data, status=status.HTTP_200_OK)
