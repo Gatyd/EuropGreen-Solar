@@ -1,0 +1,4 @@
+<template>
+    PARAMETRES
+    <NuxtPage />
+</template>
