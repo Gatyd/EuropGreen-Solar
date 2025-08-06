@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
-import { upperFirst } from 'scule'
 import type { TableColumn } from '@nuxt/ui'
 import type { Row } from '@tanstack/vue-table'
 import type { User } from '~/types'
@@ -14,7 +13,7 @@ const formModal = ref(false)
 const deleteModal = ref(false)
 const selectedUser = ref<User | undefined>(undefined)
 const toast = useToast()
-const loading = ref(false)
+const loading = ref(true)
 const users = ref<User[] | undefined>([])
 const table = useTemplateRef('table')
 
@@ -97,12 +96,25 @@ const columns: TableColumn<User>[] = [{
     accessorKey: 'is_active',
     header: 'Compte',
     cell: ({ row }) => {
-        return h(UBadge, { color: row.original.is_active ? 'success' : 'error', label: row.original.is_active ? 'Actif' : 'Inactif', variant: 'subtle' })
+        return h(UBadge,
+            {
+                color: !row.original.accept_invitation ? 'warning' : row.original.is_active ? 'success' : 'error',
+                label: !row.original.accept_invitation ? 'En attente' : row.original.is_active ? 'Actif' : 'Inactif',
+                variant: 'subtle'
+            }
+        )
+    }
+}, {
+    accessorKey: 'access',
+    header: 'Accès',
+    cell: ({ row }) => {
+        const accessCount = row.original.useraccess ? Object.values(row.original.useraccess).filter(value => value === true).length : 0
+        return row.original.role === 'admin' ? 'Complet' : accessCount > 0 ? `${accessCount} accès` : 'Aucun'
     }
 }, {
     id: 'actions',
     cell: ({ row }) => {
-        return h(
+        return row.original.role !== 'admin' ? h(
             'div',
             { class: 'text-right' },
             h(
@@ -123,7 +135,7 @@ const columns: TableColumn<User>[] = [{
                         'aria-label': 'Actions dropdown'
                     })
             )
-        )
+        ) : null
     }
 }]
 
@@ -137,9 +149,17 @@ onMounted(fetchUsers)
 </script>
 
 <template>
+    <UserModal v-model="formModal" :user="selectedUser" @submit="fetchUsers" />
     <div class="sticky top-0 z-50 bg-white">
         <UDashboardNavbar title="Utilisateurs" class="lg:text-2xl font-semibold"
-            :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }" />
+            :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }"><template #trailing>
+                <UBadge v-if="users?.length as number > 0" :label="users?.length" variant="subtle" />
+            </template>
+            <template #right>
+                <UButton color="primary" label="Inviter un utilisateur" icon="i-heroicons-plus" class="mx-2"
+                    @click="selectedUser = undefined; formModal = true" />
+            </template>
+        </UDashboardNavbar>
     </div>
     <UDashboardToolbar>
         <template #left>
