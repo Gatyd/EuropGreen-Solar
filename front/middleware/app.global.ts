@@ -1,0 +1,45 @@
+import { useAuthStore } from "~/store/auth";
+
+export default defineNuxtRouteMiddleware(async (to, from) => {
+  const auth = useAuthStore();
+
+  // Routes publiques qui ne nécessitent pas d'authentification
+  const publicRoutes = [
+    "login",
+    "register",
+    "auth",
+    "forgot-password",
+    "reset-password",
+    "terms",
+    "privacy",
+  ];
+  
+  // Si c'est une route publique, on laisse passer
+  if (publicRoutes.includes(to.name as string)) {
+    return;
+  }
+
+  // Si user pas chargé, tentative de récupération
+  if (!auth.user) {
+    try {
+      await auth.fetchUser();
+    } catch {
+      try {
+        await auth.refreshToken();
+        if (import.meta.client) {
+          try {
+            await auth.fetchUser();
+          } catch (e) {
+            console.warn("fetchUser failed even after refresh");
+            console.log(e);
+          }
+        }
+      } catch {
+        // await auth.logout();
+        if (to.name?.toString().split("-")[0] === "home") {
+          return navigateTo(`/login?from=${to.path}`);
+        }
+      }
+    }
+  }
+});

@@ -9,6 +9,7 @@ const from = route.query.from as string;
 
 definePageMeta({
     layout: false,
+    middleware: 'auth',
     title: "Connexion",
     meta: [
         { name: "description", content: "Connectez-vous à votre compte pour accéder à vos données." }

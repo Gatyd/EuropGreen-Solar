@@ -8,7 +8,6 @@ useSeoMeta({
 });
 
 const { user } = storeToRefs(useAuthStore());
-const route = useRoute();
 
 const links = [
     {
@@ -18,6 +17,15 @@ const links = [
         to: "/home",
         tooltip: {
             text: "Accueil",
+        },
+    },
+    {
+        id: "users",
+        label: "Utilisateurs",
+        icon: "i-heroicons-users",
+        to: "/home/users",
+        tooltip: {
+            text: "Utilisateurs",
         },
     },
     {
@@ -55,7 +63,7 @@ const logout = async () => {
 
     <UDashboardGroup>
         <UDashboardSidebar collapsible resizable :min-size="14" :default-size="17.5" :max-size="21" :ui="{
-            footer: 'block border-t border-(--ui-border)',
+            footer: 'block',
             header: 'h-auto lg:pt-2',
         }" toggle-side="right">
             <template #header="{ collapsed }">
@@ -71,7 +79,17 @@ const logout = async () => {
 
             </template>
 
-            <template #footer>
+            <template #footer="{ collapsed }">
+                <div v-if="user">
+                    <UButton v-if="collapsed" to="/home/settings/account" variant="ghost"
+                        :avatar="{ alt: `${user.first_name.split(' ')[0]} ${user.last_name}`, size: 'md' }" />
+                    <UUser v-else :ui="{ root: 'cursor-pointer' }" to="/home/settings/account"
+                        :name="`${user.first_name.split(' ')[0]} ${user.last_name.split(' ')[0][0]}.`"
+                        :avatar="{ alt: `${user.first_name.split(' ')[0]} ${user.last_name}` }" />
+
+                    <USeparator class="mt-2" />
+                </div>
+
                 <div class="pb-2">
                     <UButton icon="i-heroicons-arrow-left-start-on-rectangle-16-solid" label="Déconnexion" color="error"
                         variant="ghost" class="w-full justify-start" @click="logout" :ui="{
