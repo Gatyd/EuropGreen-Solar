@@ -89,8 +89,12 @@ WSGI_APPLICATION = 'EuropGreenSolar.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.sqlite3' if DEBUG else 'django.db.backends.postgresql',
+        'NAME': BASE_DIR / 'db.sqlite3' if DEBUG else config('DB_NAME'),
+        'USER': '' if DEBUG else config('DB_USER'),
+        'PASSWORD': '' if DEBUG else config('DB_PASSWORD'),
+        'HOST': '' if DEBUG else config('DB_HOST', default='localhost'),
+        'PORT': '' if DEBUG else config('DB_PORT', default='5432'),
     }
 }
 
