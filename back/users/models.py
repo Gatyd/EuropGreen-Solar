@@ -1,6 +1,9 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
 import uuid
+import secrets
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -50,3 +53,32 @@ class UserAccess(models.Model):
     offers = models.BooleanField(default=False)
     requests = models.BooleanField(default=False)
     administrative_procedures = models.BooleanField(default=False)
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table = 'users_password_reset_token'
+        verbose_name = 'Token de réinitialisation de mot de passe'
+        verbose_name_plural = 'Tokens de réinitialisation de mot de passe'
+    
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = secrets.token_urlsafe(32)
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(hours=1)
+        super().save(*args, **kwargs)
+    
+    def is_valid(self):
+        """Vérifie si le token est encore valide"""
+        return not self.is_used and timezone.now() < self.expires_at
+    
+    def mark_as_used(self):
+        """Marque le token comme utilisé"""
+        self.is_used = True
+        self.save()
