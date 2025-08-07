@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from django.utils.timezone import now
 from django.conf import settings
 from .serializers import LoginSerializer
-from .cookie_utils import set_jwt_cookies, set_jwt_access_cookie, set_jwt_refresh_cookie, unset_jwt_cookies, get_refresh_token_from_cookie
+from .cookie_utils import set_jwt_cookies, unset_jwt_cookies, get_refresh_token_from_cookie
 from users.serializers import UserSerializer, User
 
 class LoginUser(APIView):
@@ -29,7 +29,7 @@ class LoginUser(APIView):
             
             return response
         return Response({"Connexion impossible": "Identifiants invalides"}, status=status.HTTP_400_BAD_REQUEST)
-    
+
 class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
 
@@ -50,21 +50,7 @@ class RefreshTokenView(APIView):
 
         response = Response(UserSerializer(user).data, status=status.HTTP_200_OK)
 
-        # Mettre à jour l'access token
-        set_jwt_access_cookie(response, access_token)
-        
-        # Si ROTATE_REFRESH_TOKENS est activé, générer un nouveau refresh token
-        if settings.SIMPLE_JWT.get('ROTATE_REFRESH_TOKENS', False):
-            # Blacklister l'ancien token si possible
-            try:
-                token.blacklist()
-            except AttributeError:
-                # La blacklist n'est pas activée
-                pass
-            
-            # Générer un nouveau refresh token
-            new_refresh_token = RefreshToken.for_user(user)
-            set_jwt_refresh_cookie(response, str(new_refresh_token))
+        set_jwt_cookies(response, access_token, str(RefreshToken.for_user(user)))
 
         return response
     
