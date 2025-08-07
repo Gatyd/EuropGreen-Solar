@@ -14,10 +14,11 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 const UBadge = resolveComponent('UBadge')
 const q = ref("")
 const formModal = ref(false)
-const deleteModal = ref(false)
+const deactivateModal = ref(false)
 const selectedUser = ref<User | undefined>(undefined)
 const toast = useToast()
 const loading = ref(true)
+const activateLoadig = ref(false)
 const users = ref<User[] | undefined>([])
 const table = useTemplateRef('table')
 
@@ -62,10 +63,15 @@ function getRowItems(row: Row<User>) {
         {
             label: row.original.is_active ? 'Désactiver' : 'Réactiver',
             color: row.original.is_active ? 'error' : 'success',
+            loading: activateLoadig.value,
             icon: `i-heroicons-${row.original.is_active ? 'x-circle' : 'check-circle'}`,
             onSelect() {
                 selectedUser.value = row.original
-                deleteModal.value = true
+                if (row.original.is_active) {
+                    deactivateModal.value = true
+                } else {
+                    reactivateUser()
+                }
             }
         }
     ]
@@ -143,6 +149,31 @@ const columns: TableColumn<User>[] = [{
     }
 }]
 
+const reactivateUser = async () => {
+    if (!selectedUser.value) return;
+
+    activateLoadig.value = true
+
+    const result = await apiRequest(
+        () => $fetch(`/api/users/${selectedUser.value?.id}/reactivate/`, {
+            method: 'PATCH'
+        }),
+        toast
+    )
+
+    if (result !== null) {
+        toast.add({
+            title: 'Utilisateur réactivé',
+            description: `Le compte de ${selectedUser.value.first_name.split(" ")[0]} ${selectedUser.value.last_name.split(" ")[0]} a été réactivé avec succès.`,
+            icon: 'i-heroicons-x-circle',
+            color: 'success'
+        })
+        fetchUsers()
+    }
+
+    activateLoadig.value = false
+}
+
 const pagination = ref({
     pageIndex: 0,
     pageSize: 10
@@ -154,6 +185,7 @@ onMounted(fetchUsers)
 
 <template>
     <UserModal v-model="formModal" :user="selectedUser" @submit="fetchUsers" />
+    <UserDeactivateModal v-model="deactivateModal" v-if="selectedUser" :user="selectedUser" @deactivate="fetchUsers" />
     <div class="sticky top-0 z-50 bg-white">
         <UDashboardNavbar title="Utilisateurs" class="lg:text-2xl font-semibold"
             :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }"><template #trailing>
