@@ -40,13 +40,13 @@ const validatePassword = (password: string): string[] => {
         errors.push('Le mot de passe doit contenir au moins 8 caractères');
     }
 
-    // if (!/\d/.test(password)) {
-    //     errors.push('Le mot de passe doit contenir au moins un chiffre');
-    // }
+    if (!/\d/.test(password)) {
+        errors.push('Le mot de passe doit contenir au moins un chiffre');
+    }
 
-    // if (!/[a-zA-Z]/.test(password)) {
-    //     errors.push('Le mot de passe doit contenir au moins une lettre');
-    // }
+    if (!/[a-zA-Z]/.test(password)) {
+        errors.push('Le mot de passe doit contenir au moins une lettre');
+    }
 
     return errors;
 };

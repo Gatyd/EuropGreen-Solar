@@ -15,26 +15,9 @@ export const useAuthStore = defineStore("auth", {
     clearUser() {
       this.user = null;
     },
-    // async registerUser(credentials: any, toast: any): Promise<LoginResponse> {
-    //   try {
-    //     const res = await $fetch("/api/registration/", {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: credentials,
-    //       credentials: "include",
-    //     });
-    //     this.user = (res as any).user as User;
-    //     return { success: true, message: "Compte créé avec succès" };
-    //   } catch (err: any) {
-    //     catchErrors(err, toast);
-    //     return { success: false, message: "Erreur lors de la création du compte" };
-    //   }
-    // },
     async loginUser(credentials: any): Promise<LoginResponse> {
       try {
-        const res = await $fetch("/api/login/", {
+        const res = await $fetch("/api/auth/login/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -75,7 +58,7 @@ export const useAuthStore = defineStore("auth", {
     async refreshToken() {
       try {
         const headers = useRequestHeaders(["cookie"]);
-        await $fetch("/api/token/refresh/", {
+        await $fetch("/api/auth/token/refresh/", {
           method: "POST",
           credentials: "include",
           headers,
@@ -86,7 +69,7 @@ export const useAuthStore = defineStore("auth", {
       }
     },
     async logout() {
-      await $fetch("/api/logout/", {
+      await $fetch("/api/auth/logout/", {
         method: "POST",
         credentials: "include",
       });

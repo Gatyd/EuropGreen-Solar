@@ -11,34 +11,80 @@ useSeoMeta({
 
 const versions = [
     {
-        title: 'Authentification et gestion des utilisateurs',
-        description: "Finalisation de l'authentification et de la gestion des utilisateurs en interconnectant l'API et le frontend",
-        date: '2025-08-05',
+        title: 'Gestion de base des utilisateurs',
+        description: "Création, modification et désactivation de compte utilisateur",
+        date: '2025-08-07',
         features: [
             {
-                title: 'Interface d\'administration de base',
-                description: 'Gestion des utilisateurs',
-                badge: ['Users', 'Access'],
+                title: 'Implémentation de la page de gestion des utilisateurs',
+                description: "Possibilité de modifier les informations et accès de tous les utilisateurs",
                 link: {
                     label: 'Gérer les utilisateurs',
                     url: '/home/users'
                 }
             },
             {
-                title: 'Implémentation de l\'authentification',
-                description: 'Interface de connexion et mot de passe oublié',
+                title: "Routes de gestion des utilisateurs",
+                description: 'Modèles et API pour la gestion des utilisateurs',
+                badge: ['API'],
+                link: {
+                    label: 'Voir la documentation',
+                    url: `${process.env.PROXY_URL || "http://localhost:8000/"}api/docs/#/users`
+                }
+            }
+        ]
+    },
+    {
+        title: 'Modification de compte et mot de passe',
+        description: "Mise à jour des informations de compte et de sécurité",
+        date: '2025-08-06',
+        features: [
+            {
+                title: 'Implémentation de la page des paramètres de compte',
+                description: "Possibilité de modifier le nom et le prénom de l'utilisateur connecté",
+                link: {
+                    label: 'Modifier les informations du compte',
+                    url: '/home/settings/account'
+                }
+            },
+            {
+                title: 'Implémentation de la page des paramètres de sécurité',
+                description: "Possibilité de modifier le mot de passe de l'utilisateur connecté",
+                link: {
+                    label: 'Modifier les informations de sécurité',
+                    url: '/home/settings/security'
+                }
+            },
+        ]
+    },
+    {
+        title: 'Connexion et mot de passe oublié',
+        description: "Finalisation de la connexion et de la réinitialisation du mot de passe",
+        date: '2025-08-05',
+        features: [
+            {
+                title: 'Implémentation de la page de mot de passe oublié',
+                description: 'Réinitialisation du mot de passe à base de l\'adresse email de l\'utilisateur',
+                link: {
+                    label: 'Mot de passe oublié',
+                    url: '/forgot-password'
+                }
+            },
+            {
+                title: 'Implémentation de la page de connexion',
+                description: 'Connexion avec adresse email et mot de passe',
                 link: {
                     label: 'Se connecter',
                     url: '/login'
                 }
             },
             {
-                title: 'Gestion des utilisateurs',
-                description: 'Modèles et API pour la gestion des comptes utilisateurs',
+                title: "Routes d'authentification",
+                description: 'Modèles et API pour l\'authentification des utilisateurs',
                 badge: ['API'],
                 link: {
                     label: 'Voir la documentation',
-                    url: `${process.env.PROXY_URL || "http://localhost:8000/"}api/docs/#/users`
+                    url: `${process.env.PROXY_URL || "http://localhost:8000/"}api/docs/#/auth`
                 }
             }
         ]
