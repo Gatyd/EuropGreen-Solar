@@ -11,6 +11,43 @@ useSeoMeta({
 
 const versions = [
     {
+        title: 'Déploiement des fonctionnalités développées',
+        description: "",
+        date: '2025-08-07',
+        features: [
+            {
+                title: 'Frontend Nuxt',
+                description: "Déploiement continu sur vercel",
+                link: {
+                    label: 'Page actuelle',
+                    url: '#'
+                }
+            },
+            {
+                title: "Backend django",
+                description: 'Modèles et API pour la gestion des utilisateurs',
+                badge: ['API'],
+                link: {
+                    label: 'Voir la documentation',
+                    url: `${process.env.PROXY_URL || "http://localhost:8000/"}api/docs/`
+                }
+            }
+        ],
+        badge: 'v0.1.0',
+        authors: [
+            {
+                name: 'Thierry APLOGAN',
+                description: 'devgatyd@gmail.com',
+                avatar: {
+                    src: 'https://avatars.githubusercontent.com/u/131877017',
+                    alt: 'Avatar de Thierry APLOGAN'
+                },
+                // to: 'https://github.com/Gatyd',
+                // target: '_blank'
+            }
+        ]
+    },
+    {
         title: 'Gestion de base des utilisateurs',
         description: "Création, modification et désactivation de compte utilisateur",
         date: '2025-08-07',
@@ -108,16 +145,6 @@ const versions = [
                 description: 'Initialisation et configuration de base du serveur Django avec API REST'
             }
         ]
-        // badge: 'v0.1.0',
-        // authors: [
-        //     {
-        //         name: 'Équipe Dev',
-        //         description: 'Configuration initiale',
-        //         avatar: {
-        //             src: 'https://github.com/github.png'
-        //         }
-        //     }
-        // ]
     },
 ]
 
@@ -156,8 +183,9 @@ const versions = [
                                             <UBadge v-for="value in feature.badge" :label="value" variant="soft" />
                                         </div>
                                         <p class="text-sm text-gray-600">{{ feature.description }}</p>
-                                        <UButton v-if="'link' in feature" :label="feature.link?.label" :to="feature.link?.url"
-                                            variant="ghost" target="_blank" trailing-icon="i-heroicons-arrow-top-right-on-square" />
+                                        <UButton v-if="'link' in feature" :label="feature.link?.label"
+                                            :to="feature.link?.url" variant="ghost" target="_blank"
+                                            trailing-icon="i-heroicons-arrow-top-right-on-square" />
                                     </div>
                                 </div>
                             </div>

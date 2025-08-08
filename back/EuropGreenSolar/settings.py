@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-h#4*tb(@c3yel34p=)blpxh7b$s=u9ulev@i%pq^n+85jh^&es
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=lambda v: [host.strip() for host in v.split(',')])
 
 
 # Application definition
@@ -89,12 +89,12 @@ WSGI_APPLICATION = 'EuropGreenSolar.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3' if DEBUG else 'django.db.backends.postgresql',
-        'NAME': BASE_DIR / 'db.sqlite3' if DEBUG else config('DB_NAME'),
-        'USER': '' if DEBUG else config('DB_USER'),
-        'PASSWORD': '' if DEBUG else config('DB_PASSWORD'),
-        'HOST': '' if DEBUG else config('DB_HOST', default='localhost'),
-        'PORT': '' if DEBUG else config('DB_PORT', default='5432'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'USER': '' if DEBUG else config('DB_USER'),
+        # 'PASSWORD': '' if DEBUG else config('DB_PASSWORD'),
+        # 'HOST': '' if DEBUG else config('DB_HOST', default='localhost'),
+        # 'PORT': '' if DEBUG else config('DB_PORT', default='5432'),
     }
 }
 
@@ -129,15 +129,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-FRONTEND_URL = 'http://localhost:3000'
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'statics/'
-STATICFILES_DIRS = [BASE_DIR / 'static/']
-STATIC_ROOT = BASE_DIR / 'statics'
+STATIC_URL = '/statics/'
+STATICFILES_DIRS = [BASE_DIR / 'static']  # Répertoire où tu mets tes fichiers statiques en dev
+STATIC_ROOT = BASE_DIR / 'statics'  # Répertoire dans lequel collectstatic mettra tout en prod
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / "media"
