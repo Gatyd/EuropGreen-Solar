@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-h#4*tb(@c3yel34p=)blpxh7b$s=u9ulev@i%pq^n+85jh^&es
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=lambda v: [host.strip() for host in v.split(',')])
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=lambda v: [host.strip() for host in v.split(',')])
 
 
 # Application definition
@@ -196,7 +196,7 @@ SPECTACULAR_SETTINGS = {
     'REDOC_DIST': 'SIDECAR',
 }
 
-# EMAIL CONFIG
+# SMTP CONFIG
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='')
@@ -205,3 +205,7 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='')
+
+# Mailgun Configuration
+MAILGUN_API_KEY = config('MAILGUN_API_KEY', default='')
+MAILGUN_DOMAIN = config('MAILGUN_DOMAIN', default='')

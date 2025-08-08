@@ -3,6 +3,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+import requests
 import secrets
 import string
 from .models import User, UserAccess
@@ -51,13 +52,47 @@ class AdminUserSerializer(serializers.ModelSerializer):
         alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
         password = ''.join(secrets.choice(alphabet) for _ in range(12))
         return password
-        
-    def send_welcome_email(self, user, password):
-        """Envoie l'email de bienvenue avec le mot de passe"""
+    
+    def send_welcome_email_mailgun(self, user, password):
+        """Envoi via Mailgun API"""
+        try:
+            # Contexte pour le template (même que votre version SMTP)
+            context = {
+                'user': user,
+                'password': password,
+                'frontend_url': settings.FRONTEND_URL,
+            }
+            
+            # Utiliser votre template existant
+            html_message = render_to_string('emails/welcome_user.html', context)
+            plain_message = strip_tags(html_message)
+            
+            response = requests.post(
+                f"https://api.mailgun.net/v3/{settings.MAILGUN_DOMAIN}/messages",
+                auth=("api", settings.MAILGUN_API_KEY),
+                data={
+                    "from": f"Europ'Green Solar <noreply@{settings.MAILGUN_DOMAIN}>",
+                    "to": user.email,
+                    "subject": "Bienvenue chez EuropGreen Solar - Vos identifiants de connexion",
+                    "text": plain_message,
+                    "html": html_message
+                },
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                return True, "Email envoyé avec succès"
+            else:
+                return False, f"Erreur Mailgun: {response.text}"
+                
+        except Exception as e:
+            return False, f"Erreur Mailgun: {str(e)}"
+    
+    def send_welcome_email_smtp(self, user, password):
+        """Envoi via SMTP (votre méthode actuelle)"""
         try:
             subject = "Bienvenue chez EuropGreen Solar - Vos identifiants de connexion"
             
-            # Contexte pour le template
             context = {
                 'user': user,
                 'password': password,
@@ -70,14 +105,46 @@ class AdminUserSerializer(serializers.ModelSerializer):
             send_mail(
                 subject=subject,
                 message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
+                from_email=f"Europ'Green Solar<{settings.DEFAULT_FROM_EMAIL}>",
                 recipient_list=[user.email],
                 html_message=html_message,
                 fail_silently=False,
             )
+            return True, "Email envoyé avec succès"
+            
         except Exception as e:
-            print(f"Erreur lors de l'envoi de l'email: {e}")
+            return False, f"Erreur SMTP: {str(e)}"
     
+    def send_welcome_email(self, user, password):
+        """
+        Méthode principale qui choisit entre Mailgun et SMTP
+        Retourne (success, message, password_for_response)
+        """
+        # Vérifier si Mailgun est configuré
+        mailgun_configured = (
+            hasattr(settings, 'MAILGUN_API_KEY') and 
+            hasattr(settings, 'MAILGUN_DOMAIN') and 
+            settings.MAILGUN_API_KEY and 
+            settings.MAILGUN_DOMAIN
+        )
+        
+        if mailgun_configured:
+            success, message = self.send_welcome_email_mailgun(user, password)
+            if success:
+                return True, message, None
+            else:
+                # Mailgun a échoué, essayer SMTP en fallback
+                print(f"Mailgun échoué: {message}, tentative SMTP...")
+        
+        # Utiliser SMTP (soit par choix, soit en fallback)
+        success, message = self.send_welcome_email_smtp(user, password)
+        
+        if success:
+            return True, message, None
+        else:
+            # SMTP aussi a échoué, retourner le mot de passe
+            return False, message, password
+        
     def create(self, validated_data):
         """Création d'un utilisateur avec génération automatique du mot de passe"""
         # Génération du mot de passe sécurisé
@@ -99,8 +166,18 @@ class AdminUserSerializer(serializers.ModelSerializer):
         # Création des accès par défaut uniquement pour les utilisateurs qui ne sont pas client ou admin
         if user.role not in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN]:
             UserAccess.objects.create(user=user, **access)
+
+        email_success, email_message, fallback_password = self.send_welcome_email(user, password)
         
-        self.send_welcome_email(user, password)
+        if not email_success:
+            # L'email n'a pas pu être envoyé, mais l'utilisateur est créé
+            # Lever une exception avec les détails
+            error_message = {
+                "detail": "Compte créé avec succès, mais l'email n'a pas pu être envoyé.",
+                "message": f"Le compte de {user.email} a été créé mais l'email de bienvenue n'a pas pu être envoyé. Mot de passe temporaire : {fallback_password}"
+            }
+            
+            raise serializers.ValidationError(error_message)
         
         return user
     
