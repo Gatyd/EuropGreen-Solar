@@ -10,4 +10,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
+# Collecter les fichiers statiques
+RUN python manage.py collectstatic --noinput
+
 CMD ["gunicorn", "EuropGreenSolar.wsgi:application", "--bind", "0.0.0.0:8000"]

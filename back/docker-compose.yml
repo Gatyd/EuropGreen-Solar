@@ -3,10 +3,10 @@ version: '3.9'
 services:
   web:
     build: .
-    network_mode: "host"
+    ports:
+      - "8000:8000"
     volumes:
       - .:/app
-      - /home/root/EuropGreen-Solar/back/statics:/app/statics
     env_file:
       - .env
     depends_on:
@@ -14,7 +14,6 @@ services:
 
   db:
     image: postgres:15
-    network_mode: "host"
     environment:
       POSTGRES_DB: nomdb
       POSTGRES_USER: user
