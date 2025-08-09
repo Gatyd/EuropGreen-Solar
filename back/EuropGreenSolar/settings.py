@@ -89,12 +89,12 @@ WSGI_APPLICATION = 'EuropGreenSolar.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        # 'USER': '' if DEBUG else config('DB_USER'),
-        # 'PASSWORD': '' if DEBUG else config('DB_PASSWORD'),
-        # 'HOST': '' if DEBUG else config('DB_HOST', default='localhost'),
-        # 'PORT': '' if DEBUG else config('DB_PORT', default='5432'),
+        'ENGINE': 'django.db.backends.sqlite3' if DEBUG else 'django.db.backends.postgresql',
+        'NAME': BASE_DIR / 'db.sqlite3' if DEBUG else config('DB_NAME'),
+        'USER': '' if DEBUG else config('DB_USER'),
+        'PASSWORD': '' if DEBUG else config('DB_PASSWORD'),
+        'HOST': '' if DEBUG else config('DB_HOST', default='localhost'),
+        'PORT': '' if DEBUG else config('DB_PORT', default='5432'),
     }
 }
 
@@ -198,7 +198,7 @@ SPECTACULAR_SETTINGS = {
 
 # SMTP CONFIG
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' if config('EMAIL_HOST_PASSWORD') else 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)

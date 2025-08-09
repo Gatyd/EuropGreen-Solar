@@ -4,45 +4,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="{% static 'favicon.ico' %}" />
+    <link rel="icon" href="https://europgreen-solar.gatyd.tech/statics/favicon.ico" />
     <title>{% block title %}EuropGreen Solar{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 font-sans">
-    <div class="mx-auto max-w-2xl bg-white sm:shadow-lg sm:rounded-lg sm:my-5 overflow-hidden">
+<body style="background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0;">
+    <div style="max-width: 672px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 8px; margin-top: 20px; margin-bottom: 20px; overflow: hidden;">
         
         <!-- Header avec logo -->
-        <div class="inline-block bg-gray-800 shadow-lg">
-            <img src="{% static 'images/logo.png' %}" 
+        <div style="background-color: #1f2937; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center; padding: 20px;">
+            <img src="https://europgreen-solar.gatyd.tech/statics/images/logo.png" 
                  alt="EuropGreen Solar" 
-                 class="h-auto w-auto mx-auto"
+                 style="height: auto; width: auto; margin: 0 auto; max-width: 200px;"
                  onerror="this.style.display='none'; this.parentElement.nextElementSibling.style.display='block';">
         </div>
 
         <!-- Contenu principal -->
-        <div class="p-4 sm:p-6 lg:p-8">
+        <div style="padding: 32px;">
             {% block content %}
-            <p class="text-gray-700 text-base leading-relaxed mb-4">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
                 Contenu de l'email...
             </p>
             {% endblock %}
         </div>
 
         <!-- Pied de page professionnel -->
-        <div class="bg-gray-50 border-t border-gray-200 p-4 sm:p-6">
-            <div class="text-center">
+        <div style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 32px;">
+            <div style="text-align: center;">
                 {% block footer_content %}
-                <div class="mb-4">
-                    <p class="text-gray-800 font-medium text-sm mb-1">
+                <div style="margin-bottom: 16px;">
+                    <p style="color: #1f2937; font-weight: 500; font-size: 14px; margin-bottom: 4px; margin-top: 0;">
                         EuropGreen Solar
                     </p>
-                    <p class="text-gray-600 text-xs">
+                    <p style="color: #6b7280; font-size: 12px; margin: 0;">
                         Installations photovoltaïques • Solutions énergétiques durables
                     </p>
                 </div>
                 
-                <div class="border-t border-gray-300 pt-4">
-                    <p class="text-gray-500 text-xs">
+                <div style="border-top: 1px solid #d1d5db; padding-top: 16px;">
+                    <p style="color: #6b7280; font-size: 12px; margin: 0;">
                         Ce message est envoyé automatiquement par notre système de gestion.<br>
                         Veuillez ne pas répondre directement à cet email.
                     </p>
