@@ -25,7 +25,7 @@ export const useAuthStore = defineStore("auth", {
           body: credentials,
           credentials: "include",
         });
-        this.user = (res as any).user as User;
+        this.user = res as User;
         return { success: true, message: "Connecté avec succès" };
       } catch (err: any) {
         let errorMessage = "Identifiants de connexion invalides.";
