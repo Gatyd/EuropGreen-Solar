@@ -20,6 +20,15 @@ const links = [
         },
     },
     {
+        id: "requests",
+        label: "Demandes",
+        icon: "i-heroicons-document-text",
+        to: "/home/requests",
+        tooltip: {
+            text: "Demandes",
+        },
+    },
+    {
         id: "users",
         label: "Utilisateurs",
         icon: "i-heroicons-users",
@@ -54,14 +63,15 @@ const links = [
 const accessLink = links.map((link: any) => {
     if (!user.value?.is_superuser) {
         if (link.id === "users") return null
+        if (link.id === "home") return null
     }
-    // if (!user.value?.is_superuser && user.value?.is_staff) {
-    //     const useraccess = user.value?.useraccess || {};
+    if (!user.value?.is_superuser && user.value?.is_staff) {
+        const useraccess = user.value?.useraccess;
 
     //     if (link.id === "home") return null
 
-    //     if ((link.label === "Messages" || link.label === "Facturation") && !droits.messages) return null
-    // }
+        if ((link.id === "requests") && !useraccess?.requests) return null
+    }
 
     return link;
 }).filter((link: any) => link !== null);

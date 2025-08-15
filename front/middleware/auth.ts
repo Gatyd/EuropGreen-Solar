@@ -12,6 +12,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "reset-password",
     "terms",
     "privacy",
+    "evolution"
   ];
   
   // Si on vient d'une route publique, on n'interfère pas
