@@ -10,3 +10,19 @@ class IsAdmin(permissions.BasePermission):
         if not user.is_authenticated:
             return False
         return user.is_superuser
+
+class HasRequestsAccess(permissions.BasePermission):
+    """
+    Permission personnalisée pour vérifier que l'utilisateur a accès aux requêtes.
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        # Correction: le champ correct est 'requests' dans UserAccess
+        # Autorise si l'utilisateur a l'accès requests ou est superuser
+        try:
+            return bool(getattr(user.useraccess, 'requests', False)) or bool(user.is_superuser)
+        except Exception:
+            return bool(user.is_superuser)
