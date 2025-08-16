@@ -111,7 +111,6 @@ const closeModal = () => {
 }
 
 const submit = async () => {
-    console.log('Submitting form with state:', state)
     loading.value = true
     const res = await apiRequest<User>(
         () => $fetch(`/api/users/${props.user ? `${props.user.id}/` : ''}`, {
@@ -127,10 +126,28 @@ const submit = async () => {
             color: 'success',
             icon: 'i-heroicons-check-circle'
         })
-        emit('submit');
+        emit('submit', res);
         closeModal();
     }
     loading.value = false
+}
+
+const formRef = ref<any>(null)
+const trySubmit = async () => {
+    try {
+        if (formRef.value?.validate) {
+            const errors = await formRef.value.validate()
+            if (Array.isArray(errors) && errors.length) {
+                return
+            }
+        } else {
+            const errors = validate(state)
+            if (errors.length) return
+        }
+        await submit()
+    } catch (e) {
+        // console.error('[UserModal] trySubmit error', e)
+    }
 }
 </script>
 
@@ -139,7 +156,7 @@ const submit = async () => {
         :title="props.user ? 'Modification de l\'utilisateur' : 'Invitation d\'un nouvel utilisateur'"
         :ui="{ title: 'text-xl', content: 'max-w-2xl' }" @close="closeModal">
         <template #body>
-            <UForm :state="state" :validate="validate" @submit="submit" class="w-full">
+            <UForm ref="formRef" :state="state" :validate="validate" class="w-full">
                 <div class="grid grid-cols-2 gap-6 mb-10">
                     <UFormField label="Nom" name="last_name" required>
                         <UInput v-model="state.last_name" class="w-full" type="text" placeholder="Entrez le nom" />
@@ -168,7 +185,7 @@ const submit = async () => {
                 </div>
 
                 <div class="flex justify-center">
-                    <UButton type="submit" :loading="loading"
+                    <UButton type="button" :loading="loading" @click="trySubmit"
                         :label="user ? 'Modifier l\'utilisateur' : 'Inviter un nouvel utilisateur'" />
                 </div>
             </UForm>

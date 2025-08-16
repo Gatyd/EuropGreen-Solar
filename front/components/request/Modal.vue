@@ -1,0 +1,20 @@
+<script setup lang="ts">
+import type { ProspectSource } from '~/types/requests'
+
+const props = defineProps<{ modelValue: boolean; source: ProspectSource }>()
+const emit = defineEmits(['update:modelValue', 'submit'])
+
+const onSubmit = (form: FormData) => {
+	form.set('source', props.source)
+	emit('submit', form)
+}
+</script>
+
+<template>
+	<UModal :open="modelValue" @update:open="v => emit('update:modelValue', v)" title="Nouvelle demande"
+					:ui="{ title: 'text-xl', content: 'max-w-2xl' }">
+		<template #body>
+			<RequestForm @submit="onSubmit" />
+		</template>
+	</UModal>
+</template>
