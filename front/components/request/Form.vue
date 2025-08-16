@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { ProspectRequestPayload, ProspectStatus, ProspectSource } from '~/types/requests'
+import type { ProspectRequestPayload, ProspectStatus, ProspectSource, ProspectRequest } from '~/types/requests'
 
-const props = defineProps<{ modelValue?: ProspectRequestPayload | null }>()
+const props = defineProps<{ modelValue?: ProspectRequest | null }>()
 const emit = defineEmits(['submit'])
 
 const loading = ref(false)
@@ -22,7 +22,8 @@ const state = reactive<ProspectRequestPayload>({
 
 watch(() => props.modelValue, (v) => {
     if (v) Object.assign(state, v)
-})
+    state.assigned_to_id = v?.assigned_to?.id
+}, { immediate: true })
 
 const validate = (st: any) => {
     const errors: any[] = []

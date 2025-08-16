@@ -8,7 +8,7 @@ const props = defineProps<{
     loading?: boolean
     count?: number
 }>()
-const emit = defineEmits(['drop', 'open'])
+const emit = defineEmits(['drop', 'open', 'convert'])
 
 // DnD via HTML5 API
 const onDragStart = (event: DragEvent, item: ProspectRequest) => {
@@ -49,7 +49,7 @@ const onDragOver = (event: DragEvent) => {
         <div v-else class="flex flex-col gap-2">
             <div v-for="it in items" :key="it.id" draggable="true" @dragstart="(e: DragEvent) => onDragStart(e, it)">
                 <div @click.stop.prevent="emit('open', it)">
-                    <RequestCard :item="it" />
+                    <RequestCard :item="it" @convert="emit('convert', $event)" />
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@
 import type { ProspectRequest, ProspectStatus } from '~/types/requests'
 import DetailsModal from '@/components/request/DetailsModal.vue'
 import apiRequest from '~/utils/apiRequest'
+import type { ProspectRequestPayload } from '~/types/requests'
 
 definePageMeta({ layout: 'default' })
 
@@ -9,8 +10,8 @@ const toast = useToast()
 const creating = ref(false)
 const search = ref('')
 const dateRange = ref<{ start?: string | null, end?: string | null }>({ start: null, end: null })
-const selected = ref(null as any)
-const detailsOpen = ref(false)
+const selected = ref<ProspectRequest | null>(null)
+const detailsOpen = ref<boolean>(false)
 
 const columns: { key: ProspectStatus; title: string }[] = [
     { key: 'new', title: 'Nouveau' },
@@ -74,6 +75,8 @@ onMounted(fetchAll)
 const onDrop = async (payload: { to: ProspectStatus, item: ProspectRequest }) => {
     const { to, item: card } = payload
     const prev = card.status
+    // Si le statut ne change pas, ne rien faire
+    if (to === prev) return
     card.status = to
     const res = await apiRequest<ProspectRequest>(
         () => $fetch(`/api/requests/${card.id}/`, { method: 'PATCH', body: { status: to }, credentials: 'include' }),
@@ -89,20 +92,33 @@ const onDrop = async (payload: { to: ProspectStatus, item: ProspectRequest }) =>
     }
 }
 
-const createFromModal = async (form: FormData) => {
+const submitFromModal = async (form: FormData) => {
     const res = await apiRequest<ProspectRequest>(
-        () => $fetch('/api/requests/', { method: 'POST', body: form, credentials: 'include' }),
+        () => $fetch(`/api/requests/${selected.value ? `${selected.value.id}/` : ''}`,
+            { method: selected.value ? 'PATCH' : 'POST', body: form, credentials: 'include' }
+        ),
         toast
     )
     if (res) {
-        toast.add({ title: 'Demande créée', color: 'success', icon: 'i-heroicons-check-circle' })
+        toast.add({ title: `Demande ${selected.value ? 'modifiée' : 'créée'} avec succès`, color: 'success', icon: 'i-heroicons-check-circle' })
         creating.value = false
+        await fetchAll()
     }
 }
 
 function openDetails(item: any) {
     selected.value = item
     detailsOpen.value = true
+}
+
+function convertToOffer(item: ProspectRequest) {
+    // TODO: brancher vers le flux d’offre
+    toast.add({ title: 'Conversion en offre', description: `${item.last_name} ${item.first_name}`, icon: 'i-heroicons-arrow-right-circle', color: 'primary' })
+}
+
+function openEditFromDetails() {
+    if (!selected.value) return
+    creating.value = true
 }
 </script>
 
@@ -137,18 +153,18 @@ function openDetails(item: any) {
         </UCard>
 
         <ClientOnly>
-            <RequestModal :model-value="creating" source="call_center" @update:model-value="v => creating = v"
-                @submit="createFromModal" />
+            <RequestModal :model-value="creating" :payload="selected" source="call_center"
+                @update:model-value="v => creating = v" @submit="submitFromModal" />
         </ClientOnly>
 
         <div class="flex gap-4 overflow-x-auto p-4">
             <div class="" v-for="col in columns" :key="col.key">
                 <RequestSkeleton v-if="loading" :title="col.title" />
                 <RequestColumn v-else :title="col.title" :status="col.key" :items="items[col.key]"
-                    :count="items[col.key].length" @drop="onDrop" @open="openDetails" />
+                    :count="items[col.key].length" @drop="onDrop" @open="openDetails" @convert="convertToOffer" />
             </div>
         </div>
 
-        <DetailsModal v-model="detailsOpen" :item="selected" />
+        <DetailsModal v-model="detailsOpen" :item="selected" @edit="openEditFromDetails" />
     </div>
 </template>

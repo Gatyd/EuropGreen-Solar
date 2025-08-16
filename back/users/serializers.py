@@ -17,11 +17,11 @@ class UserAccessSerializer(serializers.ModelSerializer):
         fields = ['installation', 'offers', 'requests', 'administrative_procedures']
 
 class UserSerializer(serializers.ModelSerializer):
-    access = UserAccessSerializer(source='useraccess', read_only=True)
+    useraccess = UserAccessSerializer(read_only=True)
     
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'is_active', 'is_staff', 'is_superuser', 'access']
+        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'is_active', 'is_staff', 'is_superuser', 'useraccess']
         read_only_fields = ['id', 'is_staff', 'is_superuser', 'role']
 
 class AdminUserSerializer(serializers.ModelSerializer):

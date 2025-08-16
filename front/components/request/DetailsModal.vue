@@ -2,7 +2,7 @@
 import type { ProspectRequest } from '~/types/requests'
 
 const props = defineProps<{ modelValue: boolean; item: ProspectRequest | null }>()
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'edit'])
 const close = () => emit('update:modelValue', false)
 </script>
 
@@ -50,8 +50,11 @@ const close = () => emit('update:modelValue', false)
                         <div class="font-medium">{{ item.source }}</div>
                     </div>
                 </div>
-                <div class="flex justify-end pt-4 border-t mt-4" v-if="item.status === 'closed'">
-                    <UButton color="primary" icon="i-heroicons-arrow-right-circle" label="Transformer en offre" />
+                <div class="flex items-center justify-between pt-4 border-t mt-4">
+                    <UButton color="neutral" variant="soft" icon="i-heroicons-pencil-square" label="Modifier"
+                        @click="emit('edit')" />
+                    <UButton v-if="item.status === 'closed'" color="primary" icon="i-heroicons-arrow-right-circle"
+                        label="Transformer en offre" />
                 </div>
             </div>
         </template>

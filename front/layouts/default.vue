@@ -67,7 +67,6 @@ const accessLink = links.map((link: any) => {
     }
     if (!user.value?.is_superuser && user.value?.is_staff) {
         const useraccess = user.value?.useraccess;
-
     //     if (link.id === "home") return null
 
         if ((link.id === "requests") && !useraccess?.requests) return null
