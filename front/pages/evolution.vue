@@ -6,6 +6,41 @@ definePageMeta({
 
 const versions = [
     {
+        title: "Module 'Demandes' (Gestion des Prospects)",
+        description: "",
+        date: '2025-08-16',
+        features: [
+            {
+                title: "Vue Kanban des prospects",
+                description: "Création, modification et glisser-déposer de demande client",
+                link: {
+                    label: "Gérer les demandes",
+                    url: '/home/requests'
+                }
+            },
+            {
+                title: "Routes de gestion des demandes",
+                description: 'Modèles et API pour la gestion des demandes',
+                badge: ['API'],
+                link: {
+                    label: 'Voir la documentation',
+                    url: `${process.env.PROXY_URL || "http://localhost:8000/"}api/docs/#requests`
+                }
+            }
+        ],
+        badge: 'v0.1.1',
+        authors: [
+            {
+                name: 'Thierry APLOGAN',
+                description: 'devgatyd@gmail.com',
+                avatar: {
+                    src: 'https://avatars.githubusercontent.com/u/131877017',
+                    alt: 'Avatar de Thierry APLOGAN'
+                },
+            }
+        ]
+    },
+    {
         title: 'Déploiement des fonctionnalités développées',
         description: "",
         date: '2025-08-07',

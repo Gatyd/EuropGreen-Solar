@@ -106,6 +106,11 @@ const submitFromModal = async (form: FormData) => {
     }
 }
 
+const newRequest = () => {
+    creating.value = true
+    selected.value = null
+}
+
 function openDetails(item: any) {
     selected.value = item
     detailsOpen.value = true
@@ -132,7 +137,7 @@ function openEditFromDetails() {
                 </template>
                 <template #right>
                     <UButton color="primary" label="Nouvelle demande" icon="i-heroicons-plus" class="mx-2"
-                        @click="creating = true" />
+                        @click="newRequest" />
                 </template>
             </UDashboardNavbar>
         </div>

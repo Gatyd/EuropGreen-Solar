@@ -21,8 +21,14 @@ const state = reactive<ProspectRequestPayload>({
 })
 
 watch(() => props.modelValue, (v) => {
-    if (v) Object.assign(state, v)
-    state.assigned_to_id = v?.assigned_to?.id
+    if (v) {
+        // Assigner toutes les propriétés sauf electricity_bill
+        Object.assign(state, {
+            ...v,
+            electricity_bill: null // Réinitialiser le fichier en mode édition
+        })
+        state.assigned_to_id = v.assigned_to?.id
+    }
 }, { immediate: true })
 
 const validate = (st: any) => {
@@ -33,6 +39,7 @@ const validate = (st: any) => {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(st.email)) errors.push({ name: 'email', message: 'Email invalide.' })
     if (!st.phone) errors.push({ name: 'phone', message: 'Téléphone obligatoire.' })
     if (!st.address) errors.push({ name: 'address', message: 'Adresse obligatoire.' })
+    if(!state.assigned_to_id) errors.push({ name: 'assigned_to_id', message: 'Employé chargé d\'affaire obligatoire.' })
     return errors
 }
 
@@ -74,15 +81,30 @@ const submit = async () => {
                 <UInput v-model="state.address" class="w-full" />
             </UFormField>
             <div class="space-y-5">
-                <UFormField label="Employé chargé d'affaire" name="assigned_to_id">
+                <UFormField label="Employé chargé d'affaire" name="assigned_to_id" required>
                     <UserSelectMenu v-model="state.assigned_to_id" class="w-full" />
                 </UFormField>
                 <UFormField label="Type de logement" name="housing_type">
                     <UInput v-model="state.housing_type" class="w-full" />
                 </UFormField>
             </div>
-            <UFormField label="Facture d’électricité (optionnelle)" description="JPG, PNG ou PDF" name="electricity_bill">
-                <UFileUpload class="w-full" />
+            <UFormField label="Facture d'électricité (optionnelle)" description="JPG, PNG ou PDF" name="electricity_bill">
+                <!-- Affichage du fichier existant en mode édition -->
+                <div v-if="props.modelValue?.electricity_bill" class="mb-3">
+                    <div class="text-sm text-gray-600 mb-2">Fichier actuel :</div>
+                    <UButton 
+                        as="a" 
+                        :href="props.modelValue.electricity_bill" 
+                        target="_blank" 
+                        icon="i-heroicons-document" 
+                        variant="soft" 
+                        color="primary" 
+                        label="Voir la facture actuelle" 
+                        class="mb-2"
+                    />
+                    <div class="text-xs text-gray-500 mb-3">Téléchargez un nouveau fichier pour remplacer l'actuel</div>
+                </div>
+                <UFileUpload v-model="state.electricity_bill" class="w-full" />
             </UFormField>
             <!-- <UFormField label="Notes" name="notes" class="col-span-2">
 				<UTextarea v-model="state.notes" :rows="3" />

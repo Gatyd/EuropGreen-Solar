@@ -22,12 +22,33 @@ class ProspectRequestViewSet(
 ):
 	queryset = ProspectRequest.objects.select_related("assigned_to").all()
 	serializer_class = ProspectRequestSerializer
-	permission_classes = [IsAuthenticated, HasRequestsAccess]
 	http_method_names = ["get", "post", "patch"]
 	parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+	def get_permissions(self):
+		"""
+		Permissions personnalisées selon l'action :
+		- create: tout le monde peut créer une demande (pas de permission spéciale)
+		- autres actions: nécessite HasRequestsAccess
+		"""
+		if self.action == 'create':
+			permission_classes = []  # Pas de permission requise pour la création
+		else:
+			permission_classes = [IsAuthenticated, HasRequestsAccess]
+		
+		return [permission() for permission in permission_classes]
+
 	def get_queryset(self):
+		# Pour la création, pas besoin de filtrer le queryset
+		if self.action == 'create':
+			return ProspectRequest.objects.none()  # Queryset vide pour la création
+		
 		user = self.request.user
+		
+		# Vérifier que l'utilisateur est authentifié pour les autres actions
+		if not user.is_authenticated:
+			return ProspectRequest.objects.none()
+		
 		# Portée de base selon le rôle
 		if user.is_superuser:
 			qs = ProspectRequest.objects.select_related("assigned_to").all()
