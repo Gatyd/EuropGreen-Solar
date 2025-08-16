@@ -1,6 +1,11 @@
 
 export type UserRoles = "employee" | "installer" | "secretary" | "customer" | "admin";
 
+export interface Item {
+    value: string;
+    label: string;
+}
+
 export interface LoginResponse {
 	success: boolean;
 	message: string;
