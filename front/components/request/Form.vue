@@ -171,5 +171,4 @@ const submit = async () => {
             <UButton type="submit" :loading="loading" icon="i-heroicons-check-circle" label="Valider" />
         </div>
     </UForm>
-
 </template>
