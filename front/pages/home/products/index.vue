@@ -33,13 +33,11 @@ async function fetchProducts() {
 // Mapping des types techniques -> libellés utilisateurs
 const TYPE_LABELS: Record<string, string> = {
     panel: 'Panneau',
-    panneau: 'Panneau',
     inverter: 'Onduleur',
-    onduleur: 'Onduleur',
     battery: 'Batterie',
-    batterie: 'Batterie',
     structure: 'Structure',
-    service: 'Service'
+    service: 'Service',
+    other: 'Autre'
 }
 
 const typeLabel = (val?: string) => {
@@ -126,7 +124,9 @@ onMounted(fetchProducts)
 
 <template>
     <div>
-        <ProductModal v-model="formModal" :product="selectedProduct" @submit="fetchProducts" @update:model-value="v => formModal = v" />
+        <ClientOnly>
+            <ProductModal v-model="formModal" :product="selectedProduct" @submit="fetchProducts" />
+        </ClientOnly>
         <ProductDelete v-if="selectedProduct" v-model="deleteModal" :product="selectedProduct"
             @submit="fetchProducts" />
         <div class="sticky top-0 z-50 bg-white">

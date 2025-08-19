@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Product } from '~/types/billing';
 
-const props = defineProps<{ modelValue: boolean, product?: Product | null }>()
-const emit = defineEmits(['update:modelValue','submit'])
+const model = defineModel({ type: Boolean })
+
+const props = defineProps<{ product?: Product | null }>()
+const emit = defineEmits(['submit'])
 
 const loading = ref(false)
 const typeItems = [
@@ -80,6 +82,8 @@ const submit = async () => {
     )
     if (res) {
         toast.add({ title: `Produit / Service ${props.product ? 'modifiée' : 'créée'} avec succès`, color: 'success', icon: 'i-heroicons-check-circle' })
+        model.value = false
+        resetForm()
         emit('submit', res)
     }
     loading.value = false
@@ -87,8 +91,8 @@ const submit = async () => {
 </script>
 
 <template>
-    <UModal :open="modelValue" :title="product ? 'Modifier Produit / Service' : 'Nouveau Produit / Service'" @update:open="v => emit('update:modelValue', v)"
-        :ui="{ title: 'text-xl', content: 'max-w-2xl' }">
+    <UModal v-model:open="model" :title="product ? 'Modifier Produit / Service' : 'Nouveau Produit / Service'"
+         :ui="{ title: 'text-xl', content: 'max-w-2xl' }">
         <template #body>
             <UForm :state="state" :validate="validate" @submit="submit" class="w-full">
                 <div class="grid grid-cols-2 gap-4 mb-6">
@@ -99,10 +103,16 @@ const submit = async () => {
                         <USelectMenu v-model="state.type" :items="typeItems" value-key="value" class="w-full" />
                     </UFormField>
                     <UFormField label="Prix unitaire (€)" name="unit_price" required>
-                        <UInputNumber v-model="state.unit_price" class="w-full" />
+                        <UInputNumber v-model="state.unit_price" :step="0.01" class="w-full" :format-options="{
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2
+                        }" />
                     </UFormField>
                     <UFormField label="Coût (€)" name="cost_price">
-                        <UInputNumber v-model="state.cost_price" class="w-full" />
+                        <UInputNumber v-model="state.cost_price" :step="0.01" class="w-full" :format-options="{
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2
+                        }" />
                     </UFormField>
                     <UFormField label="Description" name="description" required class="col-span-2">
                         <UTextarea :rows="5" v-model="state.description" class="w-full" />
