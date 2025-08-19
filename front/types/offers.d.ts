@@ -19,4 +19,5 @@ export interface Offer {
 	status: OfferStatus
 	created_at: string
 	updated_at: string
+	last_quote?: import('./billing').Quote | null
 }

@@ -111,10 +111,10 @@ class Quote(models.Model):
 				Quote.objects.filter(offer=self.offer).order_by("-version").values_list("version", flat=True).first()
 			)
 			self.version = (last_version or 0) + 1
-		# Générer un numéro unique si manquant: Q-YYYY-####
+		# Générer un numéro unique si manquant: D-YYYY-####
 		if not self.number:
 			year = timezone.now().year
-			base = f"Q-{year}-"
+			base = f"D-{year}-"
 			seq = 1
 			while True:
 				candidate = f"{base}{seq:04d}"
