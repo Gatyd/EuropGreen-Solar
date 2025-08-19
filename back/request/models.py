@@ -25,6 +25,8 @@ class ProspectRequest(models.Model):
 	electricity_bill = models.FileField(upload_to="requests/bills/", blank=True, null=True)
 	status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
 	source = models.CharField(max_length=20, choices=Source.choices, default=Source.WEB_FORM)
+	appointment_date = models.DateTimeField(null=True)
+	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="created_requests")
 	assigned_to = models.ForeignKey(
 		settings.AUTH_USER_MODEL,
 		on_delete=models.SET_NULL,

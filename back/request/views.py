@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from authentication.permissions import HasRequestsAccess
 from .models import ProspectRequest
 from .serializers import ProspectRequestSerializer
+from django.db.models import Q
 
 
 @extend_schema_view(
@@ -57,7 +58,7 @@ class ProspectRequestViewSet(
 			qs = ProspectRequest.objects.select_related("assigned_to").filter(email=user.email)
 		else:
 			# Staff non-admin: ne voir que les demandes qui lui sont assignées
-			qs = ProspectRequest.objects.select_related("assigned_to").filter(assigned_to_id=user.id)
+			qs = ProspectRequest.objects.select_related("assigned_to").filter(Q(assigned_to_id=user.id) | Q(created_by_id=user.id))
 
 		# Filtres additionnels
 		status_param = self.request.query_params.get("status")
@@ -77,7 +78,6 @@ class ProspectRequestViewSet(
 
 		search = self.request.query_params.get("search")
 		if search:
-			from django.db.models import Q
 			qs = qs.filter(
 				Q(first_name__icontains=search)
 				| Q(last_name__icontains=search)
@@ -86,3 +86,6 @@ class ProspectRequestViewSet(
 			)
 
 		return qs
+	
+	def perform_create(self, serializer):
+		serializer.save(created_by=self.request.user)
