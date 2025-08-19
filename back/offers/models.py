@@ -21,7 +21,7 @@ class Offer(models.Model):
 	email = models.EmailField()
 	phone = models.CharField(max_length=30)
 	address = models.CharField(max_length=255)
-	housing_type = models.CharField(max_length=100, blank=True)
+	# housing_type = models.CharField(max_length=100, blank=True)
 
 	# Détails projet (placeholder libre pour le moment)
 	project_details = models.TextField(blank=True)

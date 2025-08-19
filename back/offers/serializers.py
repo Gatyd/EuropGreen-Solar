@@ -7,6 +7,6 @@ class OfferSerializer(serializers.ModelSerializer):
 		model = Offer
 		fields = [
 			'id', 'request', 'last_name', 'first_name', 'email', 'phone', 'address',
-			'housing_type', 'project_details', 'status', 'created_at', 'updated_at'
+			'project_details', 'status', 'created_at', 'updated_at'
 		]
 		read_only_fields = ['id', 'request', 'created_at', 'updated_at']
