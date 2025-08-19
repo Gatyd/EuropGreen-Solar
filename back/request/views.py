@@ -6,6 +6,7 @@ from authentication.permissions import HasRequestsAccess
 from .models import ProspectRequest
 from .serializers import ProspectRequestSerializer
 from django.db.models import Q
+from EuropGreenSolar.email_utils import send_mail as send_project_mail
 
 
 @extend_schema_view(
@@ -25,6 +26,26 @@ class ProspectRequestViewSet(
 	serializer_class = ProspectRequestSerializer
 	http_method_names = ["get", "post", "patch"]
 	parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+	def _send_assignment_email(self, instance: ProspectRequest, assignee):
+		"""Envoie l'email d'assignation au chargé d'affaire donné.
+
+		Return: (success: bool, message: str) ou (None, message) si pas d'email.
+		"""
+		if not assignee or not getattr(assignee, 'email', None):
+			return None, "Aucun assignee ou email non défini"
+		context = {
+			"prospect": instance,
+			"assignee": assignee,
+			"created_by": instance.created_by,
+		}
+		subject = f"Nouvelle demande assignée – {instance.last_name} {instance.first_name}"
+		return send_project_mail(
+			template='emails/prospect_assigned.html',
+			context=context,
+			subject=subject,
+			to=assignee.email,
+		)
 
 	def get_permissions(self):
 		"""
@@ -88,4 +109,37 @@ class ProspectRequestViewSet(
 		return qs
 	
 	def perform_create(self, serializer):
-		serializer.save(created_by=self.request.user)
+		instance = serializer.save(created_by=self.request.user)
+		# Envoi d'un email au chargé d'affaire (utilisateur assigné) s'il est défini
+		try:
+			success, msg = self._send_assignment_email(instance, instance.assigned_to)
+			if success is False:
+				print(f"Echec envoi email d'assignation: {msg}")
+		except Exception as e:
+			print(f"Erreur lors de l'envoi de l'email d'assignation: {e}")
+
+	def perform_update(self, serializer):
+		"""Envoie un email si l'utilisateur assigné change (None->valeur ou valeur->autre valeur)."""
+		# Mémoriser l'ancien assigné
+		old_assignee_id = None
+		try:
+			old_assignee_id = (
+				ProspectRequest.objects.filter(pk=serializer.instance.pk)
+				.values_list('assigned_to_id', flat=True)
+				.first()
+			)
+		except Exception as e:
+			print(f"Impossible de récupérer l'ancien assigné: {e}")
+
+		instance = serializer.save()
+
+		# Comparer et envoyer si nécessaire
+		new_assignee = instance.assigned_to
+		new_assignee_id = new_assignee.id if new_assignee else None
+		if new_assignee_id and new_assignee_id != old_assignee_id:
+			try:
+				success, msg = self._send_assignment_email(instance, new_assignee)
+				if success is False:
+					print(f"Echec envoi email d'assignation (update): {msg}")
+			except Exception as e:
+				print(f"Erreur lors de l'envoi de l'email d'assignation (update): {e}")

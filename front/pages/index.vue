@@ -19,12 +19,7 @@ const submitPublic = async (form: FormData) => {
 </script>
 
 <template>
-    <div class="container mx-auto py-10">
-        <UCard class="max-w-3xl mx-auto">
-            <template #header>
-                <h1 class="text-2xl font-semibold">Demande / Prospect</h1>
-            </template>
-            <RequestForm @submit="submitPublic" />
-        </UCard>
+    <div class="m-20">
+        <Logo />
     </div>
 </template>

@@ -1,0 +1,76 @@
+{% extends 'emails/base.html' %}
+{% load static %}
+
+{% block title %}Nouvelle demande assignée{% endblock %}
+
+{% block content %}
+  <h1 style="color:#111827; font-size:20px; margin:0 0 16px 0;">Nouvelle demande assignée</h1>
+  <p style="color:#374151; font-size:16px; line-height:1.6; margin:0 0 12px 0;">
+    Bonjour {{ assignee.first_name }} {{ assignee.last_name }},
+  </p>
+  <p style="color:#374151; font-size:16px; line-height:1.6; margin:0 0 16px 0;">
+    Une nouvelle demande vous a été assignée en tant que chargé d'affaire.
+  </p>
+
+  <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px; background:#f9fafb; margin:16px 0;">
+    <p style="color:#111827; font-weight:600; font-size:14px; margin:0 0 8px 0;">Détails du prospect</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+      <tr>
+        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Nom</td>
+        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.last_name }} {{ prospect.first_name }}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Email</td>
+        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.email }}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Téléphone</td>
+        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.phone }}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Adresse</td>
+        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.address }}</td>
+      </tr>
+      {% if prospect.housing_type %}
+      <tr>
+        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Type d'habitat</td>
+        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.housing_type }}</td>
+      </tr>
+      {% endif %}
+      {% if prospect.appointment_date %}
+      <tr>
+        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Rendez-vous</td>
+        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.appointment_date|date:'d/m/Y H:i' }}</td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Statut</td>
+        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.get_status_display }}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Source</td>
+        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.get_source_display }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <p style="color:#374151; font-size:14px; line-height:1.6; margin:16px 0 0 0;">
+    Merci de prendre en charge cette demande dans les meilleurs délais depuis l’interface d’administration.
+  </p>
+{% endblock %}
+
+{% block footer_content %}
+  <div style="margin-bottom: 16px;">
+    <p style="color: #1f2937; font-weight: 500; font-size: 14px; margin-bottom: 4px; margin-top: 0;">
+      EuropGreen Solar
+    </p>
+    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+      Assignation automatique de demande • Ne pas répondre à cet email
+    </p>
+  </div>
+  <div style="border-top: 1px solid #d1d5db; padding-top: 16px;">
+    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+      Vous avez reçu cet email car vous êtes le chargé d'affaire assigné à cette demande.
+    </p>
+  </div>
+{% endblock %}

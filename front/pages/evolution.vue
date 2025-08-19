@@ -6,6 +6,26 @@ definePageMeta({
 
 const versions = [
     {
+        title: "Correction dans le module 'Demandes' (Gestion des Prospects)",
+        description: "",
+        date: '2025-08-18',
+        features: [
+            {
+                title: "Filtrage des prospects par créateur",
+                description: "Un utilisateur qui à accès aux demandes voit uniquement les demandes qu'il a créées.",
+                badge: []
+            },
+            {
+                title: "Envoi de mail à l'assignation",
+                description: "L'utilisateur assigné à une demande reçoit le mail automatiquement à l'assignation",
+            },
+            {
+                title: "Droit administrateur sur formulaire de prospect",
+                description: 'Seul l\'administrateur peut modifier assigner un utilisateur à un prospect',
+            }
+        ],
+    },
+    {
         title: "Module 'Demandes' (Gestion des Prospects)",
         description: "",
         date: '2025-08-16',
