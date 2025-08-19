@@ -13,7 +13,15 @@ export interface ProspectRequest {
   electricity_bill?: string; // URL du fichier
   status: ProspectStatus;
   source: ProspectSource;
+  appointment_date?: string;
   assigned_to?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    role: string;
+  } | null;
+  created_by?: {
     id: string;
     first_name: string;
     last_name: string;
@@ -35,6 +43,7 @@ export interface ProspectRequestPayload {
   electricity_bill?: File | null;
   status?: ProspectStatus;
   source: ProspectSource;
+  appointment_date?: string | null;
   assigned_to_id?: string;
 //   notes?: string;
 }

@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import type { ProspectSource, ProspectRequestPayload, ProspectRequest } from '~/types/requests'
 
-const props = defineProps<{ modelValue: boolean; source: ProspectSource; payload?: ProspectRequest | null }>()
+const props = defineProps<{ modelValue: boolean; payload?: ProspectRequest | null }>()
 const emit = defineEmits(['update:modelValue', 'submit'])
 
 const onSubmit = (form: FormData) => {
-	form.set('source', props.source)
 	emit('submit', form)
 }
 </script>

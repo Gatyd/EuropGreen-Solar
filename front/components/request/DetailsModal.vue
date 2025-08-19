@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth';
 import type { ProspectRequest, ProspectStatus, ProspectSource } from '~/types/requests'
 
 const props = defineProps<{ modelValue: boolean; item: ProspectRequest | null }>()
 const emit = defineEmits(['update:modelValue', 'edit'])
 const close = () => emit('update:modelValue', false)
+const auth = useAuthStore()
 
 // Fonction pour traduire les statuts
 const getStatusLabel = (status: ProspectStatus): string => {
@@ -69,6 +71,14 @@ const getSourceLabel = (source: ProspectSource): string => {
                         <div class="text-sm text-gray-500">Facture d'électricité</div>
                         <UButton as="a" :href="item.electricity_bill" target="_blank" icon="i-heroicons-document"
                             variant="soft" color="primary" label="Voir la facture" />
+                    </div>
+                    <div v-if="item.appointment_date">
+                        <div class="text-sm text-blue-600">Rendez-vous</div>
+                        <div class="font-medium">{{ new Date(item.appointment_date).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) }}</div>
+                    </div>
+                    <div v-if="item.created_by && auth.user?.is_superuser">
+                        <div class="text-sm text-gray-500">Créée par</div>
+                        <div class="font-medium">{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>
                     </div>
                 </div>
                 <div class="flex items-center justify-between pt-4 border-t mt-4">

@@ -18,6 +18,14 @@ const auth = useAuthStore()
         <div class="text-xs text-gray-400 truncate">
             {{ item.address }}
         </div>
+        <div v-if="item.appointment_date" class="text-xs text-blue-600 mt-1">
+            <span class="font-medium">Rendez-vous :</span>
+            {{ new Date(item.appointment_date).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) }}
+        </div>
+        <!-- <div v-if="item.created_by" class="text-xs text-gray-500 mt-1">
+            <span class="font-medium">Créée par :</span>
+            {{ item.created_by.first_name }} {{ item.created_by.last_name }}
+        </div> -->
         <div v-if="auth.user?.is_superuser && item.assigned_to" class="mt-2 pt-2 border-t text-xs text-gray-500">
             Chargé d'affaire: {{ item.assigned_to.first_name }} {{ item.assigned_to.last_name }}
         </div>

@@ -2,7 +2,6 @@
 import type { ProspectRequest, ProspectStatus } from '~/types/requests'
 import DetailsModal from '@/components/request/DetailsModal.vue'
 import apiRequest from '~/utils/apiRequest'
-import type { ProspectRequestPayload } from '~/types/requests'
 
 definePageMeta({ layout: 'default' })
 
@@ -158,7 +157,7 @@ function openEditFromDetails() {
         </UCard>
 
         <ClientOnly>
-            <RequestModal :model-value="creating" :payload="selected" source="call_center"
+            <RequestModal :model-value="creating" :payload="selected"
                 @update:model-value="v => creating = v" @submit="submitFromModal" />
         </ClientOnly>
 
