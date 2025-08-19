@@ -115,9 +115,15 @@ function openDetails(item: any) {
     detailsOpen.value = true
 }
 
-function convertToOffer(item: ProspectRequest) {
-    // TODO: brancher vers le flux d’offre
-    toast.add({ title: 'Conversion en offre', description: `${item.last_name} ${item.first_name}`, icon: 'i-heroicons-arrow-right-circle', color: 'primary' })
+async function convertToOffer(item: ProspectRequest) {
+    const res = await apiRequest<any>(
+        () => $fetch(`/api/requests/${item.id}/convert_to_offer/`, { method: 'POST', credentials: 'include' }),
+        toast
+    )
+    if (res) {
+        toast.add({ title: 'Convertie en offre', description: `${item.last_name} ${item.first_name}`, icon: 'i-heroicons-check-circle', color: 'success' })
+        await fetchAll()
+    }
 }
 
 function openEditFromDetails() {
