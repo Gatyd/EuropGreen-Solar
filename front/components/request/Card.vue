@@ -5,6 +5,22 @@ import { useAuthStore } from '~/store/auth'
 const props = defineProps<{ item: ProspectRequest }>()
 const emit = defineEmits(['convert'])
 const auth = useAuthStore()
+const loading = ref(false)
+
+const convertToOffer = async () => {
+    loading.value = true
+    const toast = useToast()
+    const res = await apiRequest<any>(
+        () => $fetch(`/api/requests/${props.item.id}/convert_to_offer/`, { method: 'POST', credentials: 'include' }),
+        toast
+    )
+    if (res) {
+        toast.add({ title: 'Convertie en offre', description: `${props.item.last_name} ${props.item.first_name}`, icon: 'i-heroicons-check-circle', color: 'success' })
+        emit('convert', props.item)
+    }
+    loading.value = false
+}
+
 </script>
 
 <template>
@@ -30,7 +46,7 @@ const auth = useAuthStore()
             Chargé d'affaire: {{ item.assigned_to.first_name }} {{ item.assigned_to.last_name }}
         </div>
         <div v-if="item.status === 'closed'" class="mt-2 flex justify-end">
-            <UButton size="xs" color="primary" variant="solid" icon="i-heroicons-arrow-right-circle" label="Transformer en offre" @click.stop="emit('convert', item)" />
+            <UButton size="xs" color="primary" variant="solid" icon="i-heroicons-arrow-right-circle" label="Transformer en offre" @click.stop="convertToOffer" />
         </div>
     </UCard>
 </template>

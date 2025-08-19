@@ -92,17 +92,8 @@ const onDrop = async (payload: { to: ProspectStatus, item: ProspectRequest }) =>
 }
 
 const submitFromModal = async (form: FormData) => {
-    const res = await apiRequest<ProspectRequest>(
-        () => $fetch(`/api/requests/${selected.value ? `${selected.value.id}/` : ''}`,
-            { method: selected.value ? 'PATCH' : 'POST', body: form, credentials: 'include' }
-        ),
-        toast
-    )
-    if (res) {
-        toast.add({ title: `Demande ${selected.value ? 'modifiée' : 'créée'} avec succès`, color: 'success', icon: 'i-heroicons-check-circle' })
-        creating.value = false
-        await fetchAll()
-    }
+    creating.value = false
+    await fetchAll()
 }
 
 const newRequest = () => {
@@ -116,14 +107,7 @@ function openDetails(item: any) {
 }
 
 async function convertToOffer(item: ProspectRequest) {
-    const res = await apiRequest<any>(
-        () => $fetch(`/api/requests/${item.id}/convert_to_offer/`, { method: 'POST', credentials: 'include' }),
-        toast
-    )
-    if (res) {
-        toast.add({ title: 'Convertie en offre', description: `${item.last_name} ${item.first_name}`, icon: 'i-heroicons-check-circle', color: 'success' })
-        await fetchAll()
-    }
+    navigateTo('/home/offers')
 }
 
 function openEditFromDetails() {
@@ -163,8 +147,8 @@ function openEditFromDetails() {
         </UCard>
 
         <ClientOnly>
-            <RequestModal :model-value="creating" :payload="selected"
-                @update:model-value="v => creating = v" @submit="submitFromModal" />
+            <RequestModal :model-value="creating" :payload="selected" @update:model-value="v => creating = v"
+                @submit="submitFromModal" />
         </ClientOnly>
 
         <div class="flex gap-4 overflow-x-auto p-4">
