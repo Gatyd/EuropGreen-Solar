@@ -7,19 +7,7 @@ from decimal import Decimal
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = [
-            "id",
-            "sku",
-            "name",
-            "type",
-            "description",
-            "unit",
-            "unit_price",
-            "cost_price",
-            "is_active",
-            "created_at",
-            "updated_at",
-        ]
+        fields = ["id", "name", "type", "description", "unit_price", "cost_price", "is_active", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
@@ -28,22 +16,8 @@ class QuoteLineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QuoteLine
-        fields = [
-            "id",
-            "quote",
-            "source_product",
-            "product_type",
-            "name",
-            "description",
-            "unit",
-            "unit_price",
-            "cost_price",
-            "quantity",
-            "discount_rate",
-            "line_total",
-            "position",
-            "created_at",
-            "updated_at",
+        fields = ["id", "quote", "source_product", "product_type", "name", "description", "unit_price", "cost_price",
+            "quantity", "discount_rate", "line_total", "position", "created_at", "updated_at",
         ]
         read_only_fields = ["id", "line_total", "created_at", "updated_at"]
 
@@ -51,17 +25,8 @@ class QuoteLineSerializer(serializers.ModelSerializer):
 class QuoteSignatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuoteSignature
-        fields = [
-            "id",
-            "quote",
-            "signer_name",
-            "signer_email",
-            "ip_address",
-            "user_agent",
-            "signed_at",
-            "signature_image",
-            "signature_data",
-            "created_at",
+        fields = ["id", "quote", "signer_name", "signer_email", "ip_address", "user_agent", "signed_at",
+            "signature_image", "signature_data", "created_at",
         ]
         read_only_fields = ["id", "signed_at", "created_at"]
 
@@ -71,37 +36,11 @@ class QuoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quote
-        fields = [
-            "id",
-            "number",
-            "offer",
-            "version",
-            "predecessor",
-            "status",
-            "title",
-            "notes",
-            "currency",
-            "valid_until",
-            "subtotal",
-            "discount_amount",
-            "tax_rate",
-            "total",
-            "created_by",
-            "updated_by",
-            "created_at",
-            "updated_at",
-            "lines",
+        fields = ["id", "number", "offer", "version", "predecessor", "status", "title", "notes", "currency",
+            "valid_until", "subtotal", "discount_amount", "tax_rate", "total", "created_by", "updated_by",
+            "created_at", "updated_at", "lines",
         ]
-        read_only_fields = [
-            "id",
-            "number",
-            "version",
-            "subtotal",
-            "discount_amount",
-            "total",
-            "created_at",
-            "updated_at",
-        ]
+        read_only_fields = ["id", "number", "version", "subtotal", "discount_amount", "total", "created_at", "updated_at",]
 
     def _recalculate(self, quote: Quote):
         subtotal = sum((line.line_total for line in quote.lines.all()), Decimal("0"))

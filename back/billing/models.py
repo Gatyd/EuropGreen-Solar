@@ -15,11 +15,11 @@ class Product(models.Model):
 		OTHER = "other", "Autre"
 
 	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-	sku = models.CharField(max_length=64, unique=True)
+	# sku = models.CharField(max_length=64, unique=True)
 	name = models.CharField(max_length=255)
 	type = models.CharField(max_length=20, choices=Type.choices)
 	description = models.TextField(blank=True)
-	unit = models.CharField(max_length=32, default="unité")
+	# unit = models.CharField(max_length=32, default="unité")
 	unit_price = models.DecimalField(max_digits=12, decimal_places=2)
 	cost_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 	is_active = models.BooleanField(default=True)
@@ -135,7 +135,7 @@ class QuoteLine(models.Model):
 	product_type = models.CharField(max_length=20, choices=Product.Type.choices)
 	name = models.CharField(max_length=255)
 	description = models.TextField(blank=True)
-	unit = models.CharField(max_length=32, default="unité")
+	# unit = models.CharField(max_length=32, default="unité")
 	unit_price = models.DecimalField(max_digits=12, decimal_places=2)
 	cost_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 	quantity = models.DecimalField(max_digits=12, decimal_places=2, default=1)

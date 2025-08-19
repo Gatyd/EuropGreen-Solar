@@ -4,9 +4,9 @@ from .models import Product, Quote, QuoteLine, QuoteSignature
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-	list_display = ("sku", "name", "type", "unit_price", "is_active")
+	list_display = ("name", "type", "unit_price", "is_active")
 	list_filter = ("type", "is_active")
-	search_fields = ("sku", "name")
+	search_fields = ("name",)
 
 
 class QuoteLineInline(admin.TabularInline):

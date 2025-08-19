@@ -20,6 +20,15 @@ const links = [
         },
     },
     {
+        id: "products",
+        label: "Produits / Services",
+        icon: "i-heroicons-cube",
+        to: "/home/products",
+        tooltip: {
+            text: "Produits / Services",
+        },
+    },
+    {
         id: "requests",
         label: "Demandes",
         icon: "i-heroicons-document-text",
