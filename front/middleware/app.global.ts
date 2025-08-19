@@ -11,7 +11,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     if (user.value.is_superuser) {
       return false;
     }
-    return to.path.includes("/requests") && !user.value?.useraccess?.requests;
+    return (
+      (to.path.includes("/requests") && !user.value?.useraccess?.requests) ||
+      (to.path.includes("/offers") && !user.value?.useraccess?.offers)
+    );
   }
 
   // Routes publiques qui ne nécessitent pas d'authentification
@@ -23,7 +26,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "reset-password",
     "terms",
     "privacy",
-    "evolution"
+    "evolution",
   ];
 
   // Si c'est une route publique, on laisse passer

@@ -29,6 +29,15 @@ const links = [
         },
     },
     {
+        id: "offers",
+        label: "Offres",
+        icon: "i-heroicons-document-check",
+        to: "/home/offers",
+        tooltip: {
+            text: "Offres",
+        },
+    },
+    {
         id: "users",
         label: "Utilisateurs",
         icon: "i-heroicons-users",
@@ -70,6 +79,7 @@ const accessLink = links.map((link: any) => {
     //     if (link.id === "home") return null
 
         if ((link.id === "requests") && !useraccess?.requests) return null
+        if ((link.id === "offers") && !useraccess?.offers) return null
     }
 
     return link;
