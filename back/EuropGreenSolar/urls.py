@@ -34,6 +34,7 @@ urlpatterns = [
     path('', include('users.urls')),
     path('', include('request.urls')),
     path('', include('offers.urls')),
+    path('', include('billing.urls')),
     path('auth/', include('authentication.urls')),
 ]
 
