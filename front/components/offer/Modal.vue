@@ -59,30 +59,31 @@ const submit = async () => {
     <UModal :open="modelValue" @update:open="v => emit('update:modelValue', v)" title="Détails de l'offre"
         :ui="{ title: 'text-xl', content: 'max-w-2xl' }">
         <template #body>
-            <div class="grid grid-cols-2 gap-4">
-                <UFormField label="Nom">
+            <UForm :state="state" :validate="validate" @submit="submit" class="grid grid-cols-2 gap-4">
+                <UFormField label="Nom" name="last_name" required>
                     <UInput v-model="state.last_name" class="w-full" />
                 </UFormField>
-                <UFormField label="Prénom">
+                <UFormField label="Prénom" name="first_name" required>
                     <UInput v-model="state.first_name" class="w-full" />
                 </UFormField>
-                <UFormField label="Email">
+                <UFormField label="Email" name="email" required>
                     <UInput v-model="state.email" type="email" class="w-full" />
                 </UFormField>
-                <UFormField label="Téléphone">
+                <UFormField label="Téléphone" name="phone" required>
                     <UInput v-model="state.phone" class="w-full" />
                 </UFormField>
-                <UFormField label="Adresse" class="col-span-2">
+                <UFormField label="Adresse" class="col-span-2" name="address" required>
                     <UInput v-model="state.address" class="w-full" />
                 </UFormField>
-                <UFormField label="Détails du projet" class="col-span-2">
+                <UFormField label="Détails du projet" class="col-span-2" name="project_details" required>
                     <UTextarea v-model="state.project_details" :rows="5" class="w-full"
                         placeholder="Puissance, matériel, remarques..." />
                 </UFormField>
-            </div>
-            <div class="flex justify-end mt-2">
-                <UButton type="submit" :loading="loading" color="primary" icon="i-heroicons-check-circle" label="Enregistrer" />
-            </div>
+                <div class="col-span-2 flex justify-end mt-2">
+                    <UButton type="submit" :loading="loading" color="primary" icon="i-heroicons-check-circle"
+                        label="Enregistrer" />
+                </div>
+            </UForm>
         </template>
     </UModal>
 </template>
