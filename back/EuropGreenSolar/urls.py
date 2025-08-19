@@ -33,6 +33,7 @@ urlpatterns = [
     # Users URLs
     path('', include('users.urls')),
     path('', include('request.urls')),
+    path('', include('offers.urls')),
     path('auth/', include('authentication.urls')),
 ]
 
