@@ -7,6 +7,12 @@ from .models import ProspectRequest
 from .serializers import ProspectRequestSerializer
 from django.db.models import Q
 from EuropGreenSolar.email_utils import send_mail as send_project_mail
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils import timezone
+from offers.models import Offer
+from offers.serializers import OfferSerializer
 
 
 @extend_schema_view(
@@ -26,6 +32,7 @@ class ProspectRequestViewSet(
 	serializer_class = ProspectRequestSerializer
 	http_method_names = ["get", "post", "patch"]
 	parser_classes = [MultiPartParser, FormParser, JSONParser]
+	permission_classes = [IsAuthenticated, HasRequestsAccess]
 
 	def _send_assignment_email(self, instance: ProspectRequest, assignee):
 		"""Envoie l'email d'assignation au chargé d'affaire donné.
@@ -47,19 +54,6 @@ class ProspectRequestViewSet(
 			to=assignee.email,
 		)
 
-	def get_permissions(self):
-		"""
-		Permissions personnalisées selon l'action :
-		- create: tout le monde peut créer une demande (pas de permission spéciale)
-		- autres actions: nécessite HasRequestsAccess
-		"""
-		if self.action == 'create':
-			permission_classes = []  # Pas de permission requise pour la création
-		else:
-			permission_classes = [IsAuthenticated, HasRequestsAccess]
-		
-		return [permission() for permission in permission_classes]
-
 	def get_queryset(self):
 		# Pour la création, pas besoin de filtrer le queryset
 		if self.action == 'create':
@@ -73,13 +67,13 @@ class ProspectRequestViewSet(
 		
 		# Portée de base selon le rôle
 		if user.is_superuser:
-			qs = ProspectRequest.objects.select_related("assigned_to").all()
+			qs = ProspectRequest.objects.select_related("assigned_to").filter(converted_to_offer_at__isnull=True)
 		elif not user.is_staff:
 			# Utilisateur non staff: ne voir que ses propres demandes via email
-			qs = ProspectRequest.objects.select_related("assigned_to").filter(email=user.email)
+			qs = ProspectRequest.objects.select_related("assigned_to").filter(email=user.email, converted_to_offer_at__isnull=True)
 		else:
 			# Staff non-admin: ne voir que les demandes qui lui sont assignées
-			qs = ProspectRequest.objects.select_related("assigned_to").filter(Q(assigned_to_id=user.id) | Q(created_by_id=user.id))
+			qs = ProspectRequest.objects.select_related("assigned_to").filter(Q(assigned_to_id=user.id) | Q(created_by_id=user.id), converted_to_offer_at__isnull=True)
 
 		# Filtres additionnels
 		status_param = self.request.query_params.get("status")
@@ -106,7 +100,8 @@ class ProspectRequestViewSet(
 				| Q(phone__icontains=search)
 			)
 
-		return qs
+		# Exclure les demandes déjà converties en offre
+		return qs.filter(converted_to_offer_at__isnull=True)
 	
 	def perform_create(self, serializer):
 		instance = serializer.save(created_by=self.request.user)
@@ -143,3 +138,32 @@ class ProspectRequestViewSet(
 					print(f"Echec envoi email d'assignation (update): {msg}")
 			except Exception as e:
 				print(f"Erreur lors de l'envoi de l'email d'assignation (update): {e}")
+
+	@action(detail=True, methods=['post'], url_path='convert_to_offer')
+	def convert_to_offer(self, request, pk=None):
+		"""Convertit une demande en offre: marque la demande, crée l'offre et la lie."""
+		try:
+			instance: ProspectRequest = self.get_object()
+			if instance.converted_to_offer_at:
+				return Response({"detail": "Cette demande a déjà été convertie en offre."}, status=status.HTTP_400_BAD_REQUEST)
+
+			# Créer l'offre avec les données de la demande
+			offer = Offer.objects.create(
+				request=instance,
+				last_name=instance.last_name,
+				first_name=instance.first_name,
+				email=instance.email,
+				phone=instance.phone,
+				address=instance.address,
+				housing_type=instance.housing_type or "",
+				# project_details libre pour le moment
+			)
+
+			# Marquer la demande comme convertie
+			instance.converted_to_offer_at = timezone.now()
+			instance.save(update_fields=["converted_to_offer_at", "updated_at"])
+
+			data = OfferSerializer(offer).data
+			return Response(data, status=status.HTTP_201_CREATED)
+		except Exception as e:
+			return Response({"detail": f"Erreur de conversion: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
