@@ -58,11 +58,17 @@ const createQuote = () => {
     quoteModal.value = true
 }
 
+function onQuoteCreated(_q: any) {
+    // Fermer le modal de devis et rafraîchir l'offre côté parent
+    quoteModal.value = false
+    emit('submit')
+}
+
 </script>
 
 <template>
     <Teleport to="body">
-        <QuoteModal v-if="quoteModal" v-model="quoteModal" :offer="offer" />
+        <QuoteModal v-if="quoteModal" v-model="quoteModal" :offer="offer" @created="onQuoteCreated" />
     </Teleport>
     <UModal :open="modelValue" @update:open="v => emit('update:modelValue', v)" title="Détails de l'offre"
         :ui="{ title: 'text-xl', content: 'max-w-2xl' }">

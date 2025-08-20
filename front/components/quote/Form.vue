@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Offer } from '~/types/offers'
 import type { Product } from '~/types/billing'
+import apiRequest from '~/utils/apiRequest'
 
 const props = defineProps<{
     offer: Offer
@@ -13,6 +14,8 @@ const props = defineProps<{
             name: string
             description: string
             unit_price: number
+        cost_price?: number
+        product_type?: string
             quantity: number
             discount_rate: number
         }>
@@ -69,11 +72,13 @@ function addLine() {
     if (errs.length) return
     const p = products.value.find(p => p.id === entry.productId)
     if (!p) return
-    props.draft.lines.push({
+            props.draft.lines.push({
         productId: p.id,
         name: p.name,
         description: p.description,
-        unit_price: parseFloat(p.unit_price),
+                unit_price: parseFloat(p.unit_price),
+                cost_price: parseFloat(p.cost_price),
+            product_type: p.type,
         quantity: entry.quantity,
         discount_rate: entry.discount_rate,
     })
@@ -99,20 +104,45 @@ const validate = (state: any) => {
     if (!state.valid_until) {
         errors.push({ name: 'valid_until', message: "La date de validité est requise." })
     }
-    if (!props.draft.lines.length) {
-        errors.push({ name: 'lines', message: "Ajoutez au moins une ligne au devis." })
-        toast.add({ title: 'Erreur', description: "Ajoutez au moins une ligne au devis.", color: 'error', icon: 'i-heroicons-exclamation-triangle' })
-    }
     return errors
 }
 
-function onSubmit() {
-    // Simule l'envoi: journalise le brouillon et affiche un toast
-    // Ici on pourrait mapper vers le payload API attendu pour /api/quotes
-    // Pour l'instant, simple feedback
-    // eslint-disable-next-line no-console
-    console.log('Draft quote', JSON.parse(JSON.stringify(props.draft)))
-    toast.add({ title: 'Brouillon prêt', description: 'Le devis est cohérent et prêt à être sauvegardé.', color: 'primary', icon: 'i-heroicons-check-circle' })
+const emit = defineEmits<{
+    (e: 'created', quote: any): void
+}>()
+
+async function onSubmit() {
+    if (!props.draft.lines.length) {
+        toast.add({ title: 'Erreur', description: "Ajoutez au moins une ligne au devis.", color: 'error', icon: 'i-heroicons-exclamation-triangle' })
+        return
+    }
+    // Construire payload pour API
+    const payload = {
+        offer: props.offer.id,
+        title: props.draft.title,
+        valid_until: props.draft.valid_until,
+        tax_rate: props.draft.tax_rate,
+        lines: props.draft.lines.map((l, idx) => ({
+            position: idx,
+            product_type: l.product_type,
+            name: l.name,
+            description: l.description,
+            unit_price: l.unit_price,
+            cost_price: l.cost_price ?? 0,
+            quantity: l.quantity,
+            discount_rate: l.discount_rate,
+        })),
+    }
+    loading.value = true
+    const res = await apiRequest<any>(
+        () => $fetch('/api/quotes/', { method: 'POST', body: payload, credentials: 'include' }),
+        toast
+    )
+    loading.value = false
+    if (res) {
+        toast.add({ title: 'Devis créé', color: 'success', icon: 'i-heroicons-check-circle' })
+        emit('created', res)
+    }
 }
 
 </script>
