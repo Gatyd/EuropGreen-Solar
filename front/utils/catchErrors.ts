@@ -6,6 +6,7 @@ export default function catchErrors(err: any, toast: any) {
     if (err.response) {
       const status = err.response.status;
       if (status >= 500) {
+        console.log(err.response)
         toast.add({
           icon: "i-heroicons-exclamation-circle-20-solid",
           title: defaultErrMsg,

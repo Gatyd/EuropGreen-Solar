@@ -3,7 +3,7 @@ import type { Quote } from '~/types/billing'
 import Preview from '~/components/quote/Preview.vue'
 
 definePageMeta({
-  layout: 'public',
+  layout: false,
   middleware: []
 })
 
@@ -51,17 +51,19 @@ const draft = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 py-6">
+  <div class="min-h-screen py-6">
     <div v-if="pending" class="text-center text-gray-500">Chargement…</div>
     <div v-else-if="error" class="text-center text-red-600">{{ error }}</div>
-    <Preview v-else-if="quote && offer" :draft="draft" :offer="offer" class="mx-auto" />
+    <Preview v-else-if="quote && offer" :draft="draft" :offer="offer" :quote="quote" class="mx-auto" />
   </div>
-  
+
 </template>
 
 <style>
 /* Assure un fond blanc pour l'impression */
 @media print {
-  body { background: white; }
+  body {
+    background: white;
+  }
 }
 </style>

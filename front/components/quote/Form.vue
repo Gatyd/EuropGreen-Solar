@@ -14,8 +14,8 @@ const props = defineProps<{
             name: string
             description: string
             unit_price: number
-        cost_price?: number
-        product_type?: string
+            cost_price?: number
+            product_type?: string
             quantity: number
             discount_rate: number
         }>
@@ -26,6 +26,7 @@ const props = defineProps<{
 const products = ref<Product[]>([])
 const productModal = ref(false)
 const loading = ref(false)
+const loadingReply = ref(false)
 const toast = useToast()
 
 const selectNewProduct = (product: Product) => {
@@ -73,13 +74,13 @@ function addLine() {
     if (errs.length) return
     const p = products.value.find(p => p.id === entry.productId)
     if (!p) return
-            props.draft.lines.push({
+    props.draft.lines.push({
         productId: p.id,
         name: p.name,
         description: p.description,
-                unit_price: parseFloat(p.unit_price),
-                cost_price: parseFloat(p.cost_price),
-            product_type: p.type,
+        unit_price: parseFloat(p.unit_price),
+        cost_price: parseFloat(p.cost_price),
+        product_type: p.type,
         quantity: entry.quantity,
         discount_rate: entry.discount_rate,
     })
@@ -104,6 +105,10 @@ const validate = (state: any) => {
     // Exemple: titre facultatif, mais on peut ajouter une règle si besoin
     if (!state.valid_until) {
         errors.push({ name: 'valid_until', message: "La date de validité est requise." })
+    }
+    // Si on est en négociation (pending), exiger une réponse
+    if (props.quote && props.quote.status === 'pending' && !reply.value.trim()) {
+        errors.push({ name: 'reply', message: "Veuillez entrer une réponse à la négociation." })
     }
     return errors
 }
@@ -134,6 +139,26 @@ async function onSubmit() {
             discount_rate: l.discount_rate,
         })),
     }
+
+    // Si on est en phase de négociation ou après envoi (sent), la soumission crée une nouvelle version et envoie la réponse
+    if (props.quote && (props.quote.status === 'pending' || props.quote.status === 'sent')) {
+        if (!reply.value.trim()) {
+            toast.add({ title: 'Réponse requise', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
+            return
+        }
+        loading.value = true
+        const res = await apiRequest<any>(() => $fetch(`/api/quotes/${props.quote!.id}/reply-new-version/`, {
+            method: 'POST', body: { ...payload, reply: reply.value }, credentials: 'include'
+        }), toast)
+        loading.value = false
+        if (res) {
+            toast.add({ title: 'Nouvelle version envoyée', color: 'success', icon: 'i-heroicons-check-circle' })
+            emit('created', res)
+        }
+        return
+    }
+
+    // Sinon, logique standard (création ou patch du brouillon)
     loading.value = true
     const isEdit = !!props.quote
     const url = isEdit ? `/api/quotes/${props.quote.id}/` : '/api/quotes/'
@@ -142,6 +167,43 @@ async function onSubmit() {
     loading.value = false
     if (res) {
         toast.add({ title: isEdit ? 'Brouillon mis à jour' : 'Devis créé', color: 'success', icon: 'i-heroicons-check-circle' })
+        emit('created', res)
+    }
+}
+
+// Gestion des réponses de négociation
+const reply = ref('')
+
+async function submitReplyCurrent() {
+    if (!props.quote) return
+    if (!reply.value.trim()) {
+        toast.add({ title: 'Réponse requise', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
+        return
+    }
+    loadingReply.value = true
+    const res = await apiRequest<any>(() => $fetch(`/api/quotes/${props.quote.id}/reply/`, {
+        method: 'POST', body: { reply: reply.value }, credentials: 'include'
+    }), toast)
+    loadingReply.value = false
+    if (res) {
+        toast.add({ title: 'Réponse envoyée', color: 'success', icon: 'i-heroicons-check-circle' })
+        emit('created', res)
+    }
+}
+
+async function submitReplyNewVersion() {
+    if (!props.quote) return
+    if (!reply.value.trim()) {
+        toast.add({ title: 'Réponse requise', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
+        return
+    }
+    loadingReply.value = true
+    const res = await apiRequest<any>(() => $fetch(`/api/quotes/${props.quote.id}/reply-new-version/`, {
+        method: 'POST', body: { reply: reply.value }, credentials: 'include'
+    }), toast)
+    loadingReply.value = false
+    if (res) {
+        toast.add({ title: 'Nouvelle version envoyée', color: 'success', icon: 'i-heroicons-check-circle' })
         emit('created', res)
     }
 }
@@ -166,6 +228,21 @@ async function onSubmit() {
                     </UFormField>
                     <UFormField label="Valide jusqu'au" name="valid_until" required>
                         <UInput v-model="props.draft.valid_until" class="w-full" type="date" />
+                    </UFormField>
+                </div>
+            </UCard>
+
+            <!-- Section négociations (si status pending) -->
+            <UCard v-if="props.quote && props.quote.status === 'pending'">
+                <template #header>
+                    <div class="font-semibold">Négociations</div>
+                </template>
+                <div class="grid grid-cols-2 gap-4">
+                    <UFormField name="notes" label="Message du client">
+                        <UTextarea class="w-full" :model-value="props.quote.notes || ''" :rows="6" readonly disabled />
+                    </UFormField>
+                    <UFormField name="reply" label="Votre réponse" required>
+                        <UTextarea class="w-full" v-model="reply" :rows="6" placeholder="Saisissez votre réponse…" />
                     </UFormField>
                 </div>
             </UCard>
@@ -244,9 +321,13 @@ async function onSubmit() {
                     </div>
                 </div>
                 <template #footer>
-                    <div class="flex justify-end gap-2">
+                    <div class="flex flex-col sm:flex-row justify-end gap-2">
+                        <UButton
+                            v-if="quote && (quote.status === 'pending' || quote.status === 'sent')"
+                            color="primary" variant="soft" :loading="loadingReply" icon="i-heroicons-paper-airplane"
+                            @click="submitReplyCurrent" label="Envoyer la réponse (version actuelle)" />
                         <UButton type="submit" color="primary" :loading="loading" icon="i-heroicons-check-circle"
-                            label="Valider le brouillon" />
+                            :label="quote ? quote.status === 'pending' ? 'Envoyer (nouvelle version)' : 'Modifier le brouillon' : 'Valider le brouillon'" />
                     </div>
                 </template>
             </UCard>

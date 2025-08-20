@@ -57,6 +57,7 @@ class QuoteSerializer(serializers.ModelSerializer):
             "created_at", "updated_at", "lines",
         ]
         read_only_fields = ["id", "number", "version", "subtotal", "discount_amount", "total", "pdf", "created_at", "updated_at",]
+    # Aucun override requis; 'offer' reste obligatoire pour les créations classiques
 
     def get_pdf(self, obj: Quote):
         if not getattr(obj, 'pdf', None):
@@ -122,3 +123,13 @@ class QuoteNegotiationSerializer(serializers.Serializer):
         quote.offer.save(update_fields=['status'])
         quote.save(update_fields=['notes'])
         return quote
+
+class QuoteNegotiationReplySerializer(serializers.Serializer):
+    reply = serializers.CharField(allow_blank=False, allow_null=False, trim_whitespace=True)
+
+    def validate_reply(self, value: str):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Réponse requise")
+        if len(value) > 5000:
+            raise serializers.ValidationError("Réponse trop longue")
+        return value.strip()

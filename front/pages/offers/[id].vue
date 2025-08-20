@@ -121,7 +121,7 @@ const handleNegotiationSubmit = async (message: string) => {
                                 </template>
                                 <div v-if="offer && lastQuote" class="w-full overflow-x-auto"
                                     style="-webkit-overflow-scrolling: touch;">
-                                    <QuotePreview class="inline-block shrink-0" :offer="offer" :quote="lastQuote"
+                                    <QuotePreview class="inline-block shrink-0 shadow-md rounded-lg" :offer="offer" :quote="lastQuote"
                                         :draft="draft" />
                                 </div>
                                 <div v-else class="text-gray-500">Aucun devis à afficher</div>

@@ -7,6 +7,7 @@ const emit = defineEmits<{
 }>()
 
 const state = reactive({ message: '' })
+const loading = ref(false)
 
 const validate = (s: { message: string }) => {
     const errors: { path: string; message: string }[] = []
@@ -19,6 +20,7 @@ const validate = (s: { message: string }) => {
 const onSubmit = async () => {
     if (!props.lastQuote) return
     const toast = useToast()
+    loading.value = true
     const res = await apiRequest(
         () => $fetch(`/api/quotes/${props.lastQuote.id}/negotiate/`, {
             method: 'POST',
@@ -29,6 +31,7 @@ const onSubmit = async () => {
     if (res) {
         emit('submitted', state.message.trim())
     }
+    loading.value = false
 }
 </script>
 
@@ -39,7 +42,7 @@ const onSubmit = async () => {
                 placeholder="Décrivez votre question, vos contraintes ou votre proposition..." />
         </UFormField>
         <div class="mt-4">
-            <UButton type="submit" color="primary" label="Envoyer" />
+            <UButton type="submit" :loading="loading" color="primary" label="Envoyer" />
         </div>
     </UForm>
 </template>

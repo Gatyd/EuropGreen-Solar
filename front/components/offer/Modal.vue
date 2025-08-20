@@ -76,7 +76,7 @@ const createQuote = () => {
     quoteModal.value = true
 }
 
-const editDraft = () => {
+const editQuote = () => {
     quoteToEdit.value = props.offer.last_quote
     quoteModal.value = true
 }
@@ -164,11 +164,11 @@ function onQuoteCreated(_q: any) {
                             @click="createQuote" />
                         <template v-else>
                             <UButton v-if="props.offer.last_quote.status === 'draft'" color="secondary" size="sm"
-                                label="Modifier le brouillon" @click="editDraft" />
+                                label="Modifier le brouillon" @click="editQuote" />
                             <UButton v-if="props.offer.last_quote.status === 'draft'" :loading="quoteLoading" color="primary" size="sm"
                                 label="Envoyer le devis" @click="sendQuote" />
                             <UButton v-else-if="props.offer.last_quote.status === 'pending'" color="secondary" size="sm"
-                                label="Modifier le devis (négociation)" />
+                                label="Modifier le devis (négociation)" @click="editQuote" />
                         </template>
                     </div>
                 </div>

@@ -56,7 +56,7 @@ watch(() => props.quote, (q: any) => {
             <div class="flex flex-col xl:flex-row">
                 <QuoteForm class="xl:basis-1/2" :offer="props.offer" :draft="draft" :quote="props.quote"
                     @created="q => { emit('created', q); model = false }" />
-                <QuotePreview class="xl:basis-1/2" :offer="props.offer" :quote="props.quote" :draft="draft" />
+                <QuotePreview class="xl:basis-1/2 shadow-md rounded-lg" :offer="props.offer" :quote="props.quote" :draft="draft" />
             </div>
         </template>
     </UModal>

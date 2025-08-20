@@ -7,7 +7,13 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db.models import Q
 
 from .models import Product, Quote, QuoteSignature, QuoteLine
-from .serializers import ProductSerializer, QuoteSerializer, QuoteSignatureSerializer, QuoteNegotiationSerializer
+from .serializers import (
+    ProductSerializer,
+    QuoteSerializer,
+    QuoteSignatureSerializer,
+    QuoteNegotiationSerializer,
+    QuoteNegotiationReplySerializer,
+)
 from django.core.files.base import ContentFile
 from io import BytesIO
 import asyncio
@@ -301,7 +307,202 @@ class QuoteViewSet(viewsets.ModelViewSet):
         serializer = QuoteNegotiationSerializer(data=request.data, context={'quote': quote})
         serializer.is_valid(raise_exception=True)
         quote = serializer.save()
+        quote.status = Quote.Status.PENDING
+        quote.save()
         return Response({"detail": "Message enregistré"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="reply")
+    def reply_current(self, request, pk=None):
+        quote = self.get_object()
+        # Vérifier que c'est la dernière version
+        latest = Quote.objects.filter(offer=quote.offer).order_by("-version").first()
+        if not latest or latest.id != quote.id:
+            return Response({"detail": "Seul le dernier devis est modifiable."}, status=status.HTTP_400_BAD_REQUEST)
+        ser = QuoteNegotiationReplySerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        reply = ser.validated_data['reply']
+
+        # Contexte email
+        offer = quote.offer
+        subject = f"Réponse à votre demande – {quote.number}"
+        ctx = {
+            'quote_number': quote.number,
+            'client_message': quote.notes or '',
+            'reply_message': reply,
+            'quote_total': quote.total,
+            'quote_valid_until': quote.valid_until,
+        }
+        # Liens d'action (négociation / signature)
+        base_front = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+        ctx['link_negotiation'] = f"{base_front}/offers/{offer.id}?action=negotiation"
+        ctx['link_signature'] = f"{base_front}/offers/{offer.id}?action=signature"
+        # Pièce jointe
+        attachments = []
+        try:
+            if quote.pdf and quote.pdf.path:
+                attachments.append(quote.pdf.path)
+        except Exception:
+            pass
+
+        ok, msg = send_mail(
+            template='emails/quote_negotiation_reply.html',
+            context=ctx,
+            subject=subject,
+            to=offer.email,
+            attachments=attachments if attachments else None,
+        )
+        if not ok:
+            return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Remise à zéro des notes et statut sent
+        quote.notes = ''
+        quote.status = Quote.Status.SENT
+        quote.save(update_fields=['notes', 'status'])
+        return Response(self.get_serializer(quote).data)
+
+    @action(detail=True, methods=["post"], url_path="reply-new-version")
+    def reply_new_version(self, request, pk=None):
+        previous = self.get_object()
+        # Vérifier que c'est la dernière version
+        latest = Quote.objects.filter(offer=previous.offer).order_by("-version").first()
+        if not latest or latest.id != previous.id:
+            return Response({"detail": "Seul le dernier devis est modifiable."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Réponse séparée du payload devis
+        reply_ser = QuoteNegotiationReplySerializer(data={'reply': request.data.get('reply', '')})
+        reply_ser.is_valid(raise_exception=True)
+        reply = reply_ser.validated_data['reply']
+        # Création simple de la nouvelle version sans passer par le serializer (évite la contrainte unique en validation)
+        payload = request.data.copy()
+        from decimal import Decimal
+        from datetime import date
+        # Champs principaux (avec fallback sur l'ancien devis)
+        title = payload.get('title', previous.title) or ''
+        valid_until = payload.get('valid_until', previous.valid_until)
+        if isinstance(valid_until, str) and valid_until:
+            try:
+                valid_until = date.fromisoformat(valid_until)
+            except Exception:
+                valid_until = previous.valid_until
+        try:
+            tax_rate = Decimal(str(payload.get('tax_rate', previous.tax_rate)))
+        except Exception:
+            tax_rate = previous.tax_rate
+
+        user = getattr(request, 'user', None)
+        extra = {}
+        if user and getattr(user, 'is_authenticated', False):
+            extra['created_by'] = user
+            extra['updated_by'] = user
+
+        new_quote = Quote.objects.create(
+            offer=previous.offer,
+            predecessor=previous,
+            status=Quote.Status.DRAFT,
+            title=title,
+            valid_until=valid_until,
+            tax_rate=tax_rate,
+            notes='',
+            **extra,
+        )
+
+        # Lignes: utiliser celles du payload si présentes, sinon copier les anciennes
+        lines = payload.get('lines')
+        if not lines:
+            # copier les lignes existantes
+            for idx, ol in enumerate(previous.lines.order_by('position', 'created_at')):
+                QuoteLine.objects.create(
+                    quote=new_quote,
+                    position=ol.position or idx,
+                    product_type=ol.product_type,
+                    name=ol.name,
+                    description=ol.description,
+                    unit_price=ol.unit_price,
+                    cost_price=ol.cost_price,
+                    quantity=ol.quantity,
+                    discount_rate=ol.discount_rate,
+                )
+        else:
+            for idx, l in enumerate(lines or []):
+                try:
+                    up = Decimal(str(l.get('unit_price', 0)))
+                except Exception:
+                    up = Decimal('0')
+                try:
+                    cp = Decimal(str(l.get('cost_price', 0)))
+                except Exception:
+                    cp = Decimal('0')
+                try:
+                    qty = Decimal(str(l.get('quantity', 0)))
+                except Exception:
+                    qty = Decimal('0')
+                try:
+                    disc = Decimal(str(l.get('discount_rate', 0)))
+                except Exception:
+                    disc = Decimal('0')
+                QuoteLine.objects.create(
+                    quote=new_quote,
+                    position=l.get('position', idx),
+                    product_type=l.get('product_type') or 'other',
+                    name=l.get('name') or '',
+                    description=l.get('description') or '',
+                    unit_price=up,
+                    cost_price=cp,
+                    quantity=qty,
+                    discount_rate=disc,
+                )
+
+        # Recalcul des totaux
+        subtotal = sum((line.line_total for line in new_quote.lines.all()), Decimal('0'))
+        new_quote.subtotal = subtotal
+        try:
+            tax_factor = (new_quote.tax_rate or Decimal('0')) / Decimal('100')
+        except Exception:
+            tax_factor = Decimal('0')
+        new_quote.total = (new_quote.subtotal * (Decimal('1') + tax_factor)).quantize(Decimal('0.01'))
+        new_quote.save(update_fields=['subtotal', 'total'])
+
+        # Générer/attacher PDF pour la nouvelle version
+        pdf_bytes = render_quote_pdf(new_quote)
+        if pdf_bytes:
+            filename = f"{new_quote.number}.pdf"
+            new_quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
+
+    # Envoyer email avec le nouveau PDF
+        offer = new_quote.offer
+        subject = f"Réponse à votre demande – {new_quote.number}"
+        ctx = {
+            'quote_number': new_quote.number,
+            'client_message': previous.notes or '',
+            'reply_message': reply,
+            'quote_total': new_quote.total,
+            'quote_valid_until': new_quote.valid_until,
+        }
+        base_front = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+        ctx['link_negotiation'] = f"{base_front}/offers/{offer.id}?action=negotiation"
+        ctx['link_signature'] = f"{base_front}/offers/{offer.id}?action=signature"
+        attachments = []
+        try:
+            if new_quote.pdf and new_quote.pdf.path:
+                attachments.append(new_quote.pdf.path)
+        except Exception:
+            pass
+        ok, msg = send_mail(
+            template='emails/quote_negotiation_reply.html',
+            context=ctx,
+            subject=subject,
+            to=offer.email,
+            attachments=attachments if attachments else None,
+        )
+        if not ok:
+            return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Remise à zéro des notes sur l’ancienne version et statut sent
+        previous.notes = ''
+        previous.status = Quote.Status.SENT
+        previous.save(update_fields=['notes', 'status'])
+
+        return Response(self.get_serializer(new_quote).data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema_view(
