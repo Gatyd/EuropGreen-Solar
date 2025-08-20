@@ -1,6 +1,6 @@
 from rest_framework import viewsets, mixins
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db.models import Q
 from .models import Offer
@@ -47,3 +47,9 @@ class OfferViewSet(
 				| Q(address__icontains=s)
 			)
 		return qs
+
+	def get_permissions(self):
+		# Rendre la route de détail publique (retrieve), le reste reste protégé
+		if self.action == 'retrieve':
+			return [AllowAny()]
+		return super().get_permissions()

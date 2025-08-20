@@ -113,13 +113,13 @@ function onQuoteCreated(_q: any) {
                 <UFormField label="Adresse" class="col-span-2" name="address" required>
                     <UInput v-model="state.address" class="w-full" />
                 </UFormField>
-                <UFormField label="Détails du projet" name="project_details" required>
+                <UFormField class="col-span-2 md:col-span-1" label="Détails du projet" name="project_details" required>
                     <UTextarea v-model="state.project_details" :rows="5" class="w-full"
                         placeholder="Puissance, matériel, remarques..." />
                 </UFormField>
 
                 <!-- Panneau d'information du devis -->
-                <div class="border rounded-md p-4 bg-gray-50 dark:bg-gray-800/50">
+                <div class="col-span-2 md:col-span-1 border rounded-md p-4 bg-gray-50 dark:bg-gray-800/50">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Dernier devis</span>
                         <span v-if="props.offer.last_quote" class="text-xs px-2 py-1 rounded-full" :class="{

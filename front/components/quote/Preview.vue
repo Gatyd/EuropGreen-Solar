@@ -39,7 +39,7 @@ const totalTTC = computed(() => totalHT.value + tva.value)
 </script>
 
 <template>
-    <div v-bind="$attrs" class="max-w-5xl w-[793.8px] xl:min-h-[1122.66px] mx-auto text-xs px-6 py-2 bg-white shadow-md rounded-lg">
+    <div v-bind="$attrs" class="inline-block w-[793.8px] xl:min-h-[1122.66px] xl:mx-auto text-xs px-6 py-2 bg-white shadow-md rounded-lg">
         <!-- En-tête -->
         <div class="flex justify-between items-center mb-6">
             <!-- Logo (image à gauche) -->

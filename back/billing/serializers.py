@@ -102,3 +102,23 @@ class QuoteSerializer(serializers.ModelSerializer):
                 QuoteLine.objects.create(quote=instance, position=pos, **line)
         self._recalculate(instance)
         return instance
+
+
+class QuoteNegotiationSerializer(serializers.Serializer):
+    message = serializers.CharField(allow_blank=False, allow_null=False, trim_whitespace=True)
+
+    def validate_message(self, value: str):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Message requis")
+        if len(value) > 5000:
+            raise serializers.ValidationError("Message trop long")
+        return value.strip()
+
+    def save(self, **kwargs):
+        quote: Quote = self.context['quote']
+        quote.notes = self.validated_data['message']
+        # quote.status = Quote.Status.PENDING
+        quote.offer.status = 'negotiation'
+        quote.offer.save(update_fields=['status'])
+        quote.save(update_fields=['notes'])
+        return quote

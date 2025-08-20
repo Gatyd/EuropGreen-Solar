@@ -7,7 +7,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db.models import Q
 
 from .models import Product, Quote, QuoteSignature, QuoteLine
-from .serializers import ProductSerializer, QuoteSerializer, QuoteSignatureSerializer
+from .serializers import ProductSerializer, QuoteSerializer, QuoteSignatureSerializer, QuoteNegotiationSerializer
 from django.core.files.base import ContentFile
 from io import BytesIO
 import asyncio
@@ -290,6 +290,18 @@ class QuoteViewSet(viewsets.ModelViewSet):
 
         data = self.get_serializer(quote).data
         return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="negotiate", permission_classes=[], authentication_classes=[])  # public
+    def negotiate(self, request, pk=None):
+        quote = self.get_object()
+        # Règle métier: seule la dernière version d'une offre peut être négociée
+        latest = Quote.objects.filter(offer=quote.offer).order_by("-version").first()
+        if not latest or latest.id != quote.id:
+            return Response({"detail": "Seul le dernier devis est négociable."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = QuoteNegotiationSerializer(data=request.data, context={'quote': quote})
+        serializer.is_valid(raise_exception=True)
+        quote = serializer.save()
+        return Response({"detail": "Message enregistré"}, status=status.HTTP_200_OK)
 
 
 @extend_schema_view(

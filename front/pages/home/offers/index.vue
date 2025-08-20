@@ -57,7 +57,7 @@ const items = computed<Record<OfferStatus, Offer[]>>(() => {
 const totalCount = computed(() => filteredItems.value.length)
 
 // Statuts non autorisés au drop direct (processus spécifique)
-const blockedStatuses = new Set<OfferStatus>(['quote_sent', 'negotiation', 'quote_signed'])
+const blockedStatuses = new Set<OfferStatus>(['quote_sent', 'quote_signed'])
 
 const fetchAll = async () => {
     loading.value = true
