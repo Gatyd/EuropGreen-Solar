@@ -73,12 +73,12 @@ onMounted(fetchAll)
 
 const onDrop = async (payload: { to: OfferStatus, item: Offer }) => {
     const { to, item: card } = payload
+    const prev = card.status
+    if (to === prev) return
     if (blockedStatuses.has(to)) {
         toast.add({ title: 'Action non autorisée', description: 'Ce changement de statut suit un autre processus.', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
         return
     }
-    const prev = card.status
-    if (to === prev) return
     card.status = to
     const res = await apiRequest<Offer>(
         () => $fetch(`/api/offers/${card.id}/`, { method: 'PATCH', body: { status: to }, credentials: 'include' }),

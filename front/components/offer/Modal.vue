@@ -11,6 +11,7 @@ const emit = defineEmits<{
 }>()
 
 const loading = ref(false)
+const quoteLoading = ref(false)
 const quoteModal = ref(false)
 const quoteToEdit = ref<any | null>(null)
 
@@ -43,15 +44,17 @@ const validate = (st: any) => {
 
 const sendQuote = async () => {
     const toast = useToast()
+    quoteLoading.value = true
     if (!props.offer.last_quote) return
     const res = await apiRequest<any>(
-        () => $fetch(`/api/quotes/${props.offer.last_quote!.id}/`, { method: 'PATCH', body: { status: 'sent' }, credentials: 'include' }),
+    () => $fetch(`/api/quotes/${props.offer.last_quote!.id}/send/`, { method: 'POST', credentials: 'include' }),
         toast
     )
     if (res) {
         toast.add({ title: 'Devis envoyé', color: 'success', icon: 'i-heroicons-paper-airplane' })
         emit('submit')
     }
+    quoteLoading.value = false
 }
 
 const submit = async () => {
@@ -162,7 +165,7 @@ function onQuoteCreated(_q: any) {
                         <template v-else>
                             <UButton v-if="props.offer.last_quote.status === 'draft'" color="secondary" size="sm"
                                 label="Modifier le brouillon" @click="editDraft" />
-                            <UButton v-if="props.offer.last_quote.status === 'draft'" color="primary" size="sm"
+                            <UButton v-if="props.offer.last_quote.status === 'draft'" :loading="quoteLoading" color="primary" size="sm"
                                 label="Envoyer le devis" @click="sendQuote" />
                             <UButton v-else-if="props.offer.last_quote.status === 'pending'" color="secondary" size="sm"
                                 label="Modifier le devis (négociation)" />

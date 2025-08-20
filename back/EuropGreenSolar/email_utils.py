@@ -13,7 +13,7 @@ import requests
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.core.mail import send_mail as django_send_mail
+from django.core.mail import EmailMultiAlternatives
 
 
 def _normalize_recipients(to: Union[str, Iterable[str]]) -> List[str]:
@@ -140,19 +140,16 @@ def send_mail(
     # 2) Fallback SMTP (Django)
     try:
         django_from = _build_from_display(False, from_email)
-        # Construire la liste d'attachements au format Django: List[Tuple[name, content, mimetype]] ou chemins
-        django_attachments = None
+        # Préparer les attachements sous forme de tuples (name, content_bytes, mimetype)
+        django_attachments = []
         if attachments:
-            django_attachments = []
             for att in attachments:
                 if isinstance(att, str):
-                    # Laisser Django ouvrir le fichier si on fait EmailMessage; mais send_mail ne gère pas chemins.
-                    # Donc on lit ici pour rester simple.
                     try:
                         with open(att, 'rb') as f:
                             content = f.read()
                         fname = att.split('/')[-1] or att.split('\\')[-1]
-                        django_attachments.append((fname, content, 'application/octet-stream'))
+                        django_attachments.append((fname, content, 'application/pdf'))
                     except Exception as e:
                         print(f"Impossible d'attacher le fichier {att}: {e}")
                 else:
@@ -162,15 +159,12 @@ def send_mail(
                     except Exception as e:
                         print(f"Pièce jointe invalide (tuple attendu): {e}")
 
-        sent_count = django_send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=django_from,
-            recipient_list=to_list,
-            html_message=html_message,
-            attachments=django_attachments,
-            fail_silently=False,
-        )
+        # Construire un message multi-part avec HTML et pièces jointes
+        msg = EmailMultiAlternatives(subject=subject, body=plain_message, from_email=django_from, to=to_list)
+        msg.attach_alternative(html_message, "text/html")
+        for fname, content, mtype in django_attachments:
+            msg.attach(fname, content, mtype)
+        sent_count = msg.send(fail_silently=False)
         if sent_count > 0:
             return True, "Email envoyé via SMTP"
         return False, "Aucun email n'a été envoyé via SMTP"

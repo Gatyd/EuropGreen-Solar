@@ -12,6 +12,7 @@ from django.core.files.base import ContentFile
 from io import BytesIO
 import asyncio
 from django.conf import settings
+from EuropGreenSolar.email_utils import send_mail
 
 def _render_quote_pdf_reportlab(quote: Quote) -> bytes:
     try:
@@ -228,6 +229,67 @@ class QuoteViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         new = serializer.save()
         return Response(self.get_serializer(new).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], url_path="send")
+    def send_quote(self, request, pk=None):
+        quote = self.get_object()
+        offer = quote.offer
+        # Vérifications minimales
+        if not offer.email:
+            return Response({"detail": "Aucune adresse email client"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # S'assurer qu'un PDF est présent
+        if not quote.pdf:
+            pdf_bytes = render_quote_pdf(quote)
+            if pdf_bytes:
+                filename = f"{quote.number}.pdf"
+                quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
+
+        # Construire les liens d'action
+        base_front = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+        link_negotiation = f"{base_front}/offers/{offer.id}?action=negotiation"
+        link_signature = f"{base_front}/offers/{offer.id}?action=signature"
+
+        # Contexte du mail
+        ctx = {
+            "client_name": f"{offer.first_name} {offer.last_name}",
+            "quote_number": quote.number,
+            "quote_total": quote.total,
+            "quote_valid_until": quote.valid_until,
+            "link_negotiation": link_negotiation,
+            "link_signature": link_signature,
+        }
+
+        subject = f"Votre devis {quote.number} – Europ'Green Solar"
+        attachments = []
+        try:
+            if quote.pdf and quote.pdf.path:
+                attachments.append(quote.pdf.path)
+        except Exception:
+            pass
+
+        ok, msg = send_mail(
+            template="emails/quote_sent.html",
+            context=ctx,
+            subject=subject,
+            to=offer.email,
+            attachments=attachments if attachments else None,
+        )
+        if not ok:
+            print(msg)
+            return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Mises à jour des statuts
+        from billing.models import Quote as QuoteModel  # éviter l'import circulaire
+        quote.status = QuoteModel.Status.SENT
+        quote.save(update_fields=["status"])
+        # statut de l'offre
+        from offers.models import Offer as OfferModel
+        offer.status = OfferModel.Status.QUOTE_SENT
+        offer.save(update_fields=["status"])
+
+        data = self.get_serializer(quote).data
+        return Response(data, status=status.HTTP_200_OK)
 
 
 @extend_schema_view(

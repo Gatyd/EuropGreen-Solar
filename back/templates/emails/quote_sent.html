@@ -1,0 +1,70 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Votre devis - EuropGreen Solar{% endblock %}
+
+{% block content %}
+<div>
+  <!-- En-tête -->
+  <div style="text-align: center; margin-bottom: 28px;">
+    <h2 style="color: #2d3748; margin: 0 0 12px 0; font-size: 26px; font-weight: 700;">
+      Votre devis est prêt
+    </h2>
+    <p style="color: #4a5568; margin: 0; font-size: 15px; line-height: 1.7;">
+      Bonjour {{ client_name }}, retrouvez ci-dessous les informations essentielles de votre devis.
+    </p>
+  </div>
+
+  <!-- Récapitulatif devis -->
+  <div style="background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 28px;">
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+      <div>
+        <div style="color: #4b5563; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;">N° de devis</div>
+        <div style="color: #111827; font-weight: 700; font-size: 16px;">{{ quote_number }}</div>
+      </div>
+      <div>
+        <div style="color: #4b5563; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;">Montant TTC</div>
+        <div style="color: #111827; font-weight: 700; font-size: 16px;">{{ quote_total }} €</div>
+      </div>
+      <div>
+        <div style="color: #4b5563; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;">Validité</div>
+        <div style="color: #111827; font-weight: 700; font-size: 16px;">{% if quote_valid_until %}{{ quote_valid_until }}{% else %}—{% endif %}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div style="text-align: center; margin-bottom: 24px;">
+    <a href="{{ link_signature }}" target="_blank"
+       style="display: inline-block; background: linear-gradient(135deg, #48bb78, #38a169); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; box-shadow: 0 6px 14px rgba(56, 161, 105, .25); margin: 0 8px 12px 8px;">
+      Signer le devis
+    </a>
+    <a href="{{ link_negotiation }}" target="_blank"
+       style="display: inline-block; background-color: #edf2f7; color: #1f2937; padding: 14px 20px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 14px; border: 1px solid #cbd5e0; margin: 0 8px 12px 8px;">
+      Négocier / Poser une question
+    </a>
+    <p style="color: #718096; font-size: 13px; margin: 8px 0 0 0;">Le devis est joint en pièce jointe pour consultation hors‑ligne.</p>
+  </div>
+
+  <!-- Séparateur -->
+  <div style="text-align: center; margin: 24px 0;">
+    <div style="width: 100%; height: 1px; background: linear-gradient(to right, transparent, #e2e8f0, transparent);"></div>
+  </div>
+
+  <!-- Astuce -->
+  <div style="background-color: #f0fff4; border: 1px solid #9ae6b4; border-radius: 8px; padding: 14px;">
+    <p style="color: #2f855a; margin: 0; font-size: 13px; text-align: center;">
+      Conservez cet email: vous pourrez à tout moment revenir pour signer ou poser une question.
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_content %}
+<div style="margin-bottom: 12px;">
+  <p style="color: #1f2937; font-weight: 600; font-size: 14px; margin: 0;">Europ'Green Solar</p>
+  <p style="color: #6b7280; font-size: 12px; margin: 4px 0 0 0;">18 rue de Berlin, 68000 Colmar GES, France</p>
+  <p style="color: #9ca3af; font-size: 11px; margin: 4px 0 0 0;">SIREN: 932 121 536 • TVA: FR23932121536</p>
+  <p style="color: #9ca3af; font-size: 11px; margin: 8px 0 0 0;">Message automatique — merci de ne pas répondre</p>
+  
+</div>
+{% endblock %}
