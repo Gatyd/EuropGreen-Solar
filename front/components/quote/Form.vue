@@ -20,6 +20,7 @@ const props = defineProps<{
             discount_rate: number
         }>
     }
+    quote?: any
 }>()
 
 const products = ref<Product[]>([])
@@ -134,13 +135,13 @@ async function onSubmit() {
         })),
     }
     loading.value = true
-    const res = await apiRequest<any>(
-        () => $fetch('/api/quotes/', { method: 'POST', body: payload, credentials: 'include' }),
-        toast
-    )
+    const isEdit = !!props.quote
+    const url = isEdit ? `/api/quotes/${props.quote.id}/` : '/api/quotes/'
+    const method = isEdit ? 'PATCH' : 'POST'
+    const res = await apiRequest<any>(() => $fetch(url, { method, body: payload, credentials: 'include' }), toast)
     loading.value = false
     if (res) {
-        toast.add({ title: 'Devis créé', color: 'success', icon: 'i-heroicons-check-circle' })
+        toast.add({ title: isEdit ? 'Brouillon mis à jour' : 'Devis créé', color: 'success', icon: 'i-heroicons-check-circle' })
         emit('created', res)
     }
 }

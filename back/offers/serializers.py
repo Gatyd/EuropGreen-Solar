@@ -16,4 +16,7 @@ class OfferSerializer(serializers.ModelSerializer):
 
 	def get_last_quote(self, obj: Offer):
 		quote = obj.quotes.order_by('-version', '-created_at').first()
-		return QuoteSerializer(quote).data if quote else None
+		if not quote:
+			return None
+		# Propager le contexte (request) pour construire des URLs absolues
+		return QuoteSerializer(quote, context=self.context).data

@@ -55,6 +55,7 @@ export interface Quote {
     discount_amount: string; // Decimal as string
     tax_rate: string; // Decimal as string (%)
     total: string; // Decimal as string
+    pdf?: string | null; // URL du PDF
     created_by?: string | null;
     updated_by?: string | null;
     created_at: string;

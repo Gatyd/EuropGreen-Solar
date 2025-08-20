@@ -56,6 +56,9 @@ const items = computed<Record<OfferStatus, Offer[]>>(() => {
 })
 const totalCount = computed(() => filteredItems.value.length)
 
+// Statuts non autorisés au drop direct (processus spécifique)
+const blockedStatuses = new Set<OfferStatus>(['quote_sent', 'negotiation', 'quote_signed'])
+
 const fetchAll = async () => {
     loading.value = true
     const data = await apiRequest<Offer[]>(
@@ -70,6 +73,10 @@ onMounted(fetchAll)
 
 const onDrop = async (payload: { to: OfferStatus, item: Offer }) => {
     const { to, item: card } = payload
+    if (blockedStatuses.has(to)) {
+        toast.add({ title: 'Action non autorisée', description: 'Ce changement de statut suit un autre processus.', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
+        return
+    }
     const prev = card.status
     if (to === prev) return
     card.status = to

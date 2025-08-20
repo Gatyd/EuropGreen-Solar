@@ -12,6 +12,7 @@ const emit = defineEmits<{
 
 const loading = ref(false)
 const quoteModal = ref(false)
+const quoteToEdit = ref<any | null>(null)
 
 const state = reactive({
     last_name: '',
@@ -40,6 +41,19 @@ const validate = (st: any) => {
     return errors
 }
 
+const sendQuote = async () => {
+    const toast = useToast()
+    if (!props.offer.last_quote) return
+    const res = await apiRequest<any>(
+        () => $fetch(`/api/quotes/${props.offer.last_quote!.id}/`, { method: 'PATCH', body: { status: 'sent' }, credentials: 'include' }),
+        toast
+    )
+    if (res) {
+        toast.add({ title: 'Devis envoyé', color: 'success', icon: 'i-heroicons-paper-airplane' })
+        emit('submit')
+    }
+}
+
 const submit = async () => {
     loading.value = true
     const toast = useToast()
@@ -55,6 +69,12 @@ const submit = async () => {
 }
 
 const createQuote = () => {
+    quoteToEdit.value = null
+    quoteModal.value = true
+}
+
+const editDraft = () => {
+    quoteToEdit.value = props.offer.last_quote
     quoteModal.value = true
 }
 
@@ -68,7 +88,8 @@ function onQuoteCreated(_q: any) {
 
 <template>
     <Teleport to="body">
-        <QuoteModal v-if="quoteModal" v-model="quoteModal" :offer="offer" @created="onQuoteCreated" />
+        <QuoteModal v-if="quoteModal" v-model="quoteModal" :offer="offer" :quote="quoteToEdit || undefined"
+            @created="onQuoteCreated" />
     </Teleport>
     <UModal :open="modelValue" @update:open="v => emit('update:modelValue', v)" title="Détails de l'offre"
         :ui="{ title: 'text-xl', content: 'max-w-2xl' }">
@@ -98,43 +119,54 @@ function onQuoteCreated(_q: any) {
                 <div class="border rounded-md p-4 bg-gray-50 dark:bg-gray-800/50">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Dernier devis</span>
-                        <span v-if="props.offer.last_quote" class="text-xs px-2 py-1 rounded-full"
-                              :class="{
-                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200': props.offer.last_quote.status === 'draft',
-                                'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200': props.offer.last_quote.status === 'sent',
-                                'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200': props.offer.last_quote.status === 'pending',
-                                'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200': props.offer.last_quote.status === 'accepted',
-                                'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200': props.offer.last_quote.status === 'declined'
-                              }">
+                        <span v-if="props.offer.last_quote" class="text-xs px-2 py-1 rounded-full" :class="{
+                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200': props.offer.last_quote.status === 'draft',
+                            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200': props.offer.last_quote.status === 'sent',
+                            'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200': props.offer.last_quote.status === 'pending',
+                            'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200': props.offer.last_quote.status === 'accepted',
+                            'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200': props.offer.last_quote.status === 'declined'
+                        }">
                             {{
-                              props.offer.last_quote.status === 'draft' ? 'Brouillon' :
-                              props.offer.last_quote.status === 'sent' ? 'Envoyé' :
-                              props.offer.last_quote.status === 'pending' ? 'En attente' :
-                              props.offer.last_quote.status === 'accepted' ? 'Accepté' :
-                              props.offer.last_quote.status === 'declined' ? 'Refusé' : props.offer.last_quote.status
+                                props.offer.last_quote.status === 'draft' ? 'Brouillon' :
+                                    props.offer.last_quote.status === 'sent' ? 'Envoyé' :
+                                        props.offer.last_quote.status === 'pending' ? 'En attente' :
+                                            props.offer.last_quote.status === 'accepted' ? 'Accepté' :
+                                                props.offer.last_quote.status === 'declined' ? 'Refusé' : props.offer.last_quote.status
                             }}
                         </span>
                     </div>
 
-                    <div v-if="props.offer.last_quote" class="space-y-1 text-sm">
-                        <div class="text-gray-700 dark:text-gray-200">
-                            <span class="font-medium">N°:</span> {{ props.offer.last_quote.number }}
+                    <div v-if="props.offer.last_quote" class="flex justify-between items-center">
+                        <div class="space-y-1 text-sm">
+                            <div class="text-gray-700 dark:text-gray-200">
+                                <span class="font-medium">N°:</span> {{ props.offer.last_quote.number }}
+                            </div>
+                            <div class="text-gray-700 dark:text-gray-200">
+                                <span class="font-medium">Version:</span> v{{ props.offer.last_quote.version }}
+                            </div>
+                            <div class="text-gray-700 dark:text-gray-200">
+                                <span class="font-medium">Total:</span> {{ props.offer.last_quote.total }} €
+                            </div>
                         </div>
-                        <div class="text-gray-700 dark:text-gray-200">
-                            <span class="font-medium">Version:</span> v{{ props.offer.last_quote.version }}
-                        </div>
-                        <div class="text-gray-700 dark:text-gray-200">
-                            <span class="font-medium">Total:</span> {{ props.offer.last_quote.total }} €
-                        </div>
+                        <UButton v-if="props.offer.last_quote.pdf" variant="ghost" color="neutral" size="xl"
+                            icon="i-heroicons-document" target="_blank" :to="props.offer.last_quote.pdf" />
                     </div>
+
                     <div v-else class="text-sm text-gray-500 dark:text-gray-400">
                         Aucun devis
                     </div>
 
                     <div class="mt-3 flex gap-2 justify-end">
-                        <UButton v-if="!props.offer.last_quote" color="primary" size="sm" label="Créer le devis" @click="createQuote" />
-                        <UButton v-else-if="props.offer.last_quote.status === 'draft'" color="secondary" size="sm" label="Envoyer le devis" />
-                        <UButton v-else-if="props.offer.last_quote.status === 'pending'" color="secondary" size="sm" label="Modifier le devis" />
+                        <UButton v-if="!props.offer.last_quote" color="primary" size="sm" label="Créer le devis"
+                            @click="createQuote" />
+                        <template v-else>
+                            <UButton v-if="props.offer.last_quote.status === 'draft'" color="secondary" size="sm"
+                                label="Modifier le brouillon" @click="editDraft" />
+                            <UButton v-if="props.offer.last_quote.status === 'draft'" color="primary" size="sm"
+                                label="Envoyer le devis" @click="sendQuote" />
+                            <UButton v-else-if="props.offer.last_quote.status === 'pending'" color="secondary" size="sm"
+                                label="Modifier le devis (négociation)" />
+                        </template>
                     </div>
                 </div>
 

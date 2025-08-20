@@ -3,6 +3,7 @@ import type { Offer } from '~/types/offers'
 
 const props = defineProps<{
     offer: Offer
+    quote?: any
     draft: {
         title: string
         valid_until: string | null
@@ -75,7 +76,7 @@ const totalTTC = computed(() => totalHT.value + tva.value)
 
             <!-- Infos devis -->
             <div class="mb-6 w-60">
-                <p class="flex justify-between font-medium">Devis N° :<span class="font-bold"> —</span></p>
+                <p class="flex justify-between font-medium">Devis N° :<span class="font-bold"> {{ quote?.number || '—' }}</span></p>
                 <p class="flex justify-between font-medium">Date :<span class="font-bold"> {{ today }}</span></p>
                 <p class="flex justify-between font-medium">Valide jusqu’au :<span class="font-bold"> {{ props.draft.valid_until ? new Date(props.draft.valid_until).toLocaleDateString('fr-FR') : '—' }}</span></p>
             </div>

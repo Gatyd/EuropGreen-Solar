@@ -206,6 +206,15 @@ class QuoteViewSet(viewsets.ModelViewSet):
             quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
         # rien à retourner ici, DRF gère la réponse via serializer
 
+    def perform_update(self, serializer):
+        quote = serializer.save()
+        # Régénérer le PDF et écraser l'ancien
+        pdf_bytes = render_quote_pdf(quote)
+        if pdf_bytes:
+            filename = f"{quote.number}.pdf"
+            # storage.save écrase car on réutilise le même nom dans FileField.save
+            quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
+
     @action(detail=True, methods=["post"], url_path="version")
     def create_new_version(self, request, pk=None):
         # Créer une nouvelle version basée sur la précédente

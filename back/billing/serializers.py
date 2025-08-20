@@ -48,6 +48,7 @@ class QuoteSignatureSerializer(serializers.ModelSerializer):
 
 class QuoteSerializer(serializers.ModelSerializer):
     lines = QuoteLineSerializer(many=True, required=False)
+    pdf = serializers.SerializerMethodField()
 
     class Meta:
         model = Quote
@@ -56,6 +57,18 @@ class QuoteSerializer(serializers.ModelSerializer):
             "created_at", "updated_at", "lines",
         ]
         read_only_fields = ["id", "number", "version", "subtotal", "discount_amount", "total", "pdf", "created_at", "updated_at",]
+
+    def get_pdf(self, obj: Quote):
+        if not getattr(obj, 'pdf', None):
+            return None
+        try:
+            url = obj.pdf.url
+        except Exception:
+            return None
+        request = self.context.get('request') if hasattr(self, 'context') else None
+        if request:
+            return request.build_absolute_uri(url)
+        return url
 
     def _recalculate(self, quote: Quote):
         subtotal = sum((line.line_total for line in quote.lines.all()), Decimal("0"))
