@@ -11,6 +11,7 @@ const props = defineProps<{
 
 // État partagé du devis en cours de création
 const draft = reactive({
+    offer: props.offer.id,
     title: '',
     valid_until: '' as string | null,
     tax_rate: 20,
@@ -28,8 +29,8 @@ const draft = reactive({
     <UModal v-model:open="model" title="Nouveau Devis" fullscreen>
         <template #body>
             <div class="flex flex-col xl:flex-row">
-                                <QuoteForm class="xl:basis-1/2" :offer="props.offer" :draft="draft" />
-                                <QuotePreview class="xl:basis-1/2" :offer="props.offer" :draft="draft" />
+                <QuoteForm class="xl:basis-1/2" :offer="props.offer" :draft="draft" />
+                <QuotePreview class="xl:basis-1/2" :offer="props.offer" :draft="draft" />
             </div>
         </template>
     </UModal>

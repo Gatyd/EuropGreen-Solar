@@ -20,8 +20,14 @@ const props = defineProps<{
 }>()
 
 const products = ref<Product[]>([])
+const productModal = ref(false)
 const loading = ref(false)
 const toast = useToast()
+
+const selectNewProduct = (product: Product) => {
+    products.value.unshift(product)
+    entry.productId = product.id
+}
 
 // Charger le catalogue produits
 onMounted(async () => {
@@ -95,6 +101,7 @@ const validate = (state: any) => {
     }
     if (!props.draft.lines.length) {
         errors.push({ name: 'lines', message: "Ajoutez au moins une ligne au devis." })
+        toast.add({ title: 'Erreur', description: "Ajoutez au moins une ligne au devis.", color: 'error', icon: 'i-heroicons-exclamation-triangle' })
     }
     return errors
 }
@@ -111,6 +118,9 @@ function onSubmit() {
 </script>
 
 <template>
+    <Teleport to="body">
+        <ProductModal v-if="productModal" v-model="productModal" @submit="selectNewProduct" />
+    </Teleport>
     <div v-bind="$attrs" class="p-4 space-y-4">
         <UForm :state="props.draft" :validate="validate" @submit="onSubmit" class="space-y-6">
             <!-- Section informations générales -->
@@ -120,7 +130,8 @@ function onSubmit() {
                 </template>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <UFormField label="Titre du devis" class="md:col-span-2" name="title">
-                        <UInput v-model="props.draft.title" class="w-full" placeholder="Devis pour fourniture et pose d'une installation 8.5kwc" />
+                        <UInput v-model="props.draft.title" class="w-full"
+                            placeholder="Devis pour fourniture et pose d'une installation 8.5kwc" />
                     </UFormField>
                     <UFormField label="Valide jusqu'au" name="valid_until" required>
                         <UInput v-model="props.draft.valid_until" class="w-full" type="date" />
@@ -142,7 +153,12 @@ function onSubmit() {
                     <UFormField label="Produit" class="md:col-span-3" required>
                         <USelectMenu v-model="entry.productId" value-key="value" class="w-full"
                             :items="availableProducts.map(p => ({ label: p.name, value: p.id }))"
-                            placeholder="Sélectionner un produit" searchable clearable />
+                            placeholder="Sélectionner un produit" searchable clearable>
+                            <template #content-bottom>
+                                <UButton icon="i-heroicons-plus" color="neutral" label="Ajouter un produit"
+                                    @click.stop="productModal = true" block />
+                            </template>
+                        </USelectMenu>
                     </UFormField>
                     <UFormField label="Quantité" required>
                         <UInput v-model.number="entry.quantity" class="w-full" type="number" min="1" step="1" />
