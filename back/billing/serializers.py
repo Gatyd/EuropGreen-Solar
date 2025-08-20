@@ -13,13 +13,28 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class QuoteLineSerializer(serializers.ModelSerializer):
     source_product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), required=False, allow_null=True)
+    quote = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = QuoteLine
-        fields = ["id", "quote", "source_product", "product_type", "name", "description", "unit_price", "cost_price",
-            "quantity", "discount_rate", "line_total", "position", "created_at", "updated_at",
+        fields = [
+            "id",
+            "quote",
+            "source_product",
+            "product_type",
+            "name",
+            "description",
+            "unit_price",
+            "cost_price",
+            "quantity",
+            "discount_rate",
+            "line_total",
+            "position",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ["id", "line_total", "created_at", "updated_at"]
+        read_only_fields = ["id", "quote", "line_total", "created_at", "updated_at"]
+        extra_kwargs = {"quote": {"required": False}}
 
 
 class QuoteSignatureSerializer(serializers.ModelSerializer):
@@ -37,10 +52,10 @@ class QuoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quote
         fields = ["id", "number", "offer", "version", "predecessor", "status", "title", "notes", "currency",
-            "valid_until", "subtotal", "discount_amount", "tax_rate", "total", "created_by", "updated_by",
+            "valid_until", "subtotal", "discount_amount", "tax_rate", "total", "pdf", "created_by", "updated_by",
             "created_at", "updated_at", "lines",
         ]
-        read_only_fields = ["id", "number", "version", "subtotal", "discount_amount", "total", "created_at", "updated_at",]
+        read_only_fields = ["id", "number", "version", "subtotal", "discount_amount", "total", "pdf", "created_at", "updated_at",]
 
     def _recalculate(self, quote: Quote):
         subtotal = sum((line.line_total for line in quote.lines.all()), Decimal("0"))
@@ -55,7 +70,8 @@ class QuoteSerializer(serializers.ModelSerializer):
         lines_data = validated_data.pop("lines", [])
         quote = Quote.objects.create(**validated_data)
         for idx, line in enumerate(lines_data):
-            QuoteLine.objects.create(quote=quote, position=idx, **line)
+            pos = line.pop("position", idx)
+            QuoteLine.objects.create(quote=quote, position=pos, **line)
         self._recalculate(quote)
         return quote
 
@@ -69,6 +85,7 @@ class QuoteSerializer(serializers.ModelSerializer):
             # stratégie simple: remplacer toutes les lignes si fourni
             instance.lines.all().delete()
             for idx, line in enumerate(lines_data):
-                QuoteLine.objects.create(quote=instance, position=idx, **line)
+                pos = line.pop("position", idx)
+                QuoteLine.objects.create(quote=instance, position=pos, **line)
         self._recalculate(instance)
         return instance

@@ -66,6 +66,7 @@ class Quote(models.Model):
 	discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 	tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=20)  # en %
 	total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+	pdf = models.FileField(upload_to="quotes/pdfs/", null=True, blank=True)
 
 	created_by = models.ForeignKey(
 		settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_quotes"
