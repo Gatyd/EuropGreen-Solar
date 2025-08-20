@@ -214,12 +214,20 @@ class QuoteViewSet(viewsets.ModelViewSet):
         # rien à retourner ici, DRF gère la réponse via serializer
 
     def perform_update(self, serializer):
+        # Supprimer l'ancien PDF si présent pour éviter les suffixes automatiques
+        instance: Quote = self.get_object()
+        old_pdf_name = instance.pdf.name if getattr(instance, "pdf", None) else None
         quote = serializer.save()
-        # Régénérer le PDF et écraser l'ancien
+        if old_pdf_name:
+            try:
+                # delete without updating the model (we'll save a new file next)
+                instance.pdf.delete(save=False)
+            except Exception:
+                pass
+        # Régénérer le PDF et enregistrer sous le même nom logique
         pdf_bytes = render_quote_pdf(quote)
         if pdf_bytes:
             filename = f"{quote.number}.pdf"
-            # storage.save écrase car on réutilise le même nom dans FileField.save
             quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
 
     @action(detail=True, methods=["post"], url_path="version")
@@ -503,6 +511,70 @@ class QuoteViewSet(viewsets.ModelViewSet):
         previous.save(update_fields=['notes', 'status'])
 
         return Response(self.get_serializer(new_quote).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], url_path="sign", permission_classes=[], authentication_classes=[])
+    def sign(self, request, pk=None):
+        quote = self.get_object()
+        # Valider dernière version
+        latest = Quote.objects.filter(offer=quote.offer).order_by("-version").first()
+        if not latest or latest.id != quote.id:
+            return Response({"detail": "Seul le dernier devis est signable."}, status=status.HTTP_400_BAD_REQUEST)
+        # Déjà signé
+        if getattr(quote, "signature", None):
+            return Response({"detail": "Ce devis est déjà signé."}, status=status.HTTP_400_BAD_REQUEST)
+        # Optionnel: vérifier le statut
+        if quote.status in (Quote.Status.ACCEPTED, Quote.Status.DECLINED):
+            return Response({"detail": "Ce devis n'est pas dans un état signable."}, status=status.HTTP_400_BAD_REQUEST)
+
+        signer_name = (request.data.get("signer_name") or "").strip()
+        signature_image_b64 = request.data.get("signature_image")  # data URL ou base64 pur
+        signature_file = request.FILES.get("signature_file")  # upload direct
+        if not signer_name:
+            return Response({"detail": "Nom du signataire requis."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Récup IP et UA
+        ip = request.META.get("HTTP_X_FORWARDED_FOR")
+        if ip:
+            ip = ip.split(",")[0].strip()
+        else:
+            ip = request.META.get("REMOTE_ADDR")
+        ua = request.META.get("HTTP_USER_AGENT", "")
+
+        sig = QuoteSignature(quote=quote, signer_name=signer_name, ip_address=ip, user_agent=ua)
+
+        # 1) Fichier uploadé prioritaire
+        if signature_file:
+            sig.signature_image.save(signature_file.name, signature_file, save=False)
+        # 2) Sinon data URL/base64
+        elif signature_image_b64 and isinstance(signature_image_b64, str):
+            import base64, re
+            try:
+                match = re.match(r"^data:image/(png|jpeg|jpg);base64,(.+)$", signature_image_b64)
+                if match:
+                    ext = match.group(1)
+                    raw_b64 = match.group(2)
+                else:
+                    raw_b64 = signature_image_b64
+                    ext = "png"
+                data = base64.b64decode(raw_b64)
+                fname = f"signature-{quote.id}." + ("jpg" if ext in ("jpeg", "jpg") else "png")
+                sig.signature_image.save(fname, ContentFile(data), save=False)
+            except Exception:
+                return Response({"detail": "Image de signature invalide."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"detail": "Aucune image de signature fournie."}, status=status.HTTP_400_BAD_REQUEST)
+
+        sig.save()
+
+        # Maj des statuts
+        from offers.models import Offer as OfferModel
+        quote.status = Quote.Status.ACCEPTED
+        quote.offer.status = OfferModel.Status.QUOTE_SIGNED
+        quote.offer.save(update_fields=["status"])
+        quote.save(update_fields=["status"])
+
+        data = QuoteSerializer(quote, context={"request": request}).data
+        return Response(data, status=status.HTTP_200_OK)
 
 
 @extend_schema_view(

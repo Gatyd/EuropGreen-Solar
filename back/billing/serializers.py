@@ -38,23 +38,64 @@ class QuoteLineSerializer(serializers.ModelSerializer):
 
 
 class QuoteSignatureSerializer(serializers.ModelSerializer):
+    signature_image = serializers.SerializerMethodField()
+
     class Meta:
         model = QuoteSignature
-        fields = ["id", "quote", "signer_name", "signer_email", "ip_address", "user_agent", "signed_at",
-            "signature_image", "signature_data", "created_at",
+        fields = [
+            "id",
+            "quote",
+            "signer_name",
+            "ip_address",
+            "user_agent",
+            "signed_at",
+            "signature_image",
+            "created_at",
         ]
         read_only_fields = ["id", "signed_at", "created_at"]
+
+    def get_signature_image(self, obj: QuoteSignature):
+        if not getattr(obj, "signature_image", None):
+            return None
+        try:
+            url = obj.signature_image.url
+        except Exception:
+            return None
+        request = self.context.get("request") if hasattr(self, "context") else None
+        if request:
+            return request.build_absolute_uri(url)
+        return url
 
 
 class QuoteSerializer(serializers.ModelSerializer):
     lines = QuoteLineSerializer(many=True, required=False)
     pdf = serializers.SerializerMethodField()
+    signature = QuoteSignatureSerializer(read_only=True)
 
     class Meta:
         model = Quote
-        fields = ["id", "number", "offer", "version", "predecessor", "status", "title", "notes", "currency",
-            "valid_until", "subtotal", "discount_amount", "tax_rate", "total", "pdf", "created_by", "updated_by",
-            "created_at", "updated_at", "lines",
+        fields = [
+            "id",
+            "number",
+            "offer",
+            "version",
+            "predecessor",
+            "status",
+            "title",
+            "notes",
+            "currency",
+            "valid_until",
+            "subtotal",
+            "discount_amount",
+            "tax_rate",
+            "total",
+            "pdf",
+            "created_by",
+            "updated_by",
+            "created_at",
+            "updated_at",
+            "lines",
+            "signature",
         ]
         read_only_fields = ["id", "number", "version", "subtotal", "discount_amount", "total", "pdf", "created_at", "updated_at",]
     # Aucun override requis; 'offer' reste obligatoire pour les créations classiques

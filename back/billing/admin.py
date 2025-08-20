@@ -24,4 +24,4 @@ class QuoteAdmin(admin.ModelAdmin):
 
 @admin.register(QuoteSignature)
 class QuoteSignatureAdmin(admin.ModelAdmin):
-	list_display = ("quote", "signer_email", "ip_address", "signed_at")
+	list_display = ("quote", "ip_address", "signed_at")

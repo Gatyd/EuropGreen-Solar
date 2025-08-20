@@ -36,6 +36,18 @@ const previewLines = computed(() => props.draft.lines.map(l => {
 const totalHT = computed(() => previewLines.value.reduce((s, l) => s + l.montant, 0))
 const tva = computed(() => totalHT.value * (props.draft.tax_rate / 100))
 const totalTTC = computed(() => totalHT.value + tva.value)
+
+const signature = computed(() => props.quote?.signature || null)
+const signatureImageUrl = computed(() => {
+    const sig = signature.value
+    if (!sig) return ''
+    if (sig.signature_image) return sig.signature_image
+    // fallback: si signature_data est une data URL image
+    if (typeof sig.signature_data === 'string' && sig.signature_data.startsWith('data:image/')) {
+        return sig.signature_data
+    }
+    return ''
+})
 </script>
 
 <template>
@@ -122,6 +134,20 @@ const totalTTC = computed(() => totalHT.value + tva.value)
                 <div class="flex justify-between border-t font-bold py-1">
                     <span>TOTAL (EUR) :</span>
                     <span>{{ totalTTC.toFixed(2) }} €</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signature -->
+        <div v-if="signature" class="mt-8">
+            <div class="text-xs text-gray-600 mb-1">Signature du client</div>
+            <div class="border rounded-md p-3 inline-flex flex-col items-start gap-2">
+                <img v-if="signatureImageUrl" :src="signatureImageUrl" alt="Signature" class="h-20 object-contain bg-white" />
+                <div v-else class="text-gray-500 italic">Signature enregistrée</div>
+                <div class="text-[11px] text-gray-700">
+                    Signé par <span class="font-semibold">{{ signature.signer_name || '—' }}</span>
+                    <span v-if="signature.signer_email" class="text-gray-500">({{ signature.signer_email }})</span>
+                    <span v-if="signature.signed_at"> • le {{ new Date(signature.signed_at).toLocaleString('fr-FR') }}</span>
                 </div>
             </div>
         </div>

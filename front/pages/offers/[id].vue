@@ -45,7 +45,12 @@ const loadData = async () => {
         const arr = (quotes as any[]).sort((a, b) => (b.version || 0) - (a.version || 0))
         lastQuote.value = arr.length ? arr[0] : null
         // Si des notes existent déjà -> succès direct
+        // succès pour négociation (message enregistré)
         state.success = !!(lastQuote.value && lastQuote.value.notes && String(lastQuote.value.notes).trim().length > 0)
+        // si action=signature et devis déjà signé → succès direct
+        if (action.value === 'signature' && lastQuote.value && lastQuote.value.signature) {
+            state.success = true
+        }
     } catch (e: any) {
         state.error = 'Devis introuvable'
     } finally {
@@ -55,8 +60,15 @@ const loadData = async () => {
 
 onMounted(loadData)
 
-const handleNegotiationSubmit = async (message: string) => {
+const handleNegotiationSubmit = async (message: string) => { state.success = true }
+const handleSignatureSubmitted = async () => {
     state.success = true
+    // recharger lastQuote pour inclure la signature
+    try {
+        const quotes = await $fetch(`/api/quotes/?offer=${route.params.id}`)
+        const arr = (quotes as any[]).sort((a, b) => (b.version || 0) - (a.version || 0))
+        lastQuote.value = arr.length ? arr[0] : null
+    } catch { }
 }
 </script>
 
@@ -85,10 +97,13 @@ const handleNegotiationSubmit = async (message: string) => {
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 class="text-lg font-semibold text-emerald-800">Votre message a bien été
-                                        enregistré</h2>
-                                    <p class="text-sm text-emerald-700 mt-1">Notre équipe va étudier votre demande de
-                                        négociation et reviendra vers vous rapidement.</p>
+                                    <h2 class="text-lg font-semibold text-emerald-800">
+                                        {{ action === 'signature' ? 'Votre signature a bien été enregistrée' : 'Votre message a bien été enregistré' }}
+                                    </h2>
+                                    <p class="text-sm text-emerald-700 mt-1">
+                                        {{ action === 'signature' ? "Notre équipe va approuver votre signature et commencera l'installation." : 
+                                        "Notre équipe va étudier votre demande de négociation et reviendra vers vous rapidement." }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -105,7 +120,7 @@ const handleNegotiationSubmit = async (message: string) => {
                                     </div>
                                 </template>
                                 <div v-if="action === 'signature'">
-                                    <SignatureForm />
+                                    <SignatureForm :quote-id="lastQuote?.id" @submitted="handleSignatureSubmitted" />
                                 </div>
                                 <div v-else>
                                     <NegotiationForm :last-quote="lastQuote" @submitted="handleNegotiationSubmit" />
@@ -121,8 +136,8 @@ const handleNegotiationSubmit = async (message: string) => {
                                 </template>
                                 <div v-if="offer && lastQuote" class="w-full overflow-x-auto"
                                     style="-webkit-overflow-scrolling: touch;">
-                                    <QuotePreview class="inline-block shrink-0 shadow-md rounded-lg" :offer="offer" :quote="lastQuote"
-                                        :draft="draft" />
+                                    <QuotePreview class="inline-block shrink-0 shadow-md rounded-lg" :offer="offer"
+                                        :quote="lastQuote" :draft="draft" />
                                 </div>
                                 <div v-else class="text-gray-500">Aucun devis à afficher</div>
                             </UCard>

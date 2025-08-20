@@ -173,14 +173,12 @@ class QuoteSignature(models.Model):
 
 	# Données SES (Signature Électronique Simple)
 	signer_name = models.CharField(max_length=255, blank=True)
-	signer_email = models.EmailField(blank=True)
 	ip_address = models.GenericIPAddressField(null=True, blank=True)
 	user_agent = models.TextField(blank=True)
 	signed_at = models.DateTimeField(auto_now_add=True)
 
 	# Capture de la signature
 	signature_image = models.ImageField(upload_to="quotes/signatures/", null=True, blank=True)
-	signature_data = models.TextField(blank=True)  # base64 (canvas) ou JSON de tracé
 
 	created_at = models.DateTimeField(auto_now_add=True)
 
