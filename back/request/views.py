@@ -154,8 +154,7 @@ class ProspectRequestViewSet(
 				first_name=instance.first_name,
 				email=instance.email,
 				phone=instance.phone,
-				address=instance.address,
-				housing_type=instance.housing_type or "",
+				address=instance.address
 				# project_details libre pour le moment
 			)
 
@@ -166,4 +165,5 @@ class ProspectRequestViewSet(
 			data = OfferSerializer(offer).data
 			return Response(data, status=status.HTTP_201_CREATED)
 		except Exception as e:
+			print(e)
 			return Response({"detail": f"Erreur de conversion: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
