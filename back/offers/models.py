@@ -28,6 +28,9 @@ class Offer(models.Model):
 
 	status = models.CharField(max_length=20, choices=Status.choices, default=Status.TO_CONTACT)
 
+	# Date/heure à laquelle l'offre a été déplacée vers les installations
+	installation_moved_at = models.DateTimeField(null=True, blank=True)
+
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 

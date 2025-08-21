@@ -1,0 +1,62 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Installation démarrée – Accès à votre espace{% endblock %}
+
+{% block content %}
+<div>
+  <!-- En-tête -->
+  <div style="margin-bottom: 24px; text-align: center;">
+    <h2 style="font-size: 24px; font-weight: 600; color: #111827; margin: 0 0 12px 0;">
+      Votre devis a été approuvé ✅
+    </h2>
+    <p style="color: #374151; line-height: 1.6; margin: 0; font-size: 16px;">
+      Bonjour {{ user.first_name }} {{ user.last_name }}, votre projet passe en phase d'installation. 
+      Vous pouvez suivre l'évolution depuis votre espace client.
+    </p>
+  </div>
+
+  <!-- Informations de connexion (style cohérent avec welcome_user) -->
+  <div style="background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+    <h3 style="font-size: 20px; font-weight: 600; color: #2d3748; margin: 0 0 16px 0; text-align: center;">
+      Informations de connexion
+    </h3>
+
+    <!-- Email -->
+    <div style="margin-bottom: 16px;">
+      <div style="margin-bottom: 6px;"><strong style="color: #4a5568; font-size: 14px;">Adresse email :</strong></div>
+      <div style="background-color: #ffffff; padding: 12px 16px; border: 1px solid #cbd5e0; border-radius: 8px; font-family: 'Courier New', Monaco, monospace; font-size: 15px; color: #2d3748; word-break: break-all;">
+        {{ user.email }}
+      </div>
+    </div>
+
+    {% if password %}
+    <!-- Mot de passe temporaire -->
+    <div>
+      <div style="margin-bottom: 6px;"><strong style="color: #4a5568; font-size: 14px;">Mot de passe temporaire :</strong></div>
+      <div style="background-color: #fff5f5; padding: 12px 16px; border: 2px solid #feb2b2; border-radius: 8px; font-family: 'Courier New', Monaco, monospace; font-size: 15px; color: #c53030; word-break: break-all; font-weight: bold;">
+        {{ password }}
+      </div>
+      <p style="color:#A0AEC0; font-size: 12px; margin: 8px 0 0 0;">Changez votre mot de passe après connexion.</p>
+    </div>
+    {% else %}
+    <p style="color: #4a5568; margin: 0;">Utilisez votre mot de passe habituel pour vous connecter.
+      En cas d'oubli, utilisez la réinitialisation de mot de passe.</p>
+    {% endif %}
+  </div>
+
+  <!-- Accès plateforme -->
+  <div style="text-align: center; margin-bottom: 8px;">
+    <a href="{{ frontend_url }}/login" target="_blank"
+       style="display: inline-block; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-weight: 600; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-size: 16px; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);">
+      Accéder à la plateforme
+    </a>
+    <p style="margin-top: 10px; color: #718096; font-size: 13px; margin-bottom: 0;">Connectez-vous pour suivre votre installation</p>
+  </div>
+
+  <div style="border-top: 1px solid #e2e8f0; margin-top: 16px; padding-top: 12px; color: #4a5568; font-size: 14px;">
+    Le devis signé est joint à cet email au format PDF.
+  </div>
+
+  <p style="margin-top:16px; color:#4a5568;">Cordialement,<br>Europ'Green Solar</p>
+</div>
+{% endblock %}

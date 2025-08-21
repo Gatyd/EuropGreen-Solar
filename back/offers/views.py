@@ -24,7 +24,7 @@ class OfferViewSet(
 	permission_classes = [IsAuthenticated]
 
 	def get_queryset(self):
-		qs = Offer.objects.all().order_by('-created_at')
+		qs = Offer.objects.filter(installation_moved_at__isnull=True).order_by('-created_at')
 		status_param = self.request.query_params.get('status')
 		if status_param:
 			qs = qs.filter(status=status_param)
