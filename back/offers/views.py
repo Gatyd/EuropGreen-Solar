@@ -1,10 +1,11 @@
 from rest_framework import viewsets, mixins
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db.models import Q
 from .models import Offer
 from .serializers import OfferSerializer
+from authentication.permissions import HasOfferAccess
 
 
 @extend_schema_view(
@@ -21,7 +22,7 @@ class OfferViewSet(
 	queryset = Offer.objects.all().order_by('-created_at')
 	serializer_class = OfferSerializer
 	parser_classes = [JSONParser, FormParser, MultiPartParser]
-	permission_classes = [IsAuthenticated]
+	permission_classes = [HasOfferAccess]
 
 	def get_queryset(self):
 		qs = Offer.objects.filter(installation_moved_at__isnull=True).order_by('-created_at')
