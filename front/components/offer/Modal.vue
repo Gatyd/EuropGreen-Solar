@@ -208,9 +208,9 @@ const onDisapproveSignature = () => {
                             <UButton v-else-if="props.offer.last_quote.status === 'pending'" color="secondary" size="sm"
                                 label="Modifier le devis (négociation)" @click="editQuote" />
                             <!-- Actions d'administration -->
-                            <UButton v-if="props.offer.last_quote.signature" color="error" size="sm" variant="soft"
+                            <!-- <UButton v-if="props.offer.last_quote.signature" color="error" size="sm" variant="soft"
                                 icon="i-heroicons-x-circle" label="Désapprouver signature"
-                                @click="onDisapproveSignature" />
+                                @click="onDisapproveSignature" /> -->
                         </template>
                     </div>
                 </div>
