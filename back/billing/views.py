@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db.models import Q
+from authentication.permissions import HasOfferAccess
 
 from .models import Product, Quote, QuoteSignature, QuoteLine
 from .serializers import (
@@ -159,7 +160,7 @@ def render_quote_pdf(quote: Quote) -> bytes:
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by("name")
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [HasOfferAccess]
     parser_classes = [JSONParser, FormParser, MultiPartParser]
 
     def get_queryset(self):
@@ -185,7 +186,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 class QuoteViewSet(viewsets.ModelViewSet):
     queryset = Quote.objects.all().order_by("-created_at", "-version")
     serializer_class = QuoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [HasOfferAccess]
     parser_classes = [JSONParser, FormParser, MultiPartParser]
 
     def get_queryset(self):

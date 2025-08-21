@@ -2,7 +2,6 @@
 import type { Offer } from '~/types/offers'
 
 const props = defineProps<{ item: Offer }>()
-const toast = useToast()
 const showInstallationModal = ref(false)
 
 const submit = () => {

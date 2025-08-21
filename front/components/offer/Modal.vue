@@ -15,6 +15,7 @@ const quoteLoading = ref(false)
 const quoteModal = ref(false)
 const quoteToEdit = ref<any | null>(null)
 const previewOpen = ref(false)
+const showInstallationModal = ref(false)
 
 const previewDraft = computed(() => {
     const q = props.offer?.last_quote as any
@@ -115,7 +116,7 @@ function onQuoteCreated(_q: any) {
 
 const toast = useToast()
 const onMoveToInstallation = () => {
-    toast.add({ title: 'Logique de déplacement vers installation à venir', color: 'info', icon: 'i-heroicons-information-circle' })
+	showInstallationModal.value = true
 }
 const onDisapproveSignature = () => {
     toast.add({ title: 'Logique de désapprobation à venir', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
@@ -125,6 +126,7 @@ const onDisapproveSignature = () => {
 
 <template>
     <Teleport to="body">
+		<InstallationModal v-if="showInstallationModal" v-model="showInstallationModal" :offer="offer" @submit="submit" />
         <QuoteModal v-if="quoteModal" v-model="quoteModal" :offer="offer" :quote="quoteToEdit || undefined"
             @created="onQuoteCreated" />
     </Teleport>
@@ -218,7 +220,7 @@ const onDisapproveSignature = () => {
                 <div class="col-span-2 flex justify-between mt-2">
                     <UButton type="submit" :loading="loading" color="secondary" icon="i-heroicons-pencil-square"
                         label="Modifier" />
-                    <UButton v-if="props.offer.status === 'quote_signed'" color="primary" size="sm" variant="solid"
+                    <UButton type="button" v-if="props.offer.status === 'quote_signed'" color="primary" size="sm" variant="solid"
                         icon="i-heroicons-arrow-right-circle" label="Déplacer vers installation"
                         @click="onMoveToInstallation" />
                 </div>
