@@ -47,6 +47,15 @@ const links = [
         },
     },
     {
+        id: "installations",
+        label: "Installations",
+        icon: "i-heroicons-wrench-screwdriver",
+        to: "/home/installations",
+        tooltip: {
+            text: "Installations",
+        },
+    },
+    {
         id: "users",
         label: "Utilisateurs",
         icon: "i-heroicons-users",
@@ -81,6 +90,7 @@ const links = [
 const accessLink = links.map((link: any) => {
     if (!user.value?.is_superuser) {
         if (link.id === "users") return null
+        if (link.id === "products") return null
         if (link.id === "home") return null
     }
     if (!user.value?.is_superuser && user.value?.is_staff) {
@@ -89,6 +99,7 @@ const accessLink = links.map((link: any) => {
 
         if ((link.id === "requests") && !useraccess?.requests) return null
         if ((link.id === "offers") && !useraccess?.offers) return null
+        if ((link.id === "installations") && !useraccess?.installation) return null
     }
 
     return link;
