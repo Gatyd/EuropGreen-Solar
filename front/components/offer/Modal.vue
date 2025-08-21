@@ -14,6 +14,32 @@ const loading = ref(false)
 const quoteLoading = ref(false)
 const quoteModal = ref(false)
 const quoteToEdit = ref<any | null>(null)
+const previewOpen = ref(false)
+
+const previewDraft = computed(() => {
+    const q = props.offer?.last_quote as any
+    if (!q) {
+        return {
+            title: '',
+            valid_until: null,
+            tax_rate: 20,
+            lines: [] as Array<{ productId: string; name: string; description: string; unit_price: number; quantity: number; discount_rate: number }>
+        }
+    }
+    return {
+        title: q.title || '',
+        valid_until: q.valid_until || null,
+        tax_rate: Number(q.tax_rate ?? 20),
+        lines: (q.lines || []).map((l: any) => ({
+            productId: l.product || l.product_id || '',
+            name: l.name,
+            description: l.description,
+            unit_price: Number(l.unit_price ?? 0),
+            quantity: Number(l.quantity ?? 0),
+            discount_rate: Number(l.discount_rate ?? 0)
+        }))
+    }
+})
 
 const state = reactive({
     last_name: '',
@@ -47,7 +73,7 @@ const sendQuote = async () => {
     quoteLoading.value = true
     if (!props.offer.last_quote) return
     const res = await apiRequest<any>(
-    () => $fetch(`/api/quotes/${props.offer.last_quote!.id}/send/`, { method: 'POST', credentials: 'include' }),
+        () => $fetch(`/api/quotes/${props.offer.last_quote!.id}/send/`, { method: 'POST', credentials: 'include' }),
         toast
     )
     if (res) {
@@ -85,6 +111,14 @@ function onQuoteCreated(_q: any) {
     // Fermer le modal de devis et rafraîchir l'offre côté parent
     quoteModal.value = false
     emit('submit')
+}
+
+const toast = useToast()
+const onMoveToInstallation = () => {
+    toast.add({ title: 'Logique de déplacement vers installation à venir', color: 'info', icon: 'i-heroicons-information-circle' })
+}
+const onDisapproveSignature = () => {
+    toast.add({ title: 'Logique de désapprobation à venir', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
 }
 
 </script>
@@ -151,7 +185,11 @@ function onQuoteCreated(_q: any) {
                                 <span class="font-medium">Total:</span> {{ props.offer.last_quote.total }} €
                             </div>
                         </div>
-                        <UButton v-if="props.offer.last_quote.pdf" variant="ghost" color="neutral" size="xl"
+                        <!-- Si le devis est signé (signature présente), afficher l'aperçu au lieu du PDF -->
+                        <UButton v-if="props.offer.last_quote.signature" variant="ghost" color="neutral" size="xl"
+                            icon="i-heroicons-eye" @click="previewOpen = true" :title="'Voir l\'aperçu du devis'" />
+                        <!-- Sinon, lien vers le PDF si disponible -->
+                        <UButton v-else-if="props.offer.last_quote.pdf" variant="ghost" color="neutral" size="xl"
                             icon="i-heroicons-document" target="_blank" :to="props.offer.last_quote.pdf" />
                     </div>
 
@@ -165,19 +203,38 @@ function onQuoteCreated(_q: any) {
                         <template v-else>
                             <UButton v-if="props.offer.last_quote.status === 'draft'" color="secondary" size="sm"
                                 label="Modifier le brouillon" @click="editQuote" />
-                            <UButton v-if="props.offer.last_quote.status === 'draft'" :loading="quoteLoading" color="primary" size="sm"
-                                label="Envoyer le devis" @click="sendQuote" />
+                            <UButton v-if="props.offer.last_quote.status === 'draft'" :loading="quoteLoading"
+                                color="primary" size="sm" label="Envoyer le devis" @click="sendQuote" />
                             <UButton v-else-if="props.offer.last_quote.status === 'pending'" color="secondary" size="sm"
                                 label="Modifier le devis (négociation)" @click="editQuote" />
+                            <!-- Actions d'administration -->
+                            <UButton v-if="props.offer.last_quote.signature" color="error" size="sm" variant="soft"
+                                icon="i-heroicons-x-circle" label="Désapprouver signature"
+                                @click="onDisapproveSignature" />
                         </template>
                     </div>
                 </div>
 
-                <div class="col-span-2 flex justify-end mt-2">
-                    <UButton type="submit" :loading="loading" color="primary" icon="i-heroicons-check-circle"
-                        label="Enregistrer" />
+                <div class="col-span-2 flex justify-between mt-2">
+                    <UButton type="submit" :loading="loading" color="secondary" icon="i-heroicons-pencil-square"
+                        label="Modifier" />
+                    <UButton v-if="props.offer.status === 'quote_signed'" color="primary" size="sm" variant="solid"
+                        icon="i-heroicons-arrow-right-circle" label="Déplacer vers installation"
+                        @click="onMoveToInstallation" />
                 </div>
             </UForm>
         </template>
     </UModal>
+
+    <!-- Aperçu du devis signé -->
+    <Teleport to="body">
+        <UModal :open="previewOpen" @update:open="v => (previewOpen = v)" title="Aperçu du devis"
+            :ui="{ content: 'max-w-5xl' }">
+            <template #body>
+                <div v-if="offer?.last_quote" class="space-y-4">
+                    <QuotePreview :offer="offer" :quote="offer.last_quote" :draft="previewDraft" />
+                </div>
+            </template>
+        </UModal>
+    </Teleport>
 </template>

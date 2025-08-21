@@ -532,12 +532,25 @@ class QuoteViewSet(viewsets.ModelViewSet):
         if not signer_name:
             return Response({"detail": "Nom du signataire requis."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Récup IP et UA
-        ip = request.META.get("HTTP_X_FORWARDED_FOR")
-        if ip:
-            ip = ip.split(",")[0].strip()
-        else:
-            ip = request.META.get("REMOTE_ADDR")
+        # Récup IP et UA (en tenant compte des proxys) et normalisation
+        def _get_client_ip(req):
+            x_real_ip = req.META.get("HTTP_X_REAL_IP")
+            if x_real_ip:
+                ip_ = x_real_ip.strip()
+            else:
+                xff = req.META.get("HTTP_X_FORWARDED_FOR")
+                if xff:
+                    ip_ = xff.split(",")[0].strip()
+                else:
+                    ip_ = req.META.get("REMOTE_ADDR")
+            # Normaliser IPv6 loopback et IPv4-mappée
+            if ip_ == "::1":
+                ip_ = "127.0.0.1"
+            if ip_ and ip_.startswith("::ffff:"):
+                ip_ = ip_.split(":")[-1]
+            return ip_
+
+        ip = _get_client_ip(request)
         ua = request.META.get("HTTP_USER_AGENT", "")
 
         sig = QuoteSignature(quote=quote, signer_name=signer_name, ip_address=ip, user_agent=ua)

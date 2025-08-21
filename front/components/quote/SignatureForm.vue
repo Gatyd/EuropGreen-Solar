@@ -2,6 +2,7 @@
 // Formulaire de signature SES avec canvas (image base64) + nom/email
 const props = defineProps<{ quoteId: string | null | undefined }>()
 const emit = defineEmits<{ (e: 'submitted'): void }>()
+const loading = ref(false)
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const drawing = ref(false)
@@ -86,6 +87,7 @@ onBeforeUnmount(() => {
 const onSubmit = async () => {
   if (!props.quoteId) return
   const toast = useToast()
+  loading.value = true
   let res
   if (state.method === 'upload') {
     const fd = new FormData()
@@ -102,6 +104,7 @@ const onSubmit = async () => {
     }), toast)
   }
   if (res) emit('submitted')
+  loading.value = false
 }
 </script>
 
@@ -129,7 +132,7 @@ const onSubmit = async () => {
       <div v-else class="text-gray-500 text-sm">Choisissez un fichier image à uploader.</div>
     </UFormField>
     <div class="mt-4">
-      <UButton type="submit" color="primary" label="Signer le devis" />
+      <UButton type="submit" :loading="loading" color="primary" label="Signer le devis" />
     </div>
   </UForm>
 </template>

@@ -2,6 +2,14 @@
 import type { Offer } from '~/types/offers'
 
 const props = defineProps<{ item: Offer }>()
+const toast = useToast()
+const onMoveToInstallation = () => {
+  toast.add({
+    title: 'Logique de déplacement vers installation à venir',
+    color: 'info',
+    icon: 'i-heroicons-information-circle'
+  })
+}
 </script>
 
 <template>
@@ -14,6 +22,9 @@ const props = defineProps<{ item: Offer }>()
     </div>
     <div class="text-xs text-gray-400 truncate">
       {{ item.address }}
+    </div>
+    <div v-if="item.status === 'quote_signed'" class="mt-2 flex justify-end">
+      <UButton size="xs" color="primary" variant="solid" icon="i-heroicons-arrow-right-circle" label="Déplacer vers installation" @click.stop="onMoveToInstallation" />
     </div>
   </UCard>
 </template>
