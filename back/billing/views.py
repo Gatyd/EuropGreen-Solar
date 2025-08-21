@@ -107,7 +107,7 @@ async def _render_quote_pdf_playwright_async(quote: Quote) -> bytes:
     url = f"{base_url}/print/quotes/{quote.id}"
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch()
+        browser = await p.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
         context = await browser.new_context()
         # Auth via cookie JWT si possible
         try:
