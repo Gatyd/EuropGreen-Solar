@@ -47,6 +47,15 @@ const links = [
         },
     },
     {
+        id: "customers",
+        label: "Clients",
+        icon: "i-heroicons-user-group",
+        to: "/home/customers",
+        tooltip: {
+            text: "Clients",
+        },
+    },
+    {
         id: "installations",
         label: "Installations",
         icon: "i-heroicons-wrench-screwdriver",
@@ -92,6 +101,7 @@ const accessLink = links.map((link: any) => {
         if (link.id === "users") return null
         if (link.id === "products") return null
         if (link.id === "home") return null
+        if (link.id === "customers") return null
     }
     if (!user.value?.is_superuser && user.value?.is_staff) {
         const useraccess = user.value?.useraccess;
