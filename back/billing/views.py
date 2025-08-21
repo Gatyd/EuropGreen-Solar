@@ -16,138 +16,77 @@ from .serializers import (
     QuoteNegotiationReplySerializer,
 )
 from django.core.files.base import ContentFile
-from io import BytesIO
-import asyncio
 from django.conf import settings
 from EuropGreenSolar.email_utils import send_mail
 
-def _render_quote_pdf_reportlab(quote: Quote) -> bytes:
-    try:
-        from reportlab.pdfgen import canvas
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.units import mm
-    except Exception:
-        return b""
-    buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    y = height - 20 * mm
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(20 * mm, y, "DEVIS")
-    y -= 10 * mm
-    c.setFont("Helvetica", 10)
-    client = f"A: {quote.offer.first_name} {quote.offer.last_name}"
-    c.drawString(20 * mm, y, client)
-    y -= 5 * mm
-    c.drawString(20 * mm, y, quote.offer.address)
-    y -= 10 * mm
-    c.drawString(140 * mm, height - 20 * mm, f"N°: {quote.number}")
-    c.drawString(140 * mm, height - 25 * mm, f"Date: {quote.created_at.date()}")
-    if quote.valid_until:
-        c.drawString(140 * mm, height - 30 * mm, f"Valide jusqu'au: {quote.valid_until}")
-    y -= 10 * mm
-    if quote.title:
-        c.setFont("Helvetica", 9)
-        c.drawString(20 * mm, y, quote.title)
-        y -= 8 * mm
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(20 * mm, y, "DESCRIPTION")
-    c.drawRightString(130 * mm, y, "QTE")
-    c.drawRightString(160 * mm, y, "PRIX")
-    c.drawRightString(180 * mm, y, "REMISE %")
-    c.drawRightString(200 * mm, y, "MONTANT")
-    y -= 6 * mm
-    c.setFont("Helvetica", 9)
-    for line in quote.lines.order_by("position", "created_at"):
-        if y < 20 * mm:
-            c.showPage(); y = height - 20 * mm
-        c.drawString(20 * mm, y, line.name[:80])
-        c.drawRightString(130 * mm, y, f"{line.quantity}")
-        c.drawRightString(160 * mm, y, f"{line.unit_price:.2f}")
-        c.drawRightString(180 * mm, y, f"{line.discount_rate:.2f}")
-        c.drawRightString(200 * mm, y, f"{line.line_total:.2f}")
-        y -= 5 * mm
-        if line.description:
-            for chunk in line.description.split("\n"):
-                if y < 20 * mm:
-                    c.showPage(); y = height - 20 * mm
-                c.setFont("Helvetica", 8)
-                c.drawString(22 * mm, y, chunk[:100])
-                c.setFont("Helvetica", 9)
-                y -= 4 * mm
-    y -= 8 * mm
-    c.setFont("Helvetica-Bold", 9)
-    c.drawRightString(180 * mm, y, "TOTAL H.T.")
-    c.setFont("Helvetica", 9)
-    c.drawRightString(200 * mm, y, f"{quote.subtotal:.2f} €")
-    y -= 5 * mm
-    c.setFont("Helvetica-Bold", 9)
-    c.drawRightString(180 * mm, y, f"TVA {quote.tax_rate:.0f}%")
-    c.setFont("Helvetica", 9)
-    c.drawRightString(200 * mm, y, f"{(quote.total - quote.subtotal):.2f} €")
-    y -= 5 * mm
-    c.setFont("Helvetica-Bold", 10)
-    c.drawRightString(180 * mm, y, "TOTAL (EUR)")
-    c.setFont("Helvetica", 10)
-    c.drawRightString(200 * mm, y, f"{quote.total:.2f} €")
-    c.showPage()
-    c.save()
-    pdf_bytes = buffer.getvalue()
-    buffer.close()
-    return pdf_bytes
+# WeasyPrint-based PDF rendering
+from django.template.loader import render_to_string
+from django.contrib.staticfiles import finders
+import os
+import logging
+from pathlib import Path
+from time import perf_counter
 
-
-async def _render_quote_pdf_playwright_async(quote: Quote) -> bytes:
-    try:
-        from playwright.async_api import async_playwright
-    except Exception:
-        return _render_quote_pdf_reportlab(quote)
-
-    base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000').rstrip('/')
-    url = f"{base_url}/print/quotes/{quote.id}"
-
-    async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        context = await browser.new_context()
-        # Auth via cookie JWT si possible
-        try:
-            from rest_framework_simplejwt.tokens import AccessToken
-            if getattr(quote, 'created_by', None):
-                token = str(AccessToken.for_user(quote.created_by))
-                # Déposer le cookie d'accès sur le domaine du front
-                await context.add_cookies([
-                    {
-                        'name': getattr(settings, 'ACCESS_TOKEN_COOKIE_NAME', 'access_token'),
-                        'value': token,
-                        'url': base_url,
-                    }
-                ])
-        except Exception:
-            pass
-        page = await context.new_page()
-        await page.goto(url, wait_until="networkidle")
-        pdf_bytes = await page.pdf(format="A4", print_background=True, margin={"top":"10mm","right":"10mm","bottom":"10mm","left":"10mm"})
-        await browser.close()
-        return pdf_bytes
+logger = logging.getLogger(__name__)
 
 
 def render_quote_pdf(quote: Quote) -> bytes:
+    """Génère le PDF du devis avec WeasyPrint à partir d'un template HTML."""
     try:
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-        if loop and loop.is_running():
-            # Exécuter dans une nouvelle boucle si on est déjà dans un event loop
-            new_loop = asyncio.new_event_loop()
-            try:
-                return new_loop.run_until_complete(_render_quote_pdf_playwright_async(quote))
-            finally:
-                new_loop.close()
-        else:
-            return asyncio.run(_render_quote_pdf_playwright_async(quote))
+        from weasyprint import HTML, CSS  # lazy import pour éviter erreurs si libs système manquantes
+    except Exception as e:
+        logger.warning("PDF: WeasyPrint indisponible (import échoué): %s", e)
+        return b""
+    # Localisation des ressources statiques (logo, CSS)
+    logo_path = finders.find("images/logo.png")
+    if not logo_path:
+        # fallback chemin relatif au repo si collectstatic n'est pas utilisé en dev
+        logo_path = os.path.join(settings.BASE_DIR, "back", "static", "images", "logo.png")
+    css_path = finders.find("css/weasyprint.css")
+    if not css_path:
+        css_path = os.path.join(settings.BASE_DIR, "back", "static", "css", "weasyprint.css")
+
+    signature_file_url = ""
+    try:
+        if getattr(quote, "signature", None) and getattr(quote.signature, "signature_image", None) and quote.signature.signature_image and quote.signature.signature_image.path:
+            signature_file_url = Path(quote.signature.signature_image.path).as_uri()
     except Exception:
-        return _render_quote_pdf_reportlab(quote)
+        signature_file_url = ""
+
+    # Montant de TVA calculé côté serveur pour l'affichage
+    try:
+        tax_amount = (quote.total - quote.subtotal)
+    except Exception:
+        tax_amount = 0
+
+    context = {
+        "quote": quote,
+        "offer": quote.offer,
+        "lines": quote.lines.order_by("position", "created_at"),
+    "logo_file_url": (Path(logo_path).as_uri() if logo_path and os.path.exists(logo_path) else ""),
+        "signature_file_url": signature_file_url,
+        "tax_amount": tax_amount,
+    }
+    html = render_to_string("quote/pdf.html", context)
+
+    # base_url permet à WeasyPrint de résoudre les URLs relatives (file://)
+    # base_url: utiliser le dossier CSS s'il existe, sinon la racine du projet
+    if css_path and os.path.exists(css_path):
+        base_url = str(Path(css_path).parent)
+    else:
+        base_url = str(settings.BASE_DIR)
+    stylesheets = []
+    if css_path and os.path.exists(css_path):
+        stylesheets.append(CSS(filename=css_path))
+    try:
+        t0 = perf_counter()
+        pdf_bytes = HTML(string=html, base_url=base_url).write_pdf(stylesheets=stylesheets)
+        dt = perf_counter() - t0
+        logger.info("PDF: génération pour %s en %.2fs", getattr(quote, 'number', '?'), dt)
+        return pdf_bytes
+    except Exception as e:
+        logger.error("PDF: génération WeasyPrint échouée pour le devis %s: %s", getattr(quote, 'number', '?'), e)
+        return b""
 
 
 @extend_schema_view(

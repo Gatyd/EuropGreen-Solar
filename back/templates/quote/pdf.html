@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8">
+	<title>Devis {{ quote.number }}</title>
+	<link rel="stylesheet" href="{% static 'css/weasyprint.css' %}">
+</head>
+<body>
+	<div class="header">
+		<div>
+			{% if logo_file_url %}
+				<img class="logo" src="{{ logo_file_url }}" alt="Logo" />
+			{% else %}
+				<img class="logo" src="{% static 'images/logo.png' %}" alt="Logo" />
+			{% endif %}
+		</div>
+		<div class="company-box">
+			<p class="h1">DEVIS</p>
+			<p class="strong">Europ'Green Solar</p>
+			<p>18 rue de Berlin</p>
+			<p>68000 Colmar GES</p>
+			<p>France</p>
+			<p>n° SIREN: 932 121 536</p>
+			<p class="mb-2">n° TVA: FR23932121536</p>
+			<p>Dirigeant</p>
+			<p>0970702656</p>
+			<p>0761303795</p>
+			<p>europgreensolar@gmail.com</p>
+			<p>europ-greensolar.fr</p>
+		</div>
+	</div>
+
+	<div class="section">
+		<div class="client">
+			<p class="strong">À :</p>
+			<p>{{ offer.first_name }} {{ offer.last_name }}</p>
+			<p>{{ offer.address }}</p>
+		</div>
+		<div class="quote-info">
+			<p class="strong">Devis N° : <span class="bold">{{ quote.number }}</span></p>
+			<p class="strong">Date : <span class="bold">{{ quote.created_at|date:'d/m/Y' }}</span></p>
+			<p class="strong">Valide jusqu’au : <span class="bold">{% if quote.valid_until %}{{ quote.valid_until|date:'d/m/Y' }}{% else %}—{% endif %}</span></p>
+		</div>
+	</div>
+
+	{% if quote.title %}
+		<p class="mb-2">{{ quote.title }}</p>
+	{% endif %}
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="left">DESCRIPTION</th>
+				<th class="right">QUANTITÉ</th>
+				<th class="right">PRIX (€)</th>
+				<th class="right">REMISE %</th>
+				<th class="right">MONTANT (€)</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for line in lines %}
+			<tr>
+				<td>
+					<div class="title">{{ line.name }}</div>
+					{% if line.description %}
+						<div class="desc">{{ line.description }}</div>
+					{% endif %}
+				</td>
+				<td class="right">{{ line.quantity }}</td>
+				<td class="right">{{ line.unit_price|floatformat:2 }}</td>
+				<td class="right">{{ line.discount_rate|floatformat:2 }}</td>
+				<td class="right">{{ line.line_total|floatformat:2 }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<div class="totals">
+		<div class="box">
+			<div class="row no-border">
+				<span class="strong">TOTAL H.T. :</span>
+				<span>{{ quote.subtotal|floatformat:2 }} €</span>
+			</div>
+					<div class="row">
+						<span class="strong">TVA {{ quote.tax_rate|floatformat:0 }}% :</span>
+						<span>{{ tax_amount|floatformat:2 }} €</span>
+			</div>
+			<div class="row">
+				<span class="bold">TOTAL (EUR) :</span>
+				<span class="bold">{{ quote.total|floatformat:2 }} €</span>
+			</div>
+		</div>
+	</div>
+
+	{% if quote.signature %}
+	<div class="signature">
+		<div class="label">Signature du client</div>
+		<div class="box">
+			{% if signature_file_url %}
+				<img src="{{ signature_file_url }}" alt="Signature" />
+			{% endif %}
+			<div class="meta">
+				Signé par <span class="bold">{{ quote.signature.signer_name|default:'—' }}</span>
+				{% if quote.signature.signer_email %}<span> ({{ quote.signature.signer_email }})</span>{% endif %}
+				{% if quote.signature.signed_at %} • le {{ quote.signature.signed_at|date:'d/m/Y H:i' }}{% endif %}
+			</div>
+		</div>
+	</div>
+	{% endif %}
+</body>
+</html>
