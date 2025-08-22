@@ -113,9 +113,9 @@ const signatureImageUrl = computed(() => {
                         <p class="whitespace-pre-line text-[11px] font-medium text-zinc-500">{{ ligne.description }}</p>
                     </td>
                     <td class="p-2 text-right">{{ ligne.quantite }}</td>
-                    <td class="p-2 text-right">{{ ligne.prix.toFixed(2) }}</td>
-                    <td class="p-2 text-right">{{ ligne.remise.toFixed(2) }}</td>
-                    <td class="p-2 text-right">{{ ligne.montant.toFixed(2) }}</td>
+                    <td class="p-2 text-right">{{ formatPrice(ligne.prix, true) }}</td>
+                    <td class="p-2 text-right">{{ formatPrice(ligne.remise, true) }}</td>
+                    <td class="p-2 text-right">{{ formatPrice(ligne.montant, true) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -125,15 +125,15 @@ const signatureImageUrl = computed(() => {
             <div class="w-64">
                 <div class="flex justify-between border-t py-1">
                     <span class="font-semibold">TOTAL H.T. :</span>
-                    <span>{{ totalHT.toFixed(2) }} €</span>
+                    <span>{{ formatPrice(totalHT, true) }} €</span>
                 </div>
                 <div class="flex justify-between py-1">
                     <span class="font-semibold">TVA 20% :</span>
-                    <span>{{ tva.toFixed(2) }} €</span>
+                    <span>{{ formatPrice(tva, true) }} €</span>
                 </div>
                 <div class="flex justify-between border-t font-bold py-1">
                     <span>TOTAL (EUR) :</span>
-                    <span>{{ totalTTC.toFixed(2) }} €</span>
+                    <span>{{ formatPrice(totalTTC, true) }} €</span>
                 </div>
             </div>
         </div>

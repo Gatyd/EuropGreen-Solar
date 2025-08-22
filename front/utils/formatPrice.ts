@@ -10,7 +10,7 @@
  * - 9.9 -> "9,90"
  * - 9 -> "9"
  */
-export function formatPrice(price: number | string): string {
+export function formatPrice(price: number | string, zero: boolean = false): string {
   // Convertir en nombre si c'est une chaîne
   const numPrice = typeof price === 'string' ? parseFloat(price) : price
   
@@ -28,7 +28,7 @@ export function formatPrice(price: number | string): string {
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
   
   // Si les décimales sont .00, ne pas les afficher
-  if (decimalPart === '00') {
+  if (decimalPart === '00' && !zero) {
     return formattedInteger
   }
   
