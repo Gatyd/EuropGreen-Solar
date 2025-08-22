@@ -40,10 +40,7 @@ const loadData = async () => {
         // Récupérer l'offre (public)
         const offerRes = await $fetch(`/api/offers/${route.params.id}/`)
         offer.value = offerRes as any
-        // Récupérer le dernier devis de l'offre (public)
-        const quotes = await $fetch(`/api/quotes/?offer=${route.params.id}`)
-        const arr = (quotes as any[]).sort((a, b) => (b.version || 0) - (a.version || 0))
-        lastQuote.value = arr.length ? arr[0] : null
+        lastQuote.value = offer.value?.last_quote
         // Si des notes existent déjà -> succès direct
         // succès pour négociation (message enregistré)
         state.success = !!(lastQuote.value && lastQuote.value.notes && String(lastQuote.value.notes).trim().length > 0)
