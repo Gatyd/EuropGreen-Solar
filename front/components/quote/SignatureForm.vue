@@ -6,15 +6,17 @@ const loading = ref(false)
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const drawing = ref(false)
+const DRAW_BREAKPOINT = 1024 // px, phones/tablettes <= 1024, desktop > 1024
+const currentMode = ref<'mobile' | 'desktop'>(typeof window !== 'undefined' && window.innerWidth <= DRAW_BREAKPOINT ? 'mobile' : 'desktop')
 const state = reactive({ signer_name: '', method: 'draw' as 'draw' | 'upload', file: null as File | null })
 
 const validate = (s: typeof state) => {
-  const errors: { path: string; message: string }[] = []
+  const errors: { name: string; message: string }[] = []
   if (!s.signer_name || !s.signer_name.trim()) {
-    errors.push({ path: 'signer_name', message: 'Nom complet requis.' })
+    errors.push({ name: 'signer_name', message: 'Nom complet requis.' })
   }
   if (s.method === 'upload' && !state.file) {
-    errors.push({ path: 'file', message: 'Veuillez sélectionner une image de signature.' })
+    errors.push({ name: 'file', message: 'Veuillez sélectionner une image de signature.' })
   }
   return errors
 }
@@ -23,48 +25,134 @@ const clearCanvas = () => {
   const c = canvasRef.value
   if (!c) return
   const ctx = c.getContext('2d')!
+  // Remplir un fond blanc en tenant compte d'un éventuel scale (DPR)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.clearRect(0, 0, c.width, c.height)
   ctx.fillStyle = '#fff'
   ctx.fillRect(0, 0, c.width, c.height)
+  ctx.restore()
 }
 
 let unbindCanvas: null | (() => void) = null
+let unbindResize: null | (() => void) = null
+
+const computeMode = () => (window.innerWidth <= DRAW_BREAKPOINT ? 'mobile' : 'desktop')
 
 function setupCanvas() {
   const c = canvasRef.value
   if (!c) return
-  c.width = 640
-  c.height = 180
-  clearCanvas()
-  const ctx = c.getContext('2d')!
-  ctx.lineWidth = 2
-  ctx.lineCap = 'round'
-  const onDown = (e: PointerEvent) => {
-    drawing.value = true
-    ctx.beginPath()
-    ctx.moveTo(e.offsetX, e.offsetY)
-  }
-  const onMove = (e: PointerEvent) => {
-    if (!drawing.value) return
-    ctx.lineTo(e.offsetX, e.offsetY)
-    ctx.stroke()
-  }
-  const onUp = () => {
-    drawing.value = false
-  }
-  c.addEventListener('pointerdown', onDown)
-  c.addEventListener('pointermove', onMove)
-  window.addEventListener('pointerup', onUp)
-  unbindCanvas = () => {
-    c.removeEventListener('pointerdown', onDown)
-    c.removeEventListener('pointermove', onMove)
-    window.removeEventListener('pointerup', onUp)
+
+  const mode = currentMode.value
+
+  if (mode === 'mobile') {
+    // Mode mobile/tablette: normalisation des coords + DPR
+    const dpr = Math.max(1, window.devicePixelRatio || 1)
+    const rect = c.getBoundingClientRect()
+    const cssWidth = rect.width || 640
+    const cssHeight = rect.height || 180
+
+    c.width = Math.round(cssWidth * dpr)
+    c.height = Math.round(cssHeight * dpr)
+
+    const ctx = c.getContext('2d')!
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.scale(dpr, dpr)
+
+    clearCanvas()
+
+    ctx.lineWidth = 2
+    ctx.lineCap = 'round'
+
+    const getPos = (e: PointerEvent) => {
+      const r = c.getBoundingClientRect()
+      return { x: e.clientX - r.left, y: e.clientY - r.top }
+    }
+
+    const onDown = (e: PointerEvent) => {
+      e.preventDefault()
+      drawing.value = true
+      const { x, y } = getPos(e)
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      try { c.setPointerCapture?.(e.pointerId) } catch { }
+    }
+    const onMove = (e: PointerEvent) => {
+      if (!drawing.value) return
+      e.preventDefault()
+      const { x, y } = getPos(e)
+      ctx.lineTo(x, y)
+      ctx.stroke()
+    }
+    const onUp = (e?: PointerEvent) => {
+      drawing.value = false
+      try { if (e) c.releasePointerCapture?.(e.pointerId) } catch { }
+    }
+
+    c.addEventListener('pointerdown', onDown, { passive: false })
+    c.addEventListener('pointermove', onMove, { passive: false })
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+
+    unbindCanvas = () => {
+      c.removeEventListener('pointerdown', onDown as any)
+      c.removeEventListener('pointermove', onMove as any)
+      window.removeEventListener('pointerup', onUp as any)
+      window.removeEventListener('pointercancel', onUp as any)
+    }
+  } else {
+    // Mode desktop: ancien comportement simple
+    c.width = 640
+    c.height = 180
+
+    const ctx = c.getContext('2d')!
+    clearCanvas()
+    ctx.lineWidth = 2
+    ctx.lineCap = 'round'
+
+    const onDown = (e: PointerEvent) => {
+      drawing.value = true
+      ctx.beginPath()
+      ctx.moveTo(e.offsetX, e.offsetY)
+    }
+    const onMove = (e: PointerEvent) => {
+      if (!drawing.value) return
+      ctx.lineTo(e.offsetX, e.offsetY)
+      ctx.stroke()
+    }
+    const onUp = () => { drawing.value = false }
+
+    c.addEventListener('pointerdown', onDown)
+    c.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+
+    unbindCanvas = () => {
+      c.removeEventListener('pointerdown', onDown as any)
+      c.removeEventListener('pointermove', onMove as any)
+      window.removeEventListener('pointerup', onUp as any)
+    }
   }
 }
 
 onMounted(() => {
-  if (state.method === 'draw') {
-    nextTick(() => setupCanvas())
+  const init = () => {
+    currentMode.value = computeMode()
+    if (state.method === 'draw') {
+      nextTick(() => setupCanvas())
+    }
   }
+  init()
+  const onResize = () => {
+    const newMode = computeMode()
+    const modeChanged = newMode !== currentMode.value
+    if (modeChanged || newMode === 'mobile') {
+      if (unbindCanvas) { unbindCanvas(); unbindCanvas = null }
+      currentMode.value = newMode
+      nextTick(() => setupCanvas())
+    }
+  }
+  window.addEventListener('resize', onResize)
+  unbindResize = () => window.removeEventListener('resize', onResize)
 })
 
 watch(() => state.method, (val, prev) => {
@@ -81,6 +169,10 @@ onBeforeUnmount(() => {
   if (unbindCanvas) {
     unbindCanvas()
     unbindCanvas = null
+  }
+  if (unbindResize) {
+    unbindResize()
+    unbindResize = null
   }
 })
 
