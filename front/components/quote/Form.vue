@@ -191,23 +191,6 @@ async function submitReplyCurrent() {
     }
 }
 
-async function submitReplyNewVersion() {
-    if (!props.quote) return
-    if (!reply.value.trim()) {
-        toast.add({ title: 'Réponse requise', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
-        return
-    }
-    loadingReply.value = true
-    const res = await apiRequest<any>(() => $fetch(`/api/quotes/${props.quote.id}/reply-new-version/`, {
-        method: 'POST', body: { reply: reply.value }, credentials: 'include'
-    }), toast)
-    loadingReply.value = false
-    if (res) {
-        toast.add({ title: 'Nouvelle version envoyée', color: 'success', icon: 'i-heroicons-check-circle' })
-        emit('created', res)
-    }
-}
-
 </script>
 
 <template>

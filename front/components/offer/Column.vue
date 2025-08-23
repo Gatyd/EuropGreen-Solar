@@ -8,7 +8,7 @@ const props = defineProps<{
   loading?: boolean
   count?: number
 }>()
-const emit = defineEmits(['drop', 'open'])
+const emit = defineEmits(['drop', 'open', 'submit-quote'])
 
 const onDragStart = (event: DragEvent, item: Offer) => {
   event.dataTransfer?.setData('text/plain', JSON.stringify(item))
@@ -47,7 +47,7 @@ const onDragOver = (event: DragEvent) => {
     <div v-else class="flex flex-col gap-2">
       <div v-for="it in items" :key="it.id" draggable="true" @dragstart="(e: DragEvent) => onDragStart(e, it)">
         <div @click.stop.prevent="emit('open', it)">
-          <OfferCard :item="it" />
+          <OfferCard :item="it" @submit-quote="emit('submit-quote')" />
         </div>
       </div>
     </div>

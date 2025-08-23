@@ -142,7 +142,7 @@ async function submitInlineEdit() {
             <div v-for="col in columns" :key="col.key">
                 <RequestSkeleton v-if="loading" :title="col.title" />
                 <OfferColumn v-else :title="col.title" :status="col.key" :items="items[col.key]"
-                    :count="items[col.key].length" @drop="onDrop" @open="openDetails" />
+                    :count="items[col.key].length" @drop="onDrop" @open="openDetails" @submit-quote="fetchAll" />
             </div>
         </div>
     </div>

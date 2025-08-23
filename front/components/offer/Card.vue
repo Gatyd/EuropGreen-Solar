@@ -2,22 +2,96 @@
 import type { Offer } from '~/types/offers'
 
 const props = defineProps<{ item: Offer }>()
+const emit = defineEmits<{
+    (e: 'submit-quote'): void
+}>()
+
 const showInstallationModal = ref(false)
+const quoteModal = ref(false)
+const quoteLoading = ref(false)
+const quoteToEdit = ref<any | null>(null)
+const previewOpen = ref(false)
+
+const previewDraft = computed(() => {
+    const q = props.item?.last_quote as any
+    if (!q) {
+        return {
+            title: '',
+            valid_until: null,
+            tax_rate: 20,
+            lines: [] as Array<{ productId: string; name: string; description: string; unit_price: number; quantity: number; discount_rate: number }>
+        }
+    }
+    return {
+        title: q.title || '',
+        valid_until: q.valid_until || null,
+        tax_rate: Number(q.tax_rate ?? 20),
+        lines: (q.lines || []).map((l: any) => ({
+            productId: l.product || l.product_id || '',
+            name: l.name,
+            description: l.description,
+            unit_price: Number(l.unit_price ?? 0),
+            quantity: Number(l.quantity ?? 0),
+            discount_rate: Number(l.discount_rate ?? 0)
+        }))
+    }
+})
 
 const submit = () => {
 	navigateTo('/home/installations')
 }
 
+const sendQuote = async () => {
+    const toast = useToast()
+    quoteLoading.value = true
+    if (!props.item.last_quote) return
+    const res = await apiRequest<any>(
+        () => $fetch(`/api/quotes/${props.item.last_quote!.id}/send/`, { method: 'POST', credentials: 'include' }),
+        toast
+    )
+    if (res) {
+        toast.add({ title: 'Devis envoyé', color: 'success', icon: 'i-heroicons-paper-airplane' })
+        emit('submit-quote')
+    }
+    quoteLoading.value = false
+}
+
 const onMoveToInstallation = () => {
 	showInstallationModal.value = true
+}
+
+const createQuote = () => {
+    quoteToEdit.value = null
+    quoteModal.value = true
+}
+
+const editQuote = () => {
+    quoteToEdit.value = props.item.last_quote
+    quoteModal.value = true
+}
+
+function onQuoteCreated(_q: any) {
+	quoteModal.value = false
+    emit('submit-quote')
 }
 </script>
 
 <template>
 	<Teleport to="body">
-		<InstallationModal v-if="showInstallationModal" v-model="showInstallationModal" :offer="item" @submit="submit" />
+		<InstallationModal v-if="showInstallationModal" v-model="showInstallationModal" :offer="item"
+			@submit="submit" />
+		<QuoteModal v-if="quoteModal" v-model="quoteModal" :offer="item" :quote="quoteToEdit || undefined"
+			@created="onQuoteCreated" />
+        <UModal :open="previewOpen" @update:open="v => (previewOpen = v)" title="Aperçu du devis"
+            :ui="{ content: 'max-w-5xl' }">
+            <template #body>
+                <div v-if="item?.last_quote" class="space-y-4">
+                    <QuotePreview :offer="item" :quote="item.last_quote" :draft="previewDraft" />
+                </div>
+            </template>
+        </UModal>
 	</Teleport>
-	<UCard :ui="{ body: 'p-3' }" class="cursor-grab">
+	<UCard :ui="{ body: 'p-3 sm:p-4' }" class="cursor-grab">
 		<div class="font-medium">
 			{{ item.last_name }} {{ item.first_name }}
 		</div>
@@ -26,6 +100,63 @@ const onMoveToInstallation = () => {
 		</div>
 		<div class="text-xs text-gray-400 truncate">
 			{{ item.address }}
+		</div>
+		<div class="border rounded-md p-2 mt-2 bg-gray-50 dark:bg-gray-800/50">
+			<div class="flex items-center justify-between mb-2">
+				<span class="text-sm font-medium text-gray-600 dark:text-gray-300">Dernier devis</span>
+				<span v-if="item.last_quote" class="text-xs px-2 py-1 rounded-full" :class="{
+					'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200': item.last_quote.status === 'draft',
+					'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200': item.last_quote.status === 'sent',
+					'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200': item.last_quote.status === 'pending',
+					'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200': item.last_quote.status === 'accepted',
+					'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200': item.last_quote.status === 'declined'
+				}">
+					{{
+						item.last_quote.status === 'draft' ? 'Brouillon' :
+							item.last_quote.status === 'sent' ? 'Envoyé' :
+								item.last_quote.status === 'pending' ? 'En attente' :
+									item.last_quote.status === 'accepted' ? 'Accepté' :
+										item.last_quote.status === 'declined' ? 'Refusé' : item.last_quote.status
+					}}
+				</span>
+			</div>
+
+			<div v-if="item.last_quote" class="flex justify-between items-center">
+				<div class="space-y-1 text-sm">
+					<div class="text-gray-700 dark:text-gray-200">
+						<span class="font-medium">N°:</span> {{ item.last_quote.number }}
+					</div>
+					<div class="text-gray-700 dark:text-gray-200">
+						<span class="font-medium">Version:</span> v{{ item.last_quote.version }}
+					</div>
+					<div class="text-gray-700 dark:text-gray-200">
+						<span class="font-medium">Total:</span> {{ item.last_quote.total }} €
+					</div>
+				</div>
+				<!-- Si le devis est signé (signature présente), afficher l'aperçu au lieu du PDF -->
+				<UButton v-if="item.last_quote.signature" variant="ghost" color="neutral" size="xl"
+					icon="i-heroicons-eye" @click.stop="previewOpen = true" :title="'Voir l\'aperçu du devis'" />
+				<!-- Sinon, lien vers le PDF si disponible -->
+				<UButton v-else-if="item.last_quote.pdf" variant="ghost" @click.stop="" color="neutral" size="xl"
+					icon="i-heroicons-document" target="_blank" :to="item.last_quote.pdf" />
+			</div>
+
+			<div v-else class="text-sm text-gray-500 dark:text-gray-400">
+				Aucun devis
+			</div>
+
+			<div class="mt-3 flex gap-2 justify-end">
+				<UButton v-if="!item.last_quote" color="primary" size="sm" label="Créer le devis"
+					@click="createQuote" />
+				<template v-else>
+					<UButton v-if="item.last_quote.status === 'draft'" color="secondary" size="sm"
+						label="Modifier le brouillon" @click.stop="editQuote" />
+					<UButton v-if="item.last_quote.status === 'draft'" :loading="quoteLoading" color="primary"
+						size="sm" label="Envoyer le devis" @click.stop="sendQuote" />
+					<UButton v-else-if="item.last_quote.status === 'pending'" color="secondary" size="sm"
+						label="Modifier le devis (négociation)" @click.stop="editQuote" />
+				</template>
+			</div>
 		</div>
 		<div v-if="item.status === 'quote_signed'" class="mt-2 flex justify-end">
 			<UButton size="xs" color="primary" variant="solid" icon="i-heroicons-arrow-right-circle"
