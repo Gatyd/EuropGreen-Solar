@@ -24,7 +24,7 @@ const convertToOffer = async () => {
 </script>
 
 <template>
-    <UCard :ui="{ body: 'p-3' }" class="cursor-grab">
+    <UCard :ui="{ body: 'p-3 sm:p-4' }" class="cursor-grab">
         <div class="font-medium">
             {{ item.last_name }} {{ item.first_name }}
         </div>
@@ -45,7 +45,7 @@ const convertToOffer = async () => {
         <div v-if="auth.user?.is_superuser && item.assigned_to" class="mt-2 pt-2 border-t text-xs text-gray-500">
             Chargé d'affaire: {{ item.assigned_to.first_name }} {{ item.assigned_to.last_name }}
         </div>
-        <div v-if="item.status === 'closed'" class="mt-2 flex justify-end">
+        <div class="mt-2 flex justify-end">
             <UButton size="xs" color="primary" variant="solid" icon="i-heroicons-arrow-right-circle" label="Transformer en offre" @click.stop="convertToOffer" />
         </div>
     </UCard>
