@@ -14,6 +14,10 @@ const state = reactive({ loading: true, error: '', success: false })
 
 const action = computed(() => (route.query.action as string) || 'negotiation')
 
+useSeoMeta({
+    title: `Offre #${route.params.id || ''}`,
+})
+
 // draft minimal pour Preview à partir du devis existant
 const draft = computed(() => {
     const q = lastQuote.value

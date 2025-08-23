@@ -6,6 +6,7 @@ const loading = ref(false)
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const drawing = ref(false)
+const hasDrawn = ref(false)
 const DRAW_BREAKPOINT = 1024 // px, phones/tablettes <= 1024, desktop > 1024
 const currentMode = ref<'mobile' | 'desktop'>(typeof window !== 'undefined' && window.innerWidth <= DRAW_BREAKPOINT ? 'mobile' : 'desktop')
 const state = reactive({ signer_name: '', method: 'draw' as 'draw' | 'upload', file: null as File | null })
@@ -17,6 +18,9 @@ const validate = (s: typeof state) => {
   }
   if (s.method === 'upload' && !state.file) {
     errors.push({ name: 'file', message: 'Veuillez sélectionner une image de signature.' })
+  }
+  if (s.method === 'draw' && !hasDrawn.value) {
+    errors.push({ name: 'signature', message: 'Veuillez dessiner votre signature.' })
   }
   return errors
 }
@@ -32,6 +36,7 @@ const clearCanvas = () => {
   ctx.fillStyle = '#fff'
   ctx.fillRect(0, 0, c.width, c.height)
   ctx.restore()
+  hasDrawn.value = false
 }
 
 let unbindCanvas: null | (() => void) = null
@@ -81,6 +86,7 @@ function setupCanvas() {
       if (!drawing.value) return
       e.preventDefault()
       const { x, y } = getPos(e)
+      hasDrawn.value = true
       ctx.lineTo(x, y)
       ctx.stroke()
     }
@@ -117,6 +123,7 @@ function setupCanvas() {
     }
     const onMove = (e: PointerEvent) => {
       if (!drawing.value) return
+      hasDrawn.value = true
       ctx.lineTo(e.offsetX, e.offsetY)
       ctx.stroke()
     }
@@ -187,6 +194,11 @@ const onSubmit = async () => {
     if (state.file) fd.append('signature_file', state.file)
     res = await apiRequest(() => $fetch(`/api/quotes/${props.quoteId}/sign/`, { method: 'POST', body: fd }), toast)
   } else {
+    // Empêcher l'envoi si aucune trace n'a été dessinée
+    if (!hasDrawn.value) {
+      loading.value = false
+      return
+    }
     const dataUrl = canvasRef.value?.toDataURL('image/png') || ''
     res = await apiRequest(() => $fetch(`/api/quotes/${props.quoteId}/sign/`, {
       method: 'POST', body: {

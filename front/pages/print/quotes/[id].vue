@@ -16,6 +16,10 @@ const offer = ref<any | null>(null)
 const pending = ref(true)
 const error = ref<string | null>(null)
 
+useSeoMeta({
+  title: computed(() => quote.value ? quote.value.number : 'Devis'),
+})
+
 onMounted(async () => {
   try {
     const q = await $fetch(`/api/quotes/${id}/`, { credentials: 'include' })
