@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { Offer } from '~/types/offers'
+import type { ProspectStatus } from '~/types/requests';
+import apiRequest from "~/utils/apiRequest";
 
 const props = defineProps<{ item: Offer }>()
 const emit = defineEmits<{
-    (e: 'submit-quote'): void
+	(e: 'submit-quote'): void
 }>()
 
 const showInstallationModal = ref(false)
@@ -11,30 +13,45 @@ const quoteModal = ref(false)
 const quoteLoading = ref(false)
 const quoteToEdit = ref<any | null>(null)
 const previewOpen = ref(false)
+// Loading individuel par statut pour le retour vers les demandes
+const returningLoadings = ref<Record<ProspectStatus, boolean>>({
+	new: false,
+	followup: false,
+	info: false,
+	in_progress: false,
+	closed: false
+})
+
+const requestItems: { value: ProspectStatus; title: string }[] = [
+	{ value: 'followup', title: 'À relancer' },
+	{ value: 'info', title: 'Demande de renseignement' },
+	{ value: 'in_progress', title: 'En cours' },
+	{ value: 'closed', title: 'Clôturé' }
+]
 
 const previewDraft = computed(() => {
-    const q = props.item?.last_quote as any
-    if (!q) {
-        return {
-            title: '',
-            valid_until: null,
-            tax_rate: 20,
-            lines: [] as Array<{ productId: string; name: string; description: string; unit_price: number; quantity: number; discount_rate: number }>
-        }
-    }
-    return {
-        title: q.title || '',
-        valid_until: q.valid_until || null,
-        tax_rate: Number(q.tax_rate ?? 20),
-        lines: (q.lines || []).map((l: any) => ({
-            productId: l.product || l.product_id || '',
-            name: l.name,
-            description: l.description,
-            unit_price: Number(l.unit_price ?? 0),
-            quantity: Number(l.quantity ?? 0),
-            discount_rate: Number(l.discount_rate ?? 0)
-        }))
-    }
+	const q = props.item?.last_quote as any
+	if (!q) {
+		return {
+			title: '',
+			valid_until: null,
+			tax_rate: 20,
+			lines: [] as Array<{ productId: string; name: string; description: string; unit_price: number; quantity: number; discount_rate: number }>
+		}
+	}
+	return {
+		title: q.title || '',
+		valid_until: q.valid_until || null,
+		tax_rate: Number(q.tax_rate ?? 20),
+		lines: (q.lines || []).map((l: any) => ({
+			productId: l.product || l.product_id || '',
+			name: l.name,
+			description: l.description,
+			unit_price: Number(l.unit_price ?? 0),
+			quantity: Number(l.quantity ?? 0),
+			discount_rate: Number(l.discount_rate ?? 0)
+		}))
+	}
 })
 
 const submit = () => {
@@ -42,18 +59,18 @@ const submit = () => {
 }
 
 const sendQuote = async () => {
-    const toast = useToast()
-    quoteLoading.value = true
-    if (!props.item.last_quote) return
-    const res = await apiRequest<any>(
-        () => $fetch(`/api/quotes/${props.item.last_quote!.id}/send/`, { method: 'POST', credentials: 'include' }),
-        toast
-    )
-    if (res) {
-        toast.add({ title: 'Devis envoyé', color: 'success', icon: 'i-heroicons-paper-airplane' })
-        emit('submit-quote')
-    }
-    quoteLoading.value = false
+	const toast = useToast()
+	quoteLoading.value = true
+	if (!props.item.last_quote) return
+	const res = await apiRequest<any>(
+		() => $fetch(`/api/quotes/${props.item.last_quote!.id}/send/`, { method: 'POST', credentials: 'include' }),
+		toast
+	)
+	if (res) {
+		toast.add({ title: 'Devis envoyé', color: 'success', icon: 'i-heroicons-paper-airplane' })
+		emit('submit-quote')
+	}
+	quoteLoading.value = false
 }
 
 const onMoveToInstallation = () => {
@@ -61,18 +78,36 @@ const onMoveToInstallation = () => {
 }
 
 const createQuote = () => {
-    quoteToEdit.value = null
-    quoteModal.value = true
+	quoteToEdit.value = null
+	quoteModal.value = true
 }
 
 const editQuote = () => {
-    quoteToEdit.value = props.item.last_quote
-    quoteModal.value = true
+	quoteToEdit.value = props.item.last_quote
+	quoteModal.value = true
 }
 
 function onQuoteCreated(_q: any) {
 	quoteModal.value = false
-    emit('submit-quote')
+	emit('submit-quote')
+}
+
+async function returnToRequest(status: ProspectStatus) {
+	const toast = useToast()
+	returningLoadings.value[status] = true
+	const res = await apiRequest<any>(
+		() => $fetch(`/api/offers/${props.item.id}/return_to_request/`, {
+			method: 'POST',
+			credentials: 'include',
+			body: { request_status: status }
+		}),
+		toast
+	)
+	if (res) {
+		toast.add({ title: 'Offre renvoyée vers les demandes', color: 'success', icon: 'i-heroicons-arrow-left-16-solid' })
+		emit('submit-quote')
+	}
+	returningLoadings.value[status] = false
 }
 </script>
 
@@ -82,16 +117,39 @@ function onQuoteCreated(_q: any) {
 			@submit="submit" />
 		<QuoteModal v-if="quoteModal" v-model="quoteModal" :offer="item" :quote="quoteToEdit || undefined"
 			@created="onQuoteCreated" />
-        <UModal :open="previewOpen" @update:open="v => (previewOpen = v)" title="Aperçu du devis"
-            :ui="{ content: 'max-w-5xl' }">
-            <template #body>
-                <div v-if="item?.last_quote" class="space-y-4">
-                    <QuotePreview :offer="item" :quote="item.last_quote" :draft="previewDraft" />
-                </div>
-            </template>
-        </UModal>
+		<UModal :open="previewOpen" @update:open="v => (previewOpen = v)" title="Aperçu du devis"
+			:ui="{ content: 'max-w-5xl' }">
+			<template #body>
+				<div v-if="item?.last_quote" class="space-y-4">
+					<QuotePreview :offer="item" :quote="item.last_quote" :draft="previewDraft" />
+				</div>
+			</template>
+		</UModal>
 	</Teleport>
 	<UCard :ui="{ body: 'p-3 sm:p-4' }" class="cursor-grab">
+		<UPopover v-if="item.status !== 'quote_signed'" :content="{
+			align: 'center',
+			side: 'left',
+			sideOffset: 8
+		}">
+			<UButton label="Ramener vers les demandes" icon="i-heroicons-arrow-left-16-solid" size="sm" class="mb-1"
+				color="neutral" variant="subtle" @click.stop="" />
+
+			<template #content>
+				<div class="flex flex-col gap-3 p-2">
+					<UButton
+						v-for="opt in requestItems"
+						:key="opt.value"
+						:label="opt.title"
+						size="sm"
+						variant="subtle"
+						color="neutral"
+						:loading="returningLoadings[opt.value]"
+						@click.stop="returnToRequest(opt.value)"
+					/>
+				</div>
+			</template>
+		</UPopover>
 		<div class="font-medium">
 			{{ item.last_name }} {{ item.first_name }}
 		</div>
@@ -151,8 +209,8 @@ function onQuoteCreated(_q: any) {
 				<template v-else>
 					<UButton v-if="item.last_quote.status === 'draft'" color="secondary" size="sm"
 						label="Modifier le brouillon" @click.stop="editQuote" />
-					<UButton v-if="item.last_quote.status === 'draft'" :loading="quoteLoading" color="primary"
-						size="sm" label="Envoyer le devis" @click.stop="sendQuote" />
+					<UButton v-if="item.last_quote.status === 'draft'" :loading="quoteLoading" color="primary" size="sm"
+						label="Envoyer le devis" @click.stop="sendQuote" />
 					<UButton v-else-if="item.last_quote.status === 'pending'" color="secondary" size="sm"
 						label="Modifier le devis (négociation)" @click.stop="editQuote" />
 				</template>

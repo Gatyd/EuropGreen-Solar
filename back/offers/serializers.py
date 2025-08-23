@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Offer
 from billing.models import Quote
 from billing.serializers import QuoteSerializer
+from request.models import ProspectRequest
 
 
 class OfferSerializer(serializers.ModelSerializer):
@@ -20,3 +21,12 @@ class OfferSerializer(serializers.ModelSerializer):
 			return None
 		# Propager le contexte (request) pour construire des URLs absolues
 		return QuoteSerializer(quote, context=self.context).data
+
+
+class OfferReturnToRequestSerializer(serializers.Serializer):
+	"""Serializer pour retourner une offre vers les demandes.
+
+	Attendu:
+	- request_status: nouveau statut de la demande (parmi ProspectRequest.Status)
+	"""
+	request_status = serializers.ChoiceField(choices=ProspectRequest.Status.choices)

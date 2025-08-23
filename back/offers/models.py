@@ -30,6 +30,7 @@ class Offer(models.Model):
 
 	# Date/heure à laquelle l'offre a été déplacée vers les installations
 	installation_moved_at = models.DateTimeField(null=True, blank=True)
+	returned_to_request_at = models.DateTimeField(null=True, blank=True)
 
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)

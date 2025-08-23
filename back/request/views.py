@@ -147,16 +147,21 @@ class ProspectRequestViewSet(
 			if instance.converted_to_offer_at:
 				return Response({"detail": "Cette demande a déjà été convertie en offre."}, status=status.HTTP_400_BAD_REQUEST)
 
-			# Créer l'offre avec les données de la demande
-			offer = Offer.objects.create(
-				request=instance,
-				last_name=instance.last_name,
-				first_name=instance.first_name,
-				email=instance.email,
-				phone=instance.phone,
-				address=instance.address
-				# project_details libre pour le moment
-			)
+			# Créer l'offre avec les données de la demande si elle n'exite pas
+			if not Offer.objects.filter(request=instance).exists():
+				offer = Offer.objects.create(
+					request=instance,
+					last_name=instance.last_name,
+					first_name=instance.first_name,
+					email=instance.email,
+					phone=instance.phone,
+					address=instance.address
+					# project_details libre pour le moment
+				)
+			else:
+				offer = Offer.objects.get(request=instance)
+				offer.returned_to_request_at = None
+				offer.save(update_fields=["returned_to_request_at", "updated_at"])
 
 			# Marquer la demande comme convertie
 			instance.converted_to_offer_at = timezone.now()

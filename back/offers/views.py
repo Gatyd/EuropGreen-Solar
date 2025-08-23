@@ -4,8 +4,12 @@ from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db.models import Q
 from .models import Offer
-from .serializers import OfferSerializer
+from .serializers import OfferSerializer, OfferReturnToRequestSerializer
 from authentication.permissions import HasOfferAccess
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils import timezone
 
 
 @extend_schema_view(
@@ -25,7 +29,7 @@ class OfferViewSet(
 	permission_classes = [HasOfferAccess]
 
 	def get_queryset(self):
-		qs = Offer.objects.filter(installation_moved_at__isnull=True).order_by('-created_at')
+		qs = Offer.objects.filter(installation_moved_at__isnull=True, returned_to_request_at__isnull=True).order_by('-created_at')
 		status_param = self.request.query_params.get('status')
 		if status_param:
 			qs = qs.filter(status=status_param)
@@ -54,3 +58,27 @@ class OfferViewSet(
 		if self.action == 'retrieve':
 			return [AllowAny()]
 		return super().get_permissions()
+	
+	@action(detail=True, methods=['post'],  url_path='return_to_request')
+	def return_to_request(self, request, pk=None):
+		# Validation de la payload
+		serializer = OfferReturnToRequestSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		request_status = serializer.validated_data['request_status']
+
+		try:
+			offer: Offer = self.get_object()
+		except Offer.DoesNotExist:
+			return Response({"detail": "Offre introuvable"}, status=status.HTTP_404_NOT_FOUND)
+
+		prospect_request = offer.request
+		# Mettre à jour les timestamps et le statut
+		offer.returned_to_request_at = timezone.now()
+		offer.save(update_fields=["returned_to_request_at", "updated_at"])
+
+		prospect_request.converted_to_offer_at = None
+		prospect_request.status = request_status
+		prospect_request.save(update_fields=["converted_to_offer_at", "status", "updated_at"])
+
+		return Response({"detail": "Offre retournée vers les demandes"}, status=status.HTTP_200_OK)
+		
