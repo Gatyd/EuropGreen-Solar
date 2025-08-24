@@ -188,7 +188,8 @@ onMounted(fetchUsers)
     <UserDeactivateModal v-model="deactivateModal" v-if="selectedUser" :user="selectedUser" @deactivate="fetchUsers" />
     <div class="sticky top-0 z-50 bg-white">
         <UDashboardNavbar title="Utilisateurs" class="lg:text-2xl font-semibold"
-            :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }"><template #trailing>
+            :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">
+            <template #trailing>
                 <UBadge v-if="users?.length as number > 0" :label="users?.length" variant="subtle" />
             </template>
             <template #right>

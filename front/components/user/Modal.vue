@@ -36,7 +36,8 @@ const roles = [
     { label: 'Administrateur', value: 'admin' },
     { label: 'Employé', value: 'employee' },
     { label: 'Installateur', value: 'installer' },
-    { label: 'Sécrétaire', value: 'secretary' }
+    { label: 'Sécrétaire', value: 'secretary' },
+    { label: 'Responsable régional', value: 'regional_manager' }
 ]
 
 const allAccess = [
@@ -53,6 +54,8 @@ const updateAccess = (role: string) => {
         state.useraccess = ['installation']
     } else if (role === 'secretary') {
         state.useraccess = ['installation', 'administrative_procedures']
+    } else if (role === 'regional_manager') {
+        state.useraccess = ['installation', 'offers', 'requests', 'administrative_procedures']
     } else {
         state.useraccess = []
     }
