@@ -48,9 +48,20 @@ const links = [
     },
     {
         id: "customers",
-        label: "Clients",
+        label: "Prospects / Clients",
         icon: "i-heroicons-user-group",
-        to: "/home/customers",
+        children: [
+            {
+                icon: 'i-heroicons-user-plus',
+                label: "Prospects",
+                to: "/home/customers/prospects",
+            },
+            {
+                icon: 'i-heroicons-user-group',
+                label: "Clients",
+                to: "/home/customers/list",
+            }
+        ],
         tooltip: {
             text: "Clients",
         },

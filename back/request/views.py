@@ -29,7 +29,7 @@ class ProspectRequestViewSet(
 	mixins.UpdateModelMixin,
 	viewsets.GenericViewSet,
 ):
-	queryset = ProspectRequest.objects.select_related("assigned_to").all()
+	queryset = ProspectRequest.objects.select_related("assigned_to", "offer").all()
 	serializer_class = ProspectRequestSerializer
 	http_method_names = ["get", "post", "patch"]
 	parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -68,13 +68,13 @@ class ProspectRequestViewSet(
 		
 		# Portée de base selon le rôle
 		if user.is_superuser:
-			qs = ProspectRequest.objects.select_related("assigned_to").filter(converted_to_offer_at__isnull=True)
+			qs = ProspectRequest.objects.select_related("assigned_to", "offer")
 		elif not user.is_staff:
 			# Utilisateur non staff: ne voir que ses propres demandes via email
-			qs = ProspectRequest.objects.select_related("assigned_to").filter(email=user.email, converted_to_offer_at__isnull=True)
+			qs = ProspectRequest.objects.select_related("assigned_to", "offer").filter(email=user.email)
 		else:
 			# Staff non-admin: ne voir que les demandes qui lui sont assignées
-			qs = ProspectRequest.objects.select_related("assigned_to").filter(Q(assigned_to_id=user.id) | Q(created_by_id=user.id), converted_to_offer_at__isnull=True)
+			qs = ProspectRequest.objects.select_related("assigned_to", "offer").filter(Q(assigned_to_id=user.id) | Q(created_by_id=user.id))
 
 		# Filtres additionnels
 		status_param = self.request.query_params.get("status")
@@ -101,8 +101,19 @@ class ProspectRequestViewSet(
 				| Q(phone__icontains=search)
 			)
 
-		# Exclure les demandes déjà converties en offre
-		return qs.filter(converted_to_offer_at__isnull=True)
+		# Scopes de filtrage en fin de chaîne
+		scope = self.request.query_params.get("scope")
+		if scope == "prospects":
+			# Prospects = demandes sans offre OU avec offre non déplacée vers installation
+			qs = qs.filter(Q(offer__isnull=True) | Q(offer__installation_moved_at__isnull=True))
+		elif scope == "all":
+			# Toutes les demandes (dans la portée utilisateur)
+			pass
+		else:
+			# Comportement historique: exclure celles déjà converties en offre
+			qs = qs.filter(converted_to_offer_at__isnull=True)
+
+		return qs
 	
 	def perform_create(self, serializer):
 		instance = serializer.save(created_by=self.request.user)
