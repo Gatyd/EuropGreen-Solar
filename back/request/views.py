@@ -13,6 +13,7 @@ from rest_framework import status
 from django.utils import timezone
 from offers.models import Offer
 from offers.serializers import OfferSerializer
+from django.contrib.auth import get_user_model
 
 
 @extend_schema_view(
@@ -112,6 +113,29 @@ class ProspectRequestViewSet(
 				print(f"Echec envoi email d'assignation: {msg}")
 		except Exception as e:
 			print(f"Erreur lors de l'envoi de l'email d'assignation: {e}")
+
+		# Notification aux administrateurs (superusers) à la création
+		try:
+			User = get_user_model()
+            # On cible les superusers actifs avec un email défini
+			admins = list(User.objects.filter(is_superuser=True, is_active=True).exclude(email__isnull=True).exclude(email="").values_list('email', flat=True))
+			if admins:
+				context = {
+					"prospect": instance,
+					"created_by": instance.created_by,
+				}
+				subject = f"Nouvelle demande créée – {instance.last_name} {instance.first_name}"
+				# Envoyer à tous les admins en un seul email groupé
+				success, msg = send_project_mail(
+					template='emails/prospect_created_admin.html',
+					context=context,
+					subject=subject,
+					to=admins,
+				)
+				if success is False:
+					print(f"Echec envoi email admins (création): {msg}")
+		except Exception as e:
+			print(f"Erreur lors de l'envoi de l'email aux admins: {e}")
 
 	def perform_update(self, serializer):
 		"""Envoie un email si l'utilisateur assigné change (None->valeur ou valeur->autre valeur)."""
