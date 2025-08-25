@@ -147,13 +147,9 @@ async function onSubmit() {
 
     // Si on est en phase de négociation ou après envoi (sent), la soumission crée une nouvelle version et envoie la réponse
     if (props.quote && (props.quote.status === 'pending' || props.quote.status === 'sent')) {
-        if (!reply.value.trim()) {
-            toast.add({ title: 'Réponse requise', color: 'warning', icon: 'i-heroicons-exclamation-triangle' })
-            return
-        }
         loading.value = true
-        const res = await apiRequest<any>(() => $fetch(`/api/quotes/${props.quote!.id}/reply-new-version/`, {
-            method: 'POST', body: { ...payload, reply: reply.value }, credentials: 'include'
+        const res = await apiRequest<any>(() => $fetch(`/api/quotes/${props.quote!.id}/${props.quote.status === 'pending' ? 'reply-new-version' : 'send-new-version'}/`, {
+            method: 'POST', body: props.quote.status === 'pending' ? { ...payload, reply: reply.value } : payload, credentials: 'include'
         }), toast)
         loading.value = false
         if (res) {
@@ -323,11 +319,11 @@ async function submitReplyCurrent() {
                 </UFormField>
                 <template #footer>
                     <div class="flex flex-col sm:flex-row justify-end gap-2">
-                        <UButton v-if="quote && (quote.status === 'pending' || quote.status === 'sent')" color="primary"
+                        <UButton v-if="quote && quote.status === 'pending'" color="primary"
                             variant="soft" :loading="loadingReply" icon="i-heroicons-paper-airplane"
                             @click="submitReplyCurrent" label="Envoyer la réponse (version actuelle)" />
                         <UButton type="submit" color="primary" :loading="loading" icon="i-heroicons-check-circle"
-                            :label="quote ? quote.status === 'pending' ? 'Envoyer (nouvelle version)' : 'Modifier le brouillon' : 'Valider le brouillon'" />
+                            :label="quote ? quote.status === 'pending' || quote.status === 'sent' ? 'Envoyer (nouvelle version)' : 'Modifier le brouillon' : 'Valider le brouillon'" />
                     </div>
                 </template>
             </UCard>

@@ -211,8 +211,8 @@ async function returnToRequest(status: ProspectStatus) {
 						label="Modifier le brouillon" @click.stop="editQuote" />
 					<UButton v-if="item.last_quote.status === 'draft'" :loading="quoteLoading" color="primary" size="sm"
 						label="Envoyer le devis" @click.stop="sendQuote" />
-					<UButton v-else-if="item.last_quote.status === 'pending'" color="secondary" size="sm"
-						label="Modifier le devis (négociation)" @click.stop="editQuote" />
+					<UButton v-else-if="item.last_quote.status === 'pending' || item.last_quote.status === 'sent'" color="secondary" size="sm"
+						:label="`Modifier le devis${item.last_quote.status === 'sent' ? '' : ' (négociation)'}`" @click.stop="editQuote" />
 				</template>
 			</div>
 		</div>

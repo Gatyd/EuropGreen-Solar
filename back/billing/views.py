@@ -354,7 +354,7 @@ class QuoteViewSet(viewsets.ModelViewSet):
             filename = f"{quote.number}.pdf"
             quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
 
-    @action(detail=True, methods=["post"], url_path="version")
+    @action(detail=True, methods=["post"], url_path="send-new-version")
     def send_new_version(self, request, pk=None):
         # Nouvelle version via serializer + envoi mail standard avec mention d'invalidation
         previous = self.get_object()
