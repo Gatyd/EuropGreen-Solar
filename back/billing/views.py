@@ -154,7 +154,7 @@ def _send_quote_sent_email(quote: Quote, request: Optional[HttpRequest] = None, 
         pass
 
     return send_mail(
-        template="emails/quote_sent.html",
+        template="emails/quote/quote_sent.html",
         context=ctx,
         subject=subject,
         to=offer.email,
@@ -464,7 +464,7 @@ class QuoteViewSet(viewsets.ModelViewSet):
             pass
 
         ok, msg = send_mail(
-            template='emails/quote_negotiation_reply.html',
+            template='emails/quote/quote_negotiation_reply.html',
             context=ctx,
             subject=subject,
             to=offer.email,
@@ -526,7 +526,7 @@ class QuoteViewSet(viewsets.ModelViewSet):
         except Exception:
             pass
         ok, msg = send_mail(
-            template='emails/quote_negotiation_reply.html',
+            template='emails/quote/quote_negotiation_reply.html',
             context=ctx,
             subject=subject,
             to=offer.email,

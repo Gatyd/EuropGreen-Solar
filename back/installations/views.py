@@ -85,7 +85,7 @@ class FormViewSet(viewsets.ModelViewSet):
 			attachments = [pdf_attachment] if pdf_attachment else None
 			subject = "Votre devis est approuvé – Début des étapes d'installation"
 			send_mail(
-				template='emails/installation_started.html',
+				template='emails/installation/installation_started.html',
 				context=ctx,
 				subject=subject,
 				to=client_email,

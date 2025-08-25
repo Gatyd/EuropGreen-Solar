@@ -49,7 +49,7 @@ class ProspectRequestViewSet(
 		}
 		subject = f"Nouvelle demande assignée – {instance.last_name} {instance.first_name}"
 		return send_project_mail(
-			template='emails/prospect_assigned.html',
+			template='emails/prospect/prospect_assigned.html',
 			context=context,
 			subject=subject,
 			to=assignee.email,
@@ -138,7 +138,7 @@ class ProspectRequestViewSet(
 				subject = f"Nouvelle demande créée – {instance.last_name} {instance.first_name}"
 				# Envoyer à tous les admins en un seul email groupé
 				success, msg = send_project_mail(
-					template='emails/prospect_created_admin.html',
+					template='emails/prospect/prospect_created_admin.html',
 					context=context,
 					subject=subject,
 					to=admins,

@@ -64,7 +64,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
             }
             
             # Utiliser votre template existant
-            html_message = render_to_string('emails/welcome_user.html', context)
+            html_message = render_to_string('emails/user/welcome_user.html', context)
             plain_message = strip_tags(html_message)
             
             response = requests.post(
@@ -98,8 +98,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
                 'password': password,
                 'frontend_url': settings.FRONTEND_URL,
             }
-            
-            html_message = render_to_string('emails/welcome_user.html', context)
+
+            html_message = render_to_string('emails/user/welcome_user.html', context)
             plain_message = strip_tags(html_message)
             
             send_mail(

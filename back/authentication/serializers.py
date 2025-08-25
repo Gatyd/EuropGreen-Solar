@@ -48,7 +48,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
                 'frontend_url': settings.FRONTEND_URL,
             }
             
-            html_message = render_to_string('emails/password_reset.html', context)
+            html_message = render_to_string('emails/user/password_reset.html', context)
             plain_message = strip_tags(html_message)
             
             response = requests.post(
@@ -87,7 +87,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
                 'frontend_url': settings.FRONTEND_URL,
             }
             
-            html_message = render_to_string('emails/password_reset.html', context)
+            html_message = render_to_string('emails/user/password_reset.html', context)
             plain_message = strip_tags(html_message)
             
             send_mail(
