@@ -56,6 +56,7 @@ class Quote(models.Model):
 
 	status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
 	title = models.CharField(max_length=255, blank=True)
+	negociations = models.TextField(blank=True)
 	notes = models.TextField(blank=True)
 	currency = models.CharField(max_length=3, default="EUR")
 

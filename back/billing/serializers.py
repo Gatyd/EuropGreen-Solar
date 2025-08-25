@@ -82,6 +82,7 @@ class QuoteSerializer(serializers.ModelSerializer):
             "predecessor",
             "status",
             "title",
+            "negociations",
             "notes",
             "currency",
             "valid_until",
@@ -158,11 +159,11 @@ class QuoteNegotiationSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
         quote: Quote = self.context['quote']
-        quote.notes = self.validated_data['message']
+        quote.negociations = self.validated_data['message']
         # quote.status = Quote.Status.PENDING
         quote.offer.status = 'negotiation'
         quote.offer.save(update_fields=['status'])
-        quote.save(update_fields=['notes'])
+        quote.save(update_fields=['negociations'])
         return quote
 
 class QuoteNegotiationReplySerializer(serializers.Serializer):

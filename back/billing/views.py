@@ -285,7 +285,7 @@ class QuoteViewSet(viewsets.ModelViewSet):
         subject = f"Réponse à votre demande – {quote.number}"
         ctx = {
             'quote_number': quote.number,
-            'client_message': quote.notes or '',
+            'client_message': quote.negociations or '',
             'reply_message': reply,
             'quote_total': quote.total,
             'quote_valid_until': quote.valid_until,
@@ -312,10 +312,10 @@ class QuoteViewSet(viewsets.ModelViewSet):
         if not ok:
             return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Remise à zéro des notes et statut sent
-        quote.notes = ''
+        # Remise à zéro des négociations et statut sent
+        quote.negociations = ''
         quote.status = Quote.Status.SENT
-        quote.save(update_fields=['notes', 'status'])
+        quote.save(update_fields=['negociations', 'status'])
         return Response(self.get_serializer(quote).data)
 
     @action(detail=True, methods=["post"], url_path="reply-new-version")
@@ -360,7 +360,7 @@ class QuoteViewSet(viewsets.ModelViewSet):
             title=title,
             valid_until=valid_until,
             tax_rate=tax_rate,
-            notes='',
+            negociations='',
             **extra,
         )
 
@@ -431,7 +431,7 @@ class QuoteViewSet(viewsets.ModelViewSet):
         subject = f"Réponse à votre demande – {new_quote.number}"
         ctx = {
             'quote_number': new_quote.number,
-            'client_message': previous.notes or '',
+            'client_message': previous.negociations or '',
             'reply_message': reply,
             'quote_total': new_quote.total,
             'quote_valid_until': new_quote.valid_until,
@@ -455,10 +455,10 @@ class QuoteViewSet(viewsets.ModelViewSet):
         if not ok:
             return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Remise à zéro des notes sur l’ancienne version et statut sent
-        previous.notes = ''
+        # Remise à zéro des negociations sur l’ancienne version et statut sent
+        previous.negociations = ''
         previous.status = Quote.Status.SENT
-        previous.save(update_fields=['notes', 'status'])
+        previous.save(update_fields=['negociations', 'status'])
 
         return Response(self.get_serializer(new_quote).data, status=status.HTTP_201_CREATED)
 

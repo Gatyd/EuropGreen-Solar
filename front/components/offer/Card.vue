@@ -205,7 +205,7 @@ async function returnToRequest(status: ProspectStatus) {
 
 			<div class="mt-3 flex gap-2 justify-end">
 				<UButton v-if="!item.last_quote" color="primary" size="sm" label="Créer le devis"
-					@click="createQuote" />
+					@click.stop="createQuote" />
 				<template v-else>
 					<UButton v-if="item.last_quote.status === 'draft'" color="secondary" size="sm"
 						label="Modifier le brouillon" @click.stop="editQuote" />

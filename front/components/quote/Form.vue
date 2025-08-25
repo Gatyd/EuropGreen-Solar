@@ -221,8 +221,8 @@ async function submitReplyCurrent() {
                     <div class="font-semibold">Négociations</div>
                 </template>
                 <div class="grid grid-cols-2 gap-4">
-                    <UFormField name="notes" label="Message du client">
-                        <UTextarea class="w-full" :model-value="props.quote.notes || ''" :rows="6" readonly disabled />
+                    <UFormField name="negociations" label="Message du client">
+                        <UTextarea class="w-full" :model-value="props.quote.negociations || ''" :rows="6" readonly disabled />
                     </UFormField>
                     <UFormField name="reply" label="Votre réponse" required>
                         <UTextarea class="w-full" v-model="reply" :rows="6" placeholder="Saisissez votre réponse…" />

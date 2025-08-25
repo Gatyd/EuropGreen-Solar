@@ -48,6 +48,7 @@ export interface Quote {
     predecessor?: string | null; // UUID
     status: QuoteStatus;
     title?: string;
+    negociations?: string;
     notes?: string;
     currency: string; // e.g. EUR
     valid_until?: string | null; // date

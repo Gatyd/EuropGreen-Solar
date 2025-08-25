@@ -45,9 +45,9 @@ const loadData = async () => {
         const offerRes = await $fetch(`/api/offers/${route.params.id}/`)
         offer.value = offerRes as any
         lastQuote.value = offer.value?.last_quote
-        // Si des notes existent déjà -> succès direct
+        // Si des négociations existent déjà -> succès direct
         // succès pour négociation (message enregistré)
-        state.success = !!(lastQuote.value && lastQuote.value.notes && String(lastQuote.value.notes).trim().length > 0)
+        state.success = !!(lastQuote.value && lastQuote.value.negociations && String(lastQuote.value.negociations).trim().length > 0)
         // si action=signature et devis déjà signé → succès direct
         if (action.value === 'signature' && lastQuote.value && lastQuote.value.signature) {
             state.success = true
