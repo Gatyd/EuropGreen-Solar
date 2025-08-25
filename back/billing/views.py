@@ -16,6 +16,7 @@ from .serializers import (
 from django.core.files.base import ContentFile
 import asyncio
 from typing import Optional
+import logging
 from django.http import HttpRequest
 from django.conf import settings
 from EuropGreenSolar.email_utils import send_mail
@@ -107,6 +108,165 @@ def render_quote_pdf(quote: Quote, request: Optional[HttpRequest] = None) -> byt
         return None
 
 
+def _ensure_quote_pdf(quote: Quote, request: Optional[HttpRequest] = None):
+    """Generate and attach a PDF to the quote if not present."""
+    if getattr(quote, 'pdf', None):
+        try:
+            if quote.pdf and quote.pdf.name:
+                return
+        except Exception:
+            pass
+    pdf_bytes = render_quote_pdf(quote, request=request)
+    if pdf_bytes:
+        filename = f"{quote.number}.pdf"
+        quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
+
+
+def _build_quote_links(offer_id: str) -> dict:
+    base_front = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
+    return {
+        'link_negotiation': f"{base_front}/offers/{offer_id}?action=negotiation",
+        'link_signature': f"{base_front}/offers/{offer_id}?action=signature",
+    }
+
+
+def _send_quote_sent_email(quote: Quote, request: Optional[HttpRequest] = None, predecessor_number: Optional[str] = None):
+    """Send the standard quote email using quote_sent.html, optionally indicating a predecessor invalidation."""
+    offer = quote.offer
+    links = _build_quote_links(offer.id)
+    ctx = {
+        "client_name": f"{offer.first_name} {offer.last_name}",
+        "quote_number": quote.number,
+        "quote_total": quote.total,
+        "quote_valid_until": quote.valid_until,
+        **links,
+    }
+    subject = f"Votre devis {quote.number} – Europ'Green Solar"
+    if predecessor_number:
+        ctx['predecessor_number'] = predecessor_number
+        subject = f"Votre nouveau devis {quote.number} – Europ'Green Solar"
+
+    attachments = []
+    try:
+        if quote.pdf and quote.pdf.path:
+            attachments.append(quote.pdf.path)
+    except Exception:
+        pass
+
+    return send_mail(
+        template="emails/quote_sent.html",
+        context=ctx,
+        subject=subject,
+        to=offer.email,
+        attachments=attachments if attachments else None,
+    )
+
+
+logger = logging.getLogger(__name__)
+
+
+def _create_quote_new_version(previous: Quote, payload: dict, user=None) -> Quote:
+    """Create a new quote version via ORM (bypassing serializer unique validation), copy or apply lines, and recalc totals."""
+    from decimal import Decimal
+    from datetime import date
+
+    title = payload.get('title', previous.title) or ''
+    valid_until = payload.get('valid_until', previous.valid_until)
+    if isinstance(valid_until, str) and valid_until:
+        try:
+            valid_until = date.fromisoformat(valid_until)
+        except Exception:
+            valid_until = previous.valid_until
+    try:
+        tax_rate = Decimal(str(payload.get('tax_rate', previous.tax_rate)))
+    except Exception:
+        tax_rate = previous.tax_rate
+    notes = payload.get('notes', previous.notes) or ''
+
+    extra = {}
+    if user is not None and getattr(user, 'is_authenticated', False):
+        extra['created_by'] = user
+        extra['updated_by'] = user
+
+    new_quote = Quote.objects.create(
+        offer=previous.offer,
+        predecessor=previous,
+        status=Quote.Status.DRAFT,
+        title=title,
+        valid_until=valid_until,
+        tax_rate=tax_rate,
+        notes=notes,
+        negociations='',
+        **extra,
+    )
+
+    lines = payload.get('lines')
+    created_lines = 0
+    if not lines:
+        for idx, ol in enumerate(previous.lines.order_by('position', 'created_at')):
+            QuoteLine.objects.create(
+                quote=new_quote,
+                position=ol.position or idx,
+                product_type=ol.product_type,
+                name=ol.name,
+                description=ol.description,
+                unit_price=ol.unit_price,
+                cost_price=ol.cost_price,
+                quantity=ol.quantity,
+                discount_rate=ol.discount_rate,
+            )
+            created_lines += 1
+    else:
+        for idx, l in enumerate(lines or []):
+            try:
+                up = Decimal(str(l.get('unit_price', 0)))
+            except Exception:
+                up = Decimal('0')
+            try:
+                cp = Decimal(str(l.get('cost_price', 0)))
+            except Exception:
+                cp = Decimal('0')
+            try:
+                qty = Decimal(str(l.get('quantity', 0)))
+            except Exception:
+                qty = Decimal('0')
+            try:
+                disc = Decimal(str(l.get('discount_rate', 0)))
+            except Exception:
+                disc = Decimal('0')
+            QuoteLine.objects.create(
+                quote=new_quote,
+                position=l.get('position', idx),
+                product_type=l.get('product_type') or 'other',
+                name=l.get('name') or '',
+                description=l.get('description') or '',
+                unit_price=up,
+                cost_price=cp,
+                quantity=qty,
+                discount_rate=disc,
+            )
+            created_lines += 1
+
+    # Recalculate totals
+    subtotal = sum((line.line_total for line in new_quote.lines.all()), Decimal('0'))
+    new_quote.subtotal = subtotal
+    try:
+        tax_factor = (new_quote.tax_rate or Decimal('0')) / Decimal('100')
+    except Exception:
+        tax_factor = Decimal('0')
+    new_quote.total = (new_quote.subtotal * (Decimal('1') + tax_factor)).quantize(Decimal('0.01'))
+    new_quote.save(update_fields=['subtotal', 'total'])
+
+    logger.info("Created new quote version", extra={
+        'previous_id': str(previous.id),
+        'new_id': str(new_quote.id),
+        'offer': str(previous.offer_id),
+        'version': new_quote.version,
+        'lines': created_lines,
+    })
+
+    return new_quote
+
 @extend_schema_view(
     list=extend_schema(summary="Liste des produits/services"),
     retrieve=extend_schema(summary="Détail d'un produit/service"),
@@ -194,6 +354,41 @@ class QuoteViewSet(viewsets.ModelViewSet):
             filename = f"{quote.number}.pdf"
             quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
 
+    @action(detail=True, methods=["post"], url_path="version")
+    def send_new_version(self, request, pk=None):
+        # Nouvelle version via serializer + envoi mail standard avec mention d'invalidation
+        previous = self.get_object()
+        offer = previous.offer
+        if not offer.email:
+            return Response({"detail": "Aucune adresse email client"}, status=status.HTTP_400_BAD_REQUEST)
+        payload = request.data.copy()
+        try:
+            logger.info("send_new_version payload", extra={
+                'previous_id': str(previous.id),
+                'offer': str(offer.id),
+                'has_lines': 'lines' in payload,
+                'lines_len': len(payload.get('lines', []) or [])
+            })
+        except Exception:
+            pass
+        user = getattr(request, 'user', None)
+
+        new_quote = _create_quote_new_version(previous, payload, user=user)
+        _ensure_quote_pdf(new_quote, request=request)
+
+        ok, msg = _send_quote_sent_email(new_quote, request=request, predecessor_number=previous.number)
+        if not ok:
+            return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        from billing.models import Quote as QuoteModel
+        new_quote.status = QuoteModel.Status.SENT
+        new_quote.save(update_fields=["status"])
+        from offers.models import Offer as OfferModel
+        offer.status = OfferModel.Status.QUOTE_SENT
+        offer.save(update_fields=["status"])
+
+        return Response(self.get_serializer(new_quote).data, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["post"], url_path="send")
     def send_quote(self, request, pk=None):
         quote = self.get_object()
@@ -201,44 +396,10 @@ class QuoteViewSet(viewsets.ModelViewSet):
         # Vérifications minimales
         if not offer.email:
             return Response({"detail": "Aucune adresse email client"}, status=status.HTTP_400_BAD_REQUEST)
-
         # S'assurer qu'un PDF est présent
-        if not quote.pdf:
-            pdf_bytes = render_quote_pdf(quote, request=self.request)
-            if pdf_bytes:
-                filename = f"{quote.number}.pdf"
-                quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
+        _ensure_quote_pdf(quote, request=self.request)
 
-        # Construire les liens d'action
-        base_front = getattr(settings, 'FRONTEND_URL', '').rstrip('/')
-        link_negotiation = f"{base_front}/offers/{offer.id}?action=negotiation"
-        link_signature = f"{base_front}/offers/{offer.id}?action=signature"
-
-        # Contexte du mail
-        ctx = {
-            "client_name": f"{offer.first_name} {offer.last_name}",
-            "quote_number": quote.number,
-            "quote_total": quote.total,
-            "quote_valid_until": quote.valid_until,
-            "link_negotiation": link_negotiation,
-            "link_signature": link_signature,
-        }
-
-        subject = f"Votre devis {quote.number} – Europ'Green Solar"
-        attachments = []
-        try:
-            if quote.pdf and quote.pdf.path:
-                attachments.append(quote.pdf.path)
-        except Exception:
-            pass
-
-        ok, msg = send_mail(
-            template="emails/quote_sent.html",
-            context=ctx,
-            subject=subject,
-            to=offer.email,
-            attachments=attachments if attachments else None,
-        )
+        ok, msg = _send_quote_sent_email(quote, request=self.request)
         if not ok:
             print(msg)
             return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -330,103 +491,22 @@ class QuoteViewSet(viewsets.ModelViewSet):
         reply_ser = QuoteNegotiationReplySerializer(data={'reply': request.data.get('reply', '')})
         reply_ser.is_valid(raise_exception=True)
         reply = reply_ser.validated_data['reply']
-        # Création simple de la nouvelle version sans passer par le serializer (évite la contrainte unique en validation)
         payload = request.data.copy()
-        from decimal import Decimal
-        from datetime import date
-        # Champs principaux (avec fallback sur l'ancien devis)
-        title = payload.get('title', previous.title) or ''
-        valid_until = payload.get('valid_until', previous.valid_until)
-        if isinstance(valid_until, str) and valid_until:
-            try:
-                valid_until = date.fromisoformat(valid_until)
-            except Exception:
-                valid_until = previous.valid_until
         try:
-            tax_rate = Decimal(str(payload.get('tax_rate', previous.tax_rate)))
+            logger.info("reply_new_version payload", extra={
+                'previous_id': str(previous.id),
+                'offer': str(previous.offer_id),
+                'has_lines': 'lines' in payload,
+                'lines_len': len(payload.get('lines', []) or [])
+            })
         except Exception:
-            tax_rate = previous.tax_rate
+            pass
 
         user = getattr(request, 'user', None)
-        extra = {}
-        if user and getattr(user, 'is_authenticated', False):
-            extra['created_by'] = user
-            extra['updated_by'] = user
+        new_quote = _create_quote_new_version(previous, payload, user=user)
+        _ensure_quote_pdf(new_quote, request=self.request)
 
-        new_quote = Quote.objects.create(
-            offer=previous.offer,
-            predecessor=previous,
-            status=Quote.Status.DRAFT,
-            title=title,
-            valid_until=valid_until,
-            tax_rate=tax_rate,
-            negociations='',
-            **extra,
-        )
-
-        # Lignes: utiliser celles du payload si présentes, sinon copier les anciennes
-        lines = payload.get('lines')
-        if not lines:
-            # copier les lignes existantes
-            for idx, ol in enumerate(previous.lines.order_by('position', 'created_at')):
-                QuoteLine.objects.create(
-                    quote=new_quote,
-                    position=ol.position or idx,
-                    product_type=ol.product_type,
-                    name=ol.name,
-                    description=ol.description,
-                    unit_price=ol.unit_price,
-                    cost_price=ol.cost_price,
-                    quantity=ol.quantity,
-                    discount_rate=ol.discount_rate,
-                )
-        else:
-            for idx, l in enumerate(lines or []):
-                try:
-                    up = Decimal(str(l.get('unit_price', 0)))
-                except Exception:
-                    up = Decimal('0')
-                try:
-                    cp = Decimal(str(l.get('cost_price', 0)))
-                except Exception:
-                    cp = Decimal('0')
-                try:
-                    qty = Decimal(str(l.get('quantity', 0)))
-                except Exception:
-                    qty = Decimal('0')
-                try:
-                    disc = Decimal(str(l.get('discount_rate', 0)))
-                except Exception:
-                    disc = Decimal('0')
-                QuoteLine.objects.create(
-                    quote=new_quote,
-                    position=l.get('position', idx),
-                    product_type=l.get('product_type') or 'other',
-                    name=l.get('name') or '',
-                    description=l.get('description') or '',
-                    unit_price=up,
-                    cost_price=cp,
-                    quantity=qty,
-                    discount_rate=disc,
-                )
-
-        # Recalcul des totaux
-        subtotal = sum((line.line_total for line in new_quote.lines.all()), Decimal('0'))
-        new_quote.subtotal = subtotal
-        try:
-            tax_factor = (new_quote.tax_rate or Decimal('0')) / Decimal('100')
-        except Exception:
-            tax_factor = Decimal('0')
-        new_quote.total = (new_quote.subtotal * (Decimal('1') + tax_factor)).quantize(Decimal('0.01'))
-        new_quote.save(update_fields=['subtotal', 'total'])
-
-        # Générer/attacher PDF pour la nouvelle version
-        pdf_bytes = render_quote_pdf(new_quote, request=self.request)
-        if pdf_bytes:
-            filename = f"{new_quote.number}.pdf"
-            new_quote.pdf.save(filename, ContentFile(pdf_bytes), save=True)
-
-    # Envoyer email avec le nouveau PDF
+        # Envoyer email avec le nouveau PDF
         offer = new_quote.offer
         subject = f"Réponse à votre demande – {new_quote.number}"
         ctx = {
@@ -456,9 +536,8 @@ class QuoteViewSet(viewsets.ModelViewSet):
             return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Remise à zéro des negociations sur l’ancienne version et statut sent
-        previous.negociations = ''
-        previous.status = Quote.Status.SENT
-        previous.save(update_fields=['negociations', 'status'])
+        new_quote.status = Quote.Status.SENT
+        new_quote.save(update_fields=['status'])
 
         return Response(self.get_serializer(new_quote).data, status=status.HTTP_201_CREATED)
 

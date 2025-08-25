@@ -42,6 +42,7 @@ const draft = computed(() => {
     title: q.title || '',
     valid_until: q.valid_until || null,
     tax_rate: typeof q.tax_rate === 'string' ? parseFloat(q.tax_rate) : (q.tax_rate || 20),
+    notes: q.notes || '',
     lines: (q.lines || []).map(l => ({
       productId: '',
       name: l.name,

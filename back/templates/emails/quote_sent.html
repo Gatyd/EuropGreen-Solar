@@ -7,11 +7,16 @@
   <!-- En-tête -->
   <div style="text-align: center; margin-bottom: 28px;">
     <h2 style="color: #2d3748; margin: 0 0 12px 0; font-size: 26px; font-weight: 700;">
-      Votre devis est prêt
+      {% if predecessor_number %}Votre nouveau devis est prêt{% else %}Votre devis est prêt{% endif %}
     </h2>
     <p style="color: #4a5568; margin: 0; font-size: 15px; line-height: 1.7;">
       Bonjour {{ client_name }}, retrouvez ci-dessous les informations essentielles de votre devis.
     </p>
+    {% if predecessor_number %}
+    <p style="color: #b45309; background-color: #fffbeb; border: 1px solid #fcd34d; padding: 8px 12px; border-radius: 8px; display: inline-block; margin-top: 10px; font-size: 13px;">
+      Attention: le devis n°{{ predecessor_number }} n'est plus valide. Veuillez vous référer à la nouvelle version ci-dessous.
+    </p>
+    {% endif %}
   </div>
 
   <!-- Récapitulatif devis -->

@@ -111,6 +111,9 @@ const validate = (state: any) => {
     if (props.quote && props.quote.status === 'pending' && !reply.value.trim()) {
         errors.push({ name: 'reply', message: "Veuillez entrer une réponse à la négociation." })
     }
+    if (state.tax_rate < 0 || state.tax_rate > 100) {
+        errors.push({ name: 'tax_rate', message: "Le taux de TVA doit être compris entre 0 et 100%." })
+    }
     return errors
 }
 
@@ -129,6 +132,7 @@ async function onSubmit() {
         title: props.draft.title,
         valid_until: props.draft.valid_until,
         tax_rate: props.draft.tax_rate,
+        notes: props.draft.notes,
         lines: props.draft.lines.map((l, idx) => ({
             position: idx,
             product_type: l.product_type,
@@ -260,7 +264,7 @@ async function submitReplyCurrent() {
                         <UInput v-model.number="entry.quantity" class="w-full" type="number" min="1" step="1" />
                     </UFormField>
                     <UFormField label="Remise (%)">
-                        <UInput v-model.number="entry.discount_rate" class="w-full" type="number" min="0" max="100"
+                        <UInput v-model.number="entry.discount_rate" class="w-full" type="number" :min="0" :max="100"
                             step="0.5" />
                     </UFormField>
                     <div class="md:col-span-5 flex justify-between items-center mt-1">

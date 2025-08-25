@@ -132,7 +132,7 @@ const signatureImageUrl = computed(() => {
                     <span>{{ formatPrice(totalHT, true) }} €</span>
                 </div>
                 <div class="flex justify-between py-1">
-                    <span class="font-semibold">TVA {{ props.draft.tax_rate }}% :</span>
+                    <span class="font-semibold">TVA {{ formatPrice(props.draft.tax_rate) }}% :</span>
                     <span>{{ formatPrice(tva, true) }} €</span>
                 </div>
                 <div class="flex justify-between border-t font-bold py-1">
