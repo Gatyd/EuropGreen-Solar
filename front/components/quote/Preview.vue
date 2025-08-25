@@ -8,6 +8,7 @@ const props = defineProps<{
         title: string
         valid_until: string | null
         tax_rate: number
+        notes?: string
         lines: Array<{
             productId: string
             name: string
@@ -88,14 +89,17 @@ const signatureImageUrl = computed(() => {
 
             <!-- Infos devis -->
             <div class="mb-6 w-60">
-                <p class="flex justify-between font-medium">Devis N° :<span class="font-bold"> {{ quote?.number || '—' }}</span></p>
+                <p class="flex justify-between font-medium">Devis N° :<span class="font-bold"> {{ quote?.number || '—'
+                        }}</span></p>
                 <p class="flex justify-between font-medium">Date :<span class="font-bold"> {{ today }}</span></p>
-                <p class="flex justify-between font-medium">Valide jusqu’au :<span class="font-bold"> {{ props.draft.valid_until ? new Date(props.draft.valid_until).toLocaleDateString('fr-FR') : '—' }}</span></p>
+                <p class="flex justify-between font-medium">Valide jusqu’au :<span class="font-bold"> {{
+                    props.draft.valid_until ? new Date(props.draft.valid_until).toLocaleDateString('fr-FR') : '—'
+                        }}</span></p>
             </div>
         </div>
 
         <!-- Tableau -->
-    <p class="mb-2 text-xs">{{ props.draft.title || "" }}</p>
+        <p class="mb-2 text-xs">{{ props.draft.title || "" }}</p>
         <table class="w-full text-xs border-collapse">
             <thead>
                 <tr class="bg-blue-600 text-white">
@@ -128,7 +132,7 @@ const signatureImageUrl = computed(() => {
                     <span>{{ formatPrice(totalHT, true) }} €</span>
                 </div>
                 <div class="flex justify-between py-1">
-                    <span class="font-semibold">TVA 20% :</span>
+                    <span class="font-semibold">TVA {{ props.draft.tax_rate }}% :</span>
                     <span>{{ formatPrice(tva, true) }} €</span>
                 </div>
                 <div class="flex justify-between border-t font-bold py-1">
@@ -138,16 +142,26 @@ const signatureImageUrl = computed(() => {
             </div>
         </div>
 
+        <!-- Notes -->
+        <div v-if="draft.notes" class="mt-8">
+            <div class="text-sm font-semibold text-zinc-700 mb-2">Notes</div>
+            <div class="border border-zinc-200 rounded-md bg-zinc-50 p-4 text-sm leading-relaxed text-zinc-800 whitespace-pre-line">
+                {{ draft.notes }}
+            </div>
+        </div>
+
         <!-- Signature -->
         <div v-if="signature" class="mt-8">
             <div class="text-xs text-gray-600 mb-1">Signature du client</div>
             <div class="border rounded-md p-3 inline-flex flex-col items-start gap-2">
-                <img v-if="signatureImageUrl" :src="signatureImageUrl" alt="Signature" class="h-20 object-contain bg-white" />
+                <img v-if="signatureImageUrl" :src="signatureImageUrl" alt="Signature"
+                    class="h-20 object-contain bg-white" />
                 <div v-else class="text-gray-500 italic">Signature enregistrée</div>
                 <div class="text-[11px] text-gray-700">
                     Signé par <span class="font-semibold">{{ signature.signer_name || '—' }}</span>
                     <span v-if="signature.signer_email" class="text-gray-500">({{ signature.signer_email }})</span>
-                    <span v-if="signature.signed_at"> • le {{ new Date(signature.signed_at).toLocaleString('fr-FR') }}</span>
+                    <span v-if="signature.signed_at"> • le {{ new Date(signature.signed_at).toLocaleString('fr-FR')
+                        }}</span>
                 </div>
             </div>
         </div>

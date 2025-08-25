@@ -9,6 +9,7 @@ const props = defineProps<{
         title: string
         valid_until: string | null
         tax_rate: number
+        notes: string
         lines: Array<{
             productId: string
             name: string
@@ -204,13 +205,16 @@ async function submitReplyCurrent() {
                 <template #header>
                     <div class="font-semibold">Informations générales</div>
                 </template>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <UFormField label="Titre du devis" class="md:col-span-2" name="title">
+                <div class="grid grid-cols-2 md:grid-cols-12 gap-4">
+                    <UFormField label="Titre du devis" class="col-span-2 md:col-span-7" name="title">
                         <UInput v-model="props.draft.title" class="w-full"
                             placeholder="Devis pour fourniture et pose d'une installation 8.5kwc" />
                     </UFormField>
-                    <UFormField label="Valide jusqu'au" name="valid_until" required>
+                    <UFormField label="Valide jusqu'au" name="valid_until" class="md:col-span-3" required>
                         <UInput v-model="props.draft.valid_until" class="w-full" type="date" />
+                    </UFormField>
+                    <UFormField label="TVA (%)" name="tax_rate" class="md:col-span-2" required>
+                        <UInput v-model="props.draft.tax_rate" class="w-full" type="number" min="0" step="0.01" />
                     </UFormField>
                 </div>
             </UCard>
@@ -222,7 +226,8 @@ async function submitReplyCurrent() {
                 </template>
                 <div class="grid grid-cols-2 gap-4">
                     <UFormField name="negociations" label="Message du client">
-                        <UTextarea class="w-full" :model-value="props.quote.negociations || ''" :rows="6" readonly disabled />
+                        <UTextarea class="w-full" :model-value="props.quote.negociations || ''" :rows="6" readonly
+                            disabled />
                     </UFormField>
                     <UFormField name="reply" label="Votre réponse" required>
                         <UTextarea class="w-full" v-model="reply" :rows="6" placeholder="Saisissez votre réponse…" />
@@ -233,7 +238,7 @@ async function submitReplyCurrent() {
             <!-- Section ajout de lignes -->
             <UCard>
                 <template #header>
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between">
                         <div class="font-semibold">Lignes du devis</div>
                         <div class="text-xs text-gray-500">Sélectionnez un produit, saisissez quantité et remise puis
                             ajoutez</div>
@@ -303,11 +308,19 @@ async function submitReplyCurrent() {
                         </div>
                     </div>
                 </div>
+            </UCard>
+
+            <UCard>
+                <template #header>
+                    <div class="font-semibold">Notes (optionnelle)</div>
+                </template>
+                <UFormField name="notes">
+                    <UTextarea class="w-full" v-model="props.draft.notes" :rows="6" />
+                </UFormField>
                 <template #footer>
                     <div class="flex flex-col sm:flex-row justify-end gap-2">
-                        <UButton
-                            v-if="quote && (quote.status === 'pending' || quote.status === 'sent')"
-                            color="primary" variant="soft" :loading="loadingReply" icon="i-heroicons-paper-airplane"
+                        <UButton v-if="quote && (quote.status === 'pending' || quote.status === 'sent')" color="primary"
+                            variant="soft" :loading="loadingReply" icon="i-heroicons-paper-airplane"
                             @click="submitReplyCurrent" label="Envoyer la réponse (version actuelle)" />
                         <UButton type="submit" color="primary" :loading="loading" icon="i-heroicons-check-circle"
                             :label="quote ? quote.status === 'pending' ? 'Envoyer (nouvelle version)' : 'Modifier le brouillon' : 'Valider le brouillon'" />

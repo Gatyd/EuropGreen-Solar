@@ -20,6 +20,7 @@ const draft = reactive({
     title: '',
     valid_until: '' as string | null,
     tax_rate: 20,
+    notes: '',
     lines: [] as Array<{
         productId: string
         name: string
