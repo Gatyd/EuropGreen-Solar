@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Form
-from .serializers import FormSerializer
+from .serializers import FormSerializer, FormDetailSerializer
 from django.db import transaction
 from django.core.files.base import ContentFile
 
@@ -24,10 +24,10 @@ class FormViewSet(viewsets.ModelViewSet):
 		user = getattr(self.request, 'user', None)
 		if user and user.is_authenticated and user.is_superuser:
 			return qs
-		if user and user.is_staff:
+		if user and user.is_authenticated:
+			# Par défaut: uniquement les fiches créées par l'utilisateur
 			return qs.filter(created_by=user)
-		else:
-			return qs.filter(client=user)
+		return qs.none()
 
 	def perform_create(self, serializer):
 		serializer.save(created_by=self.request.user)
@@ -83,8 +83,10 @@ class FormViewSet(viewsets.ModelViewSet):
 					role=User.UserRoles.CUSTOMER,
 					password=password_for_email,
 				)
-			form.client = user
-			form.save()
+			# Si le modèle a un champ client, lier l'utilisateur (optionnel)
+			if hasattr(form, 'client'):
+				form.client = user
+				form.save(update_fields=['client', 'updated_at'])
 
 		# Email au client
 		if client_email:
@@ -106,3 +108,8 @@ class FormViewSet(viewsets.ModelViewSet):
 
 		headers = self.get_success_headers(self.get_serializer(form).data)
 		return Response(self.get_serializer(form).data, status=status.HTTP_201_CREATED, headers=headers)
+
+	def retrieve(self, request, *args, **kwargs):
+		instance = self.get_object()
+		serializer = FormDetailSerializer(instance, context=self.get_serializer_context())
+		return Response(serializer.data)
