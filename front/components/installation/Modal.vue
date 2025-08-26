@@ -49,8 +49,8 @@ const submit = async () => {
         client_first_name: state.client_first_name,
         client_last_name: state.client_last_name,
         client_address: state.client_address,
-    installation_power: state.installation_power, // number -> DRF Decimal
-    installation_type: state.installation_type.join(',')
+        installation_power: state.installation_power, // number -> DRF Decimal
+        installation_type: state.installation_type.join(',')
     }
     const res = await apiRequest(() => $fetch('/api/installations/forms/', { method: 'POST', body: payload, credentials: 'include' }), toast)
     if (res) {
@@ -88,7 +88,8 @@ const submit = async () => {
                     <UTextarea v-model="state.client_address" :rows="3" class="w-full" />
                 </UFormField>
                 <div class="md:col-span-2 flex justify-end mt-2">
-                    <UButton type="submit" :loading="loading" color="primary" icon="i-heroicons-check-circle" label="Enregistrer" />
+                    <UButton type="submit" :loading="loading" color="primary" icon="i-heroicons-check-circle"
+                        label="Enregistrer" />
                 </div>
             </UForm>
         </template>

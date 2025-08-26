@@ -11,9 +11,13 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     if (user.value.is_superuser) {
       return false;
     }
+    if (!user.value.is_staff && to.path.includes("/installations")) {
+      return false;
+    }
     return (
       (to.path.includes("/requests") && !user.value?.useraccess?.requests) ||
-      (to.path.includes("/offers") && !user.value?.useraccess?.offers)
+      (to.path.includes("/offers") && !user.value?.useraccess?.offers) ||
+      (to.path.includes("/installations") && !user.value?.useraccess?.installation)
     );
   }
 

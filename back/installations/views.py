@@ -24,9 +24,10 @@ class FormViewSet(viewsets.ModelViewSet):
 		user = getattr(self.request, 'user', None)
 		if user and user.is_authenticated and user.is_superuser:
 			return qs
-		if user and user.is_authenticated:
+		if user and user.is_staff:
 			return qs.filter(created_by=user)
-		return qs.none()
+		else:
+			return qs.filter(client=user)
 
 	def perform_create(self, serializer):
 		serializer.save(created_by=self.request.user)
@@ -82,6 +83,8 @@ class FormViewSet(viewsets.ModelViewSet):
 					role=User.UserRoles.CUSTOMER,
 					password=password_for_email,
 				)
+			form.client = user
+			form.save()
 
 		# Email au client
 		if client_email:

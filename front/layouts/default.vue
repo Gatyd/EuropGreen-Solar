@@ -122,6 +122,9 @@ const accessLink = links.map((link: any) => {
         if ((link.id === "offers") && !useraccess?.offers) return null
         if ((link.id === "installations") && !useraccess?.installation) return null
     }
+    if (!user.value?.is_staff && !user.value?.is_superuser) {
+        if (link.id !== "settings" && link.id !== "installations") return null
+    }
 
     return link;
 }).filter((link: any) => link !== null);

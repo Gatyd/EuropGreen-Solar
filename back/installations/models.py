@@ -52,6 +52,7 @@ class Form(models.Model):
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.TECHNICAL_VISIT)
 
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="created_installations")
+    client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="installations")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

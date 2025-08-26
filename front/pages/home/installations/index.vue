@@ -62,10 +62,10 @@ const totalCount = computed(() => filteredItems.value.length)
 
 const fetchAll = async () => {
     loading.value = true
-        const data = await apiRequest<InstallationForm[]>(
-            () => $fetch('/api/installations/forms/', { credentials: 'include' }),
-            toast
-        )
+    const data = await apiRequest<InstallationForm[]>(
+        () => $fetch('/api/installations/forms/', { credentials: 'include' }),
+        toast
+    )
     if (data) allItems.value = data
     loading.value = false
 }
@@ -81,9 +81,6 @@ onMounted(fetchAll)
                 <template #trailing>
                     <UBadge variant="subtle">{{ totalCount }}</UBadge>
                 </template>
-                <template #right>
-                    <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchAll">Rafraîchir</UButton>
-                </template>
             </UDashboardNavbar>
         </div>
 
@@ -98,6 +95,7 @@ onMounted(fetchAll)
                 <UFormField label="Au">
                     <UInput v-model="dateRange.end" type="date" />
                 </UFormField>
+                <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchAll">Rafraîchir</UButton>
             </div>
         </UCard>
 
