@@ -19,6 +19,15 @@ class FormViewSet(viewsets.ModelViewSet):
 	serializer_class = FormSerializer
 	permission_classes = [permissions.IsAuthenticated]
 
+	def get_queryset(self):
+		qs = Form.objects.select_related('offer', 'created_by')
+		user = getattr(self.request, 'user', None)
+		if user and user.is_authenticated and user.is_superuser:
+			return qs
+		if user and user.is_authenticated:
+			return qs.filter(created_by=user)
+		return qs.none()
+
 	def perform_create(self, serializer):
 		serializer.save(created_by=self.request.user)
 

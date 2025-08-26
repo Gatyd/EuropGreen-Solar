@@ -6,5 +6,5 @@ router = DefaultRouter()
 router.register(r'forms', FormViewSet, basename='installations-forms')
 
 urlpatterns = [
-	path('', include(router.urls)),
+	path('installations/', include(router.urls)),
 ]

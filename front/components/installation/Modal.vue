@@ -52,7 +52,7 @@ const submit = async () => {
     installation_power: state.installation_power, // number -> DRF Decimal
     installation_type: state.installation_type.join(',')
     }
-    const res = await apiRequest(() => $fetch('/api/forms/', { method: 'POST', body: payload, credentials: 'include' }), toast)
+    const res = await apiRequest(() => $fetch('/api/installations/forms/', { method: 'POST', body: payload, credentials: 'include' }), toast)
     if (res) {
         toast.add({ title: 'Fiche d\'installation créée', color: 'success', icon: 'i-heroicons-check-circle' })
         model.value = false
