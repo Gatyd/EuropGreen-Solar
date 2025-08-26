@@ -2,6 +2,7 @@
 import type { InstallationForm } from '~/types/installations'
 import apiRequest from '~/utils/apiRequest'
 import { useAuthStore } from '~/store/auth'
+import InstallationTechnicalVisitModal from '~/components/installation/technicalVisit/Modal.vue'
 
 definePageMeta({ layout: 'default' })
 
@@ -12,6 +13,7 @@ const id = computed(() => route.params.id as string)
 const loading = ref(true)
 const item = ref<InstallationForm | null>(null)
 const auth = useAuthStore()
+const openTechnicalVisit = ref(false)
 
 const fetchOne = async () => {
     loading.value = true
@@ -204,7 +206,7 @@ const steps = computed(() => {
                                 <span class="font-medium">{{ s.title }}</span>
                                 <div class="flex items-center gap-2">
                                     <UButton v-if="!item?.technical_visit" icon="i-heroicons-clipboard-document-list"
-                                        color="primary" size="xs" label="Effectuer la visite technique" />
+                                        color="primary" size="xs" label="Effectuer la visite technique" @click="openTechnicalVisit = true" />
                                     <UButton
                                         v-else-if="auth.user?.is_staff ? !item?.technical_visit?.client_signature : !item?.technical_visit?.installer_signature"
                                         icon="i-heroicons-pencil-square" color="secondary" size="xs"
@@ -215,18 +217,8 @@ const steps = computed(() => {
                         <template #technical-visit-description="{ item: s }">
                             <div class="flex flex-col md:flex-row gap-4 md:items-center">
                                 <span class="text-sm text-gray-600">{{ s.description }}</span>
-                                <div class="flex items-center gap-3 md:ml-auto">
-                                    <span class="text-xs text-gray-500">Document:</span>
-                                    <template v-if="item?.technical_visit?.report_pdf">
-                                        <UButton variant="soft" size="xs" color="neutral"
-                                            icon="i-heroicons-document-arrow-down"
-                                            :to="item?.technical_visit?.report_pdf" target="_blank"
-                                            label="Rapport (PDF)" />
-                                    </template>
-                                    <template v-else>
-                                        <UButton variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye"
-                                            label="Aperçu" />
-                                    </template>
+                                <div v-if="item?.technical_visit && !item?.technical_visit?.report_pdf" class="flex items-center gap-3 md:ml-auto">
+                                    <UButton variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye" label="Aperçu" />
                                 </div>
                             </div>
                         </template>
@@ -236,6 +228,7 @@ const steps = computed(() => {
                     </UTimeline>
                 </template>
             </div>
+            <InstallationTechnicalVisitModal v-model="openTechnicalVisit" />
         </div>
     </div>
 </template>
