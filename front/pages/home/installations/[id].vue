@@ -14,6 +14,7 @@ const loading = ref(true)
 const item = ref<InstallationForm | null>(null)
 const auth = useAuthStore()
 const openTechnicalVisit = ref(false)
+const technicalVisitAction = ref<'full' | 'signature'>('full')
 
 const fetchOne = async () => {
     loading.value = true
@@ -206,11 +207,13 @@ const steps = computed(() => {
                                 <span class="font-medium">{{ s.title }}</span>
                                 <div class="flex items-center gap-2">
                                     <UButton v-if="!item?.technical_visit" icon="i-heroicons-clipboard-document-list"
-                                        color="primary" size="xs" label="Effectuer la visite technique" @click="openTechnicalVisit = true" />
+                                        color="primary" size="xs" label="Effectuer la visite technique" @click="technicalVisitAction = 'full'; openTechnicalVisit = true" />
                                     <UButton
                                         v-else-if="auth.user?.is_staff ? !item?.technical_visit?.client_signature : !item?.technical_visit?.installer_signature"
                                         icon="i-heroicons-pencil-square" color="secondary" size="xs"
-                                        :label="auth.user?.is_staff ? 'Signer le devis (client)' : 'Signer le devis (installateur)'" />
+                                        :label="auth.user?.is_staff ? 'Signer le devis (client)' : 'Signer le devis (installateur)'"
+                                        @click="technicalVisitAction = 'signature'; openTechnicalVisit = true"
+                                    />
                                 </div>
                             </div>
                         </template>
@@ -228,7 +231,7 @@ const steps = computed(() => {
                     </UTimeline>
                 </template>
             </div>
-            <InstallationTechnicalVisitModal v-model="openTechnicalVisit" />
+            <InstallationTechnicalVisitModal v-model="openTechnicalVisit" :form-id="item?.id" :action="technicalVisitAction" />
         </div>
     </div>
 </template>

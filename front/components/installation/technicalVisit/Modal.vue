@@ -7,6 +7,8 @@ const props = defineProps<{
         visit_date: string
         expected_installation_date: string
     }>
+    formId?: string
+    action?: 'full' | 'signature'
 }>()
 
 // État partagé du brouillon de visite technique
@@ -36,10 +38,10 @@ const draft = reactive({
 </script>
 
 <template>
-    <UModal v-model:open="model" title="Visite technique" fullscreen>
+    <UModal v-model:open="model" :title="props.action === 'signature' ? 'Signature – Visite technique' : 'Visite technique'" fullscreen>
         <template #body>
             <div class="flex flex-col xl:flex-row gap-4">
-                <InstallationTechnicalVisitForm class="xl:basis-1/2" :draft="draft" />
+                <InstallationTechnicalVisitForm class="xl:basis-1/2" :draft="draft" :form-id="props.formId" :action="props.action ?? 'full'" />
                 <InstallationTechnicalVisitPreview class="xl:basis-1/2 shadow-md rounded-lg" :draft="draft" />
             </div>
         </template>
