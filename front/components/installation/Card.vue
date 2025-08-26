@@ -17,7 +17,7 @@ const props = defineProps<{ item: InstallationForm }>()
 		</div>
 		<div class="mt-2 flex justify-between items-center text-xs text-gray-500">
 			<span>Créée le {{ new Date(item.created_at).toLocaleDateString('fr-FR', { dateStyle: 'medium' }) }}</span>
-			<UBadge size="xs" color="neutral" variant="soft">{{ item.status }}</UBadge>
+			<!-- <UBadge size="xs" color="neutral" variant="soft">{{ item.status }}</UBadge> -->
 		</div>
 	</UCard>
 </template>
