@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { InstallationForm } from '~/types/installations'
 import apiRequest from '~/utils/apiRequest'
+import { useAuthStore } from '~/store/auth'
 
 definePageMeta({ layout: 'default' })
 
@@ -10,6 +11,7 @@ const toast = useToast()
 const id = computed(() => route.params.id as string)
 const loading = ref(true)
 const item = ref<InstallationForm | null>(null)
+const auth = useAuthStore()
 
 const fetchOne = async () => {
     loading.value = true
@@ -101,7 +103,8 @@ const steps = computed(() => {
             title: 'Visite technique',
             description: tv ? tvDesc : "En attente de planification de la visite technique.",
             date: tv ? fmtDate(tv.visit_date) : '',
-            color: tvValid ? 'green' : (tv ? 'amber' : 'gray')
+            color: tvValid ? 'green' : (tv ? 'amber' : 'gray'),
+            slot: 'technical-visit'
         },
         {
             icon: icons.rm,
@@ -177,7 +180,7 @@ const steps = computed(() => {
                 </template>
             </UCard>
 
-            <div class="mt-8">
+            <div class="xl:me-40 mt-8">
                 <template v-if="loading">
                     <div class="flex flex-col gap-6">
                         <div v-for="i in 7" :key="i" class="flex gap-4 items-start">
@@ -194,7 +197,43 @@ const steps = computed(() => {
                     </div>
                 </template>
                 <template v-else>
-                    <UTimeline :items="steps" size="xl" icon="i-heroicons-check-circle" orientation="vertical" />
+                    <UTimeline :items="steps" size="xl" icon="i-heroicons-check-circle" orientation="vertical">
+                        <!-- Slots personnalisés pour la visite technique -->
+                        <template #technical-visit-title="{ item: s }">
+                            <div class="flex items-center justify-between gap-4">
+                                <span class="font-medium">{{ s.title }}</span>
+                                <div class="flex items-center gap-2">
+                                    <UButton v-if="!item?.technical_visit" icon="i-heroicons-clipboard-document-list"
+                                        color="primary" size="xs" label="Effectuer la visite technique" />
+                                    <UButton
+                                        v-else-if="auth.user?.is_staff ? !item?.technical_visit?.client_signature : !item?.technical_visit?.installer_signature"
+                                        icon="i-heroicons-pencil-square" color="secondary" size="xs"
+                                        :label="auth.user?.is_staff ? 'Signer le devis (client)' : 'Signer le devis (installateur)'" />
+                                </div>
+                            </div>
+                        </template>
+                        <template #technical-visit-description="{ item: s }">
+                            <div class="flex flex-col md:flex-row gap-4 md:items-center">
+                                <span class="text-sm text-gray-600">{{ s.description }}</span>
+                                <div class="flex items-center gap-3 md:ml-auto">
+                                    <span class="text-xs text-gray-500">Document:</span>
+                                    <template v-if="item?.technical_visit?.report_pdf">
+                                        <UButton variant="soft" size="xs" color="neutral"
+                                            icon="i-heroicons-document-arrow-down"
+                                            :to="item?.technical_visit?.report_pdf" target="_blank"
+                                            label="Rapport (PDF)" />
+                                    </template>
+                                    <template v-else>
+                                        <UButton variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye"
+                                            label="Aperçu" />
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                        <template #technical-visit-date="{ item: s }">
+                            <span>{{ s.date }}</span>
+                        </template>
+                    </UTimeline>
                 </template>
             </div>
         </div>

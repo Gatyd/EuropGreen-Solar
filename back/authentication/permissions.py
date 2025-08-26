@@ -40,3 +40,18 @@ class HasOfferAccess(permissions.BasePermission):
             return bool(getattr(user.useraccess, 'offers', False)) or bool(user.is_superuser)
         except Exception:
             return bool(user.is_superuser)
+
+class HasInstallationAccess(permissions.BasePermission):
+    """
+    Permission personnalisée pour vérifier que l'utilisateur a accès aux installations.
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        # Autorise si l'utilisateur a l'accès installations ou est superuser
+        try:
+            return bool(getattr(user.useraccess, 'installation', False)) or bool(user.is_superuser)
+        except Exception:
+            return bool(user.is_superuser)

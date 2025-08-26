@@ -38,6 +38,7 @@ class TechnicalVisitSerializer(serializers.ModelSerializer):
 			'panels_to_board_distance_m',
 			'additional_equipment_needed', 'additional_equipment_details',
 			'is_validated', 'validated_at', 'approval_statement',
+			'report_pdf',
 			'client_signature', 'installer_signature',
 			'created_at', 'updated_at'
 		]

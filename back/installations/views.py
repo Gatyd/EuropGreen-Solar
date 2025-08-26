@@ -12,6 +12,7 @@ from EuropGreenSolar.email_utils import send_mail
 from users.models import User
 import secrets, string
 from django.utils import timezone
+from authentication.permissions import HasInstallationAccess
 
 
 class FormViewSet(viewsets.ModelViewSet):
@@ -20,14 +21,26 @@ class FormViewSet(viewsets.ModelViewSet):
 	permission_classes = [permissions.IsAuthenticated]
 
 	def get_queryset(self):
-		qs = Form.objects.select_related('offer', 'created_by')
+		qs = Form.objects.select_related('offer', 'created_by', 'client')
 		user = getattr(self.request, 'user', None)
-		if user and user.is_authenticated and user.is_superuser:
+		if not user or not user.is_authenticated:
+			return qs.none()
+		if user.is_superuser:
+			# Administrateur: toutes les fiches
 			return qs
-		if user and user.is_authenticated:
-			# Par défaut: uniquement les fiches créées par l'utilisateur
+		if user.is_staff:
+			# Employé: uniquement celles qu'il a créées
 			return qs.filter(created_by=user)
-		return qs.none()
+		# Client: uniquement celles où il est client
+		return qs.filter(client=user)
+
+	def get_permissions(self):
+		user = getattr(self.request, 'user', None)
+		if user and user.is_authenticated and user.is_staff:
+			permission_classes = [HasInstallationAccess]
+		else:
+			permission_classes = [permissions.IsAuthenticated]
+		return [p() for p in permission_classes]
 
 	def perform_create(self, serializer):
 		serializer.save(created_by=self.request.user)

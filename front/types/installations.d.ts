@@ -30,7 +30,8 @@ export interface TechnicalVisit {
   truck_access_comment?: string
   nacelle_needed?: string
   meter_type?: string | null
-  meter_type_other?: string
+  report_pdf?: string | null
+  created_at: string
   current_type?: string | null
   existing_grid_connection?: boolean
   meter_position?: string
