@@ -17,6 +17,7 @@ type MandateDraft = {
     company_siret: string
     company_head_office_address: string
     represented_by: string
+    representative_role: string
     // Signatures
     client_signature: { signer_name: string; method: 'draw' | 'upload'; dataUrl: string; file: File | null }
     installer_signature: { signer_name: string; method: 'draw' | 'upload'; dataUrl: string; file: File | null }
@@ -107,12 +108,9 @@ async function onSubmit() {
                 <template #header>
                     <div class="font-medium">Informations du mandataire (installateur)</div>
                 </template>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <UFormField label="Nom de la société" name="company_name" required>
                         <UInput v-model="state.company_name" class="w-full" placeholder="Nom de la société" />
-                    </UFormField>
-                    <UFormField label="Représenté par" name="represented_by" required>
-                        <UInput v-model="state.represented_by" class="w-full" placeholder="Nom et fonction" />
                     </UFormField>
                     <UFormField label="Immatriculation au RCS de" name="company_rcs_city" required>
                         <UInput v-model="state.company_rcs_city" class="w-full" placeholder="Ex: Paris" />
@@ -120,7 +118,15 @@ async function onSubmit() {
                     <UFormField label="Numéro SIRET" name="company_siret" required>
                         <UInput v-model="state.company_siret" class="w-full" placeholder="Ex: 123 456 789 00012" />
                     </UFormField>
-                    <UFormField class="md:col-span-2" label="Adresse du siège social" name="company_head_office_address"
+                    <div class="col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <UFormField label="Représenté par" name="represented_by" required>
+                            <UInput v-model="state.represented_by" class="w-full" placeholder="Nom et prénom" />
+                        </UFormField>
+                        <UFormField label="En qualité de" name="representative_role" required>
+                            <UInput v-model="state.representative_role" class="w-full" />
+                        </UFormField>
+                    </div>
+                    <UFormField class="md:col-span-3" label="Adresse du siège social" name="company_head_office_address"
                         required>
                         <UTextarea v-model="state.company_head_office_address" class="w-full" :rows="2"
                             placeholder="Adresse du siège social" />

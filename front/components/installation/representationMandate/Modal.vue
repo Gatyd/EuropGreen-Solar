@@ -25,6 +25,7 @@ const draft = reactive({
   company_siret: '',
   company_head_office_address: '',
   represented_by: '',
+  representative_role: '',
   // Signatures
   client_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
   installer_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
@@ -91,12 +92,7 @@ const onSubmit = () => {
         <InstallationRepresentationMandateForm v-if="action !== 'preview'" class="xl:basis-1/2"
           :draft="draft" :form="props.form" :mandate="props.mandate" :form-id="props.formId" :action="props.action ?? 'full'"
           @submit="onSubmit" />
-        <div :class="action !== 'preview' ? 'xl:basis-1/2 shadow-md rounded-lg' : ''">
-          <!-- Placeholder Preview; à compléter quand gabarit PDF prêt -->
-          <UCard>
-            <div class="text-sm text-gray-700">Aperçu du mandat (à venir)</div>
-          </UCard>
-        </div>
+        <InstallationRepresentationMandatePreview :class="action !== 'preview' ? 'xl:basis-1/2 shadow-md rounded-lg' : ''" :draft="draft" :form="form" />
       </div>
     </template>
   </UModal>
