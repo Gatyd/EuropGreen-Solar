@@ -35,7 +35,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   ];
 
   // Si c'est une route publique, on laisse passer
-  if (publicRoutes.includes(to.name as string)) {
+  if (publicRoutes.includes((to.name as string).split("-")[0])) {
     return;
   }
 

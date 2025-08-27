@@ -225,7 +225,8 @@ const steps = computed(() => {
                                 <div v-if="item?.technical_visit && !item?.technical_visit?.report_pdf"
                                     class="flex items-center gap-3 md:ml-auto">
                                     <UButton variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye"
-                                        label="Aperçu" @click="technicalVisitAction = 'preview'; openTechnicalVisit = true" />
+                                        label="Aperçu"
+                                        @click="technicalVisitAction = 'preview'; openTechnicalVisit = true" />
                                 </div>
                             </div>
                         </template>
