@@ -28,9 +28,13 @@ type TechnicalVisitDraft = {
     installer_signature: { signer_name: string; method: 'draw' | 'upload'; dataUrl: string; file: File | null }
 }
 
-const props = defineProps<{ draft: TechnicalVisitDraft, action?: 'full' | 'signature', formId?: string }>()
+const props = defineProps<{ draft: TechnicalVisitDraft, action?: 'full' | 'signature' | 'preview', formId?: string }>()
+const emit = defineEmits<{
+    (e: 'submit'): void
+}>()
 
 const state = toRef(props, 'draft')
+const loading = ref(false)
 
 const auth = useAuthStore()
 
@@ -88,8 +92,10 @@ const validate = (s: TechnicalVisitDraft) => {
 
 async function onSubmit() {
     const toast = useToast()
+    loading.value = true
     if (!props.formId) {
         toast.add({ title: 'Formulaire manquant', description: 'Impossible de soumettre sans ID de fiche.', color: 'error' })
+        loading.value = false
         return
     }
 
@@ -159,7 +165,8 @@ async function onSubmit() {
             fd.append('visit_date', s.visit_date)
             fd.append('expected_installation_date', s.expected_installation_date)
             if (s.roof_cover) fd.append('roof_type', roofTypeMap[s.roof_cover])
-            fd.append('tiles_spare_provided', String(!!s.spare_tiles))
+            // Booleans in multipart: use 1/0 for better Django compatibility
+            fd.append('tiles_spare_provided', s.spare_tiles ? '1' : '0')
             if (s.roof_shape) fd.append('roof_shape', roofShapeMap[s.roof_shape])
             if (s.roof_access) fd.append('roof_access', roofAccessMap[s.roof_access])
             if (s.roof_access === 'Autre' && s.roof_access_other) fd.append('roof_access_other', s.roof_access_other)
@@ -169,24 +176,28 @@ async function onSubmit() {
             if (s.meter_type) fd.append('meter_type', meterTypeMap[s.meter_type])
             if (s.meter_type === 'Autre' && s.meter_type_other) fd.append('meter_type_other', s.meter_type_other)
             if (s.current_type) fd.append('current_type', currentTypeMap[s.current_type])
-            fd.append('existing_grid_connection', String(!!s.reuse_existing_connection))
+            fd.append('existing_grid_connection', s.reuse_existing_connection ? '1' : '0')
             if (s.meter_position) fd.append('meter_position', meterPosMap[s.meter_position])
             if (s.panel_to_board_distance_m !== null) fd.append('panels_to_board_distance_m', String(s.panel_to_board_distance_m))
             if (s.meter_location_photo) fd.append('meter_location_photo', s.meter_location_photo)
-            fd.append('additional_equipment_needed', String(!!s.extra_required))
+            fd.append('additional_equipment_needed', s.extra_required ? '1' : '0')
             if (s.extra_required && s.extra_materials) fd.append('additional_equipment_details', s.extra_materials)
             if (s.installer_signature.signer_name && (s.installer_signature.file || s.installer_signature.dataUrl)) {
                 fd.append('installer_signer_name', s.installer_signature.signer_name)
                 if (s.installer_signature.file) fd.append('installer_signature_file', s.installer_signature.file)
                 else if (s.installer_signature.dataUrl) fd.append('installer_signature_data', s.installer_signature.dataUrl)
             }
-            await $fetch(`/api/installations/forms/${props.formId}/technical-visit/`, {
+            const res = await $fetch(`/api/installations/forms/${props.formId}/technical-visit/`, {
                 method: 'POST',
                 credentials: 'include',
                 body: fd,
             })
+            if (res) {
+                toast.add({ title: 'Visite technique enregistrée', color: 'success', icon: 'i-heroicons-check-circle' })
+                emit('submit')
+                loading.value = false
+            }
         }
-        toast.add({ title: 'Visite technique enregistrée', color: 'success' })
     } catch (e: any) {
         const msg = e?.data?.detail || e.message || 'Erreur inconnue'
         const toast = useToast()
@@ -230,137 +241,140 @@ const reuseExistingYN = computed<string>({
 
 <template>
     <UForm :state="state" :validate="validate" class="space-y-3" @submit.prevent="onSubmit">
-        <!-- Informations de base -->
-        <UCard>
-            <template #header>
-                <div class="font-semibold">Informations de base</div>
-            </template>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <UFormField name="visit_date" label="Date de la visite technique" required>
-                    <UInput v-model="state.visit_date" type="date" class="w-full" />
-                </UFormField>
-                <UFormField name="expected_installation_date" label="Date d'installation prévisionnelle" required>
-                    <UInput v-model="state.expected_installation_date" type="date" class="w-full" />
-                </UFormField>
-            </div>
-        </UCard>
+        <div v-if="action === 'full'" class="space-y-3">
+            <!-- Informations de base -->
+            <UCard>
+                <template #header>
+                    <div class="font-semibold">Informations de base</div>
+                </template>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <UFormField name="visit_date" label="Date de la visite technique" required>
+                        <UInput v-model="state.visit_date" type="date" class="w-full" />
+                    </UFormField>
+                    <UFormField name="expected_installation_date" label="Date d'installation prévisionnelle" required>
+                        <UInput v-model="state.expected_installation_date" type="date" class="w-full" />
+                    </UFormField>
+                </div>
+            </UCard>
 
-        <!-- Informations sur la toiture -->
-        <UCard>
-            <template #header>
-                <div class="font-semibold">Informations sur la toiture</div>
-            </template>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <UFormField name="roof_cover" label="Type de couverture" required>
-                    <USelect v-model="state.roof_cover" :items="roofCoverItems" class="w-full"
-                        placeholder="Sélectionner" />
-                </UFormField>
-                <UFormField name="spare_tiles" label="Tuiles de rechange">
-                    <URadioGroup v-model="spareTilesYN" :items="yesNoItems" orientation="horizontal" />
-                </UFormField>
-                <UFormField name="roof_shape" label="Forme du toit" required>
-                    <USelect v-model="state.roof_shape" :items="roofShapeItems" class="w-full"
-                        placeholder="Sélectionner" />
-                </UFormField>
-            </div>
-        </UCard>
-
-        <!-- Accessibilité -->
-        <UCard>
-            <template #header>
-                <div class="font-semibold">Accessibilité</div>
-            </template>
-            <div class="space-y-4">
+            <!-- Informations sur la toiture -->
+            <UCard>
+                <template #header>
+                    <div class="font-semibold">Informations sur la toiture</div>
+                </template>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <UFormField name="roof_access" label="Accès toiture" required>
-                        <USelect v-model="state.roof_access" :items="roofAccessItems" class="w-full"
+                    <UFormField name="roof_cover" label="Type de couverture" required>
+                        <USelect v-model="state.roof_cover" :items="roofCoverItems" class="w-full"
                             placeholder="Sélectionner" />
                     </UFormField>
-                    <UFormField name="nacelle_needed" label="Nacelle nécessaire">
-                        <URadioGroup v-model="state.nacelle_needed" :items="yesNoUnknownItems"
-                            class="flex flex-wrap gap-3" />
+                    <UFormField name="spare_tiles" label="Tuiles de rechange">
+                        <URadioGroup v-model="spareTilesYN" :items="yesNoItems" orientation="horizontal" />
                     </UFormField>
-                    <UFormField name="truck_access" label="Accès camion">
-                        <URadioGroup v-model="state.truck_access" :items="yesNoUnknownItems"
-                            class="flex flex-wrap gap-3" />
-                    </UFormField>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <UFormField v-if="state.roof_access === 'Autre'" name="roof_access_other"
-                        label="Précisions (Accès toiture)">
-                        <UInput v-model="state.roof_access_other" class="w-full"
-                            placeholder="Décrivez l'accès toiture" />
-                    </UFormField>
-                    <UFormField class="md:col-start-3" v-if="state.truck_access === 'no'" name="truck_access_note"
-                        label="Précisions (Accès camion)">
-                        <UInput v-model="state.truck_access_note" class="w-full" placeholder="Précisez la contrainte" />
-                    </UFormField>
-                </div>
-            </div>
-        </UCard>
-
-        <!-- Installation électrique existante -->
-        <UCard>
-            <template #header>
-                <div class="font-semibold">Installation électrique existante</div>
-            </template>
-            <div class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <UFormField name="meter_type" label="Type de compteur" required>
-                        <USelect v-model="state.meter_type" :items="meterTypeItems" class="w-full"
+                    <UFormField name="roof_shape" label="Forme du toit" required>
+                        <USelect v-model="state.roof_shape" :items="roofShapeItems" class="w-full"
                             placeholder="Sélectionner" />
                     </UFormField>
-                    <UFormField name="current_type" label="Type de courant" required>
-                        <USelect v-model="state.current_type" :items="currentTypeItems" class="w-full"
-                            placeholder="Sélectionner" />
-                    </UFormField>
-                    <UFormField name="reuse_existing_connection" label="Raccordement au réseau existant">
-                        <URadioGroup v-model="reuseExistingYN" :items="yesNoItems" orientation="horizontal" />
+                </div>
+            </UCard>
+
+            <!-- Accessibilité -->
+            <UCard>
+                <template #header>
+                    <div class="font-semibold">Accessibilité</div>
+                </template>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <UFormField name="roof_access" label="Accès toiture" required>
+                            <USelect v-model="state.roof_access" :items="roofAccessItems" class="w-full"
+                                placeholder="Sélectionner" />
+                        </UFormField>
+                        <UFormField name="nacelle_needed" label="Nacelle nécessaire">
+                            <URadioGroup v-model="state.nacelle_needed" :items="yesNoUnknownItems"
+                                class="flex flex-wrap gap-3" />
+                        </UFormField>
+                        <UFormField name="truck_access" label="Accès camion">
+                            <URadioGroup v-model="state.truck_access" :items="yesNoUnknownItems"
+                                class="flex flex-wrap gap-3" />
+                        </UFormField>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <UFormField v-if="state.roof_access === 'Autre'" name="roof_access_other"
+                            label="Précisions (Accès toiture)">
+                            <UInput v-model="state.roof_access_other" class="w-full"
+                                placeholder="Décrivez l'accès toiture" />
+                        </UFormField>
+                        <UFormField class="md:col-start-3" v-if="state.truck_access === 'no'" name="truck_access_note"
+                            label="Précisions (Accès camion)">
+                            <UInput v-model="state.truck_access_note" class="w-full"
+                                placeholder="Précisez la contrainte" />
+                        </UFormField>
+                    </div>
+                </div>
+            </UCard>
+
+            <!-- Installation électrique existante -->
+            <UCard>
+                <template #header>
+                    <div class="font-semibold">Installation électrique existante</div>
+                </template>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <UFormField name="meter_type" label="Type de compteur" required>
+                            <USelect v-model="state.meter_type" :items="meterTypeItems" class="w-full"
+                                placeholder="Sélectionner" />
+                        </UFormField>
+                        <UFormField name="current_type" label="Type de courant" required>
+                            <USelect v-model="state.current_type" :items="currentTypeItems" class="w-full"
+                                placeholder="Sélectionner" />
+                        </UFormField>
+                        <UFormField name="reuse_existing_connection" label="Raccordement au réseau existant">
+                            <URadioGroup v-model="reuseExistingYN" :items="yesNoItems" orientation="horizontal" />
+                        </UFormField>
+                    </div>
+
+                    <div
+                        :class="['grid grid-cols-1 md:grid-cols-8 gap-4', { 'md:grid-cols-12': state.meter_type === 'Autre' }]">
+                        <UFormField v-if="state.meter_type === 'Autre'" class="md:col-span-4" name="meter_type_other"
+                            label="Précisions (Type de compteur)">
+                            <UInput v-model.number="state.meter_type_other" class="w-full" />
+                        </UFormField>
+                        <UFormField class="md:col-span-3" name="meter_position" label="Position du compteur" required>
+                            <USelect v-model="state.meter_position" :items="meterPositionItems" class="w-full"
+                                placeholder="Sélectionner" />
+                        </UFormField>
+                        <UFormField class="md:col-span-5" name="panel_to_board_distance_m"
+                            label="Distance panneaux → tableau (m)" required>
+                            <UInput class="w-full" v-model.number="state.panel_to_board_distance_m" type="number"
+                                min="0" step="0.1" />
+                        </UFormField>
+                    </div>
+
+                    <UFormField name="meter_location_photo" label="Photo localisation du compteur">
+                        <UFileUpload v-model="state.meter_location_photo" icon="i-lucide-image"
+                            label="Importez la photo depuis la galerie" description="SVG, PNG, JPG ou JPEG"
+                            accept="image/*" class="h-[180px]" />
                     </UFormField>
                 </div>
+            </UCard>
 
-                <div
-                    :class="['grid grid-cols-1 md:grid-cols-8 gap-4', { 'md:grid-cols-12': state.meter_type === 'Autre' }]">
-                    <UFormField v-if="state.meter_type === 'Autre'" class="md:col-span-4" name="meter_type_other"
-                        label="Précisions (Type de compteur)">
-                        <UInput v-model.number="state.meter_type_other" class="w-full" />
-                    </UFormField>
-                    <UFormField class="md:col-span-3" name="meter_position" label="Position du compteur" required>
-                        <USelect v-model="state.meter_position" :items="meterPositionItems" class="w-full"
-                            placeholder="Sélectionner" />
-                    </UFormField>
-                    <UFormField class="md:col-span-5" name="panel_to_board_distance_m"
-                        label="Distance panneaux → tableau (m)" required>
-                        <UInput class="w-full" v-model.number="state.panel_to_board_distance_m" type="number" min="0"
-                            step="0.1" />
+            <!-- Matériel supplémentaire nécessaire -->
+            <UCard>
+                <template #header>
+                    <div class="flex gap-4">
+                        <div class="font-semibold">Matériel supplémentaire nécessaire</div>
+                        <USwitch v-model="state.extra_required" />
+                    </div>
+                </template>
+                <div>
+                    <UFormField v-if="state.extra_required" name="extra_materials"
+                        label="Liste du matériel supplémentaire à prévoir"
+                        description="Aller à la ligne pour chaque élément à ajouter et indiquer pour chaque élément la raison de l'ajout">
+                        <UTextarea v-model="state.extra_materials" :rows="5" class="w-full" />
                     </UFormField>
                 </div>
-
-                <UFormField name="meter_location_photo" label="Photo localisation du compteur">
-                    <UFileUpload v-model="state.meter_location_photo" icon="i-lucide-image"
-                        label="Importez la photo depuis la galerie" description="SVG, PNG, JPG ou JPEG" accept="image/*"
-                        class="h-[180px]" />
-                </UFormField>
-            </div>
-        </UCard>
-
-        <!-- Matériel supplémentaire nécessaire -->
-        <UCard>
-            <template #header>
-                <div class="flex gap-4">
-                    <div class="font-semibold">Matériel supplémentaire nécessaire</div>
-                    <USwitch v-model="state.extra_required" />
-                </div>
-            </template>
-            <div>
-                <UFormField v-if="state.extra_required" name="extra_materials"
-                    label="Liste du matériel supplémentaire à prévoir"
-                    description="Aller à la ligne pour chaque élément à ajouter et indiquer pour chaque élément la raison de l'ajout">
-                    <UTextarea v-model="state.extra_materials" :rows="5" class="w-full" />
-                </UFormField>
-            </div>
-        </UCard>
+            </UCard>
+        </div>
 
         <!-- Signatures -->
         <UCard>
@@ -368,25 +382,12 @@ const reuseExistingYN = computed<string>({
                 <div class="font-semibold">Signature {{ auth.user?.is_staff ? 'installateur' : 'client' }}</div>
             </template>
             <div class="space-y-6">
-                <template v-if="props.action === 'signature'">
-                    <div v-if="auth.user?.is_staff">
-                        <SignatureField v-model="state.installer_signature" :required="true"
-                            label="Nom du signataire" />
-                    </div>
-                    <div v-else>
-                        <SignatureField v-model="state.client_signature" :required="true" label="Nom du signataire" />
-                    </div>
-                </template>
-                <template v-else>
-                    <!-- <div>
-                        <div class="mb-2 font-medium">Signature client</div>
-                        <SignatureField v-model="state.client_signature" :required="false" label="Nom du signataire" />
-                    </div> -->
-                    <div>
-                        <SignatureField v-model="state.installer_signature" :required="false"
-                            label="Nom du signataire" />
-                    </div>
-                </template>
+                <div v-if="auth.user?.is_staff">
+                    <SignatureField v-model="state.installer_signature" :required="true" label="Nom du signataire" />
+                </div>
+                <div v-else>
+                    <SignatureField v-model="state.client_signature" :required="true" label="Nom du signataire" />
+                </div>
             </div>
         </UCard>
 

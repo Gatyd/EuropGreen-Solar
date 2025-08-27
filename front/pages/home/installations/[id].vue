@@ -14,7 +14,7 @@ const loading = ref(true)
 const item = ref<InstallationForm | null>(null)
 const auth = useAuthStore()
 const openTechnicalVisit = ref(false)
-const technicalVisitAction = ref<'full' | 'signature'>('full')
+const technicalVisitAction = ref<'full' | 'signature' | 'preview'>('full')
 
 const fetchOne = async () => {
     loading.value = true
@@ -30,7 +30,7 @@ onMounted(fetchOne)
 
 // Helpers d’affichage
 const fmtDateTime = (v?: string | null) => v ? new Date(v).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : ''
-const fmtDate = (v?: string | null) => v ? new Date(v).toLocaleDateString('fr-FR', { dateStyle: 'medium' }) : ''
+const fmtDate = (v?: string | null) => v ? new Date(v).toLocaleDateString('fr-FR', { dateStyle: 'medium' }) : '';
 
 const steps = computed(() => {
     const f = item.value
@@ -47,11 +47,13 @@ const steps = computed(() => {
     const tvValid = tvSignedClient && tvSignedInst
     const tvDesc = tvValid
         ? "Enregistrement et validation des informations collectées lors de la visite technique sur site."
-        : (!tvSignedClient
-            ? "En attente de signature du client."
-            : !tvSignedInst
-                ? "En attente de signature de l'installateur."
-                : "En attente d'informations.")
+        : (!tvSignedClient && !tvSignedInst)
+            ? "En attente de signature du client et de l'installateur."
+            : !tvSignedClient
+                ? "En attente de signature du client."
+                : !tvSignedInst
+                    ? "En attente de signature de l'installateur."
+                    : "En attente d'informations."
 
     const rmSignedClient = !!rm?.client_signature
     const rmSignedInst = !!rm?.installer_signature
@@ -207,21 +209,23 @@ const steps = computed(() => {
                                 <span class="font-medium">{{ s.title }}</span>
                                 <div class="flex items-center gap-2">
                                     <UButton v-if="!item?.technical_visit" icon="i-heroicons-clipboard-document-list"
-                                        color="primary" size="xs" label="Effectuer la visite technique" @click="technicalVisitAction = 'full'; openTechnicalVisit = true" />
+                                        color="primary" size="xs" label="Effectuer la visite technique"
+                                        @click="technicalVisitAction = 'full'; openTechnicalVisit = true" />
                                     <UButton
-                                        v-else-if="auth.user?.is_staff ? !item?.technical_visit?.client_signature : !item?.technical_visit?.installer_signature"
+                                        v-else-if="auth.user?.is_staff ? !item?.technical_visit?.installer_signature : !item?.technical_visit?.client_signature"
                                         icon="i-heroicons-pencil-square" color="secondary" size="xs"
-                                        :label="auth.user?.is_staff ? 'Signer le devis (client)' : 'Signer le devis (installateur)'"
-                                        @click="technicalVisitAction = 'signature'; openTechnicalVisit = true"
-                                    />
+                                        :label="auth.user?.is_staff ? 'Signer le rapport (installateur)' : 'Signer le rapport (client)'"
+                                        @click="technicalVisitAction = 'signature'; openTechnicalVisit = true" />
                                 </div>
                             </div>
                         </template>
                         <template #technical-visit-description="{ item: s }">
                             <div class="flex flex-col md:flex-row gap-4 md:items-center">
                                 <span class="text-sm text-gray-600">{{ s.description }}</span>
-                                <div v-if="item?.technical_visit && !item?.technical_visit?.report_pdf" class="flex items-center gap-3 md:ml-auto">
-                                    <UButton variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye" label="Aperçu" />
+                                <div v-if="item?.technical_visit && !item?.technical_visit?.report_pdf"
+                                    class="flex items-center gap-3 md:ml-auto">
+                                    <UButton variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye"
+                                        label="Aperçu" @click="technicalVisitAction = 'preview'; openTechnicalVisit = true" />
                                 </div>
                             </div>
                         </template>
@@ -231,7 +235,8 @@ const steps = computed(() => {
                     </UTimeline>
                 </template>
             </div>
-            <InstallationTechnicalVisitModal v-model="openTechnicalVisit" :form-id="item?.id" :action="technicalVisitAction" />
+            <InstallationTechnicalVisitModal v-model="openTechnicalVisit" :form-id="item?.id" @submit="fetchOne"
+                :action="technicalVisitAction" />
         </div>
     </div>
 </template>

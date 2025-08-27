@@ -216,7 +216,7 @@ class FormViewSet(viewsets.ModelViewSet):
 				else:
 					cf, ext = self._decode_data_url_image(str(data_url))
 					if cf:
-						sig.signature_image.save(f"signature.{ext or 'png'}", cf, save=False)
+						sig.signature_image.save(f"signature-{sig.id}.{ext or 'png'}", cf, save=False)
 				sig.save()
 				tv.installer_signature = sig
 

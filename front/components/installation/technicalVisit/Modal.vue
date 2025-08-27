@@ -8,7 +8,10 @@ const props = defineProps<{
         expected_installation_date: string
     }>
     formId?: string
-    action?: 'full' | 'signature'
+    action?: 'full' | 'signature' | 'preview'
+}>()
+const emit = defineEmits<{
+    (e: 'submit'): void
 }>()
 
 // État partagé du brouillon de visite technique
@@ -35,14 +38,23 @@ const draft = reactive({
     client_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
     installer_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
 })
+
+const onSubmit = () => {
+    emit('submit')
+    model.value = false
+}
+
 </script>
 
 <template>
-    <UModal v-model:open="model" :title="props.action === 'signature' ? 'Signature – Visite technique' : 'Visite technique'" fullscreen>
+    <UModal v-model:open="model"
+        :title="action === 'signature' ? 'Signature – Visite technique' : action === 'full' ? 'Visite technique' : 'Aperçu - Rapport Visite technique'"
+        :fullscreen="action !== 'preview'" :ui="{ content: action !== 'preview' ? 'max-w-screen' : 'max-w-5xl' }">
         <template #body>
-            <div class="flex flex-col xl:flex-row gap-4">
-                <InstallationTechnicalVisitForm class="xl:basis-1/2" :draft="draft" :form-id="props.formId" :action="props.action ?? 'full'" />
-                <InstallationTechnicalVisitPreview class="xl:basis-1/2 shadow-md rounded-lg" :draft="draft" />
+            <div :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4' : ''">
+                <InstallationTechnicalVisitForm v-if="action !== 'preview'" class="xl:basis-1/2" :draft="draft"
+                    :form-id="props.formId" @submit="onSubmit" :action="props.action ?? 'full'" />
+                <InstallationTechnicalVisitPreview :class="action !== 'preview' ? 'xl:basis-1/2 shadow-md rounded-lg' : ''" :draft="draft" />
             </div>
         </template>
     </UModal>

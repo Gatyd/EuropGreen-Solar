@@ -148,7 +148,7 @@ class TechnicalVisit(models.Model):
 
     # Matériel supplémentaire
     additional_equipment_needed = models.BooleanField(default=False)
-    additional_equipment_details = models.TextField(blank=True)
+    additional_equipment_details = models.TextField(blank=True, null=True)
 
     # Validation de la visite technique
     is_validated = models.BooleanField(default=False)
