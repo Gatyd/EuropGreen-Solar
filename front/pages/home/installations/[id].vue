@@ -3,6 +3,7 @@ import type { InstallationForm } from '~/types/installations'
 import apiRequest from '~/utils/apiRequest'
 import { useAuthStore } from '~/store/auth'
 import InstallationTechnicalVisitModal from '~/components/installation/technicalVisit/Modal.vue'
+import InstallationRepresentationMandateModal from '~/components/installation/representationMandate/Modal.vue'
 
 definePageMeta({ layout: 'default' })
 
@@ -15,6 +16,8 @@ const item = ref<InstallationForm | null>(null)
 const auth = useAuthStore()
 const openTechnicalVisit = ref(false)
 const technicalVisitAction = ref<'full' | 'signature' | 'preview'>('full')
+const openMandate = ref(false)
+const mandateAction = ref<'full' | 'signature' | 'preview'>('full')
 
 const fetchOne = async () => {
     loading.value = true
@@ -127,7 +130,8 @@ const steps = computed(() => {
             title: 'Mandat représentation',
             description: rm ? rmDesc : "En attente de création du mandat de représentation.",
             date: rm ? fmtDateTime(rm.updated_at) : '',
-            ui: colorUI(rmValid ? 'green' : (rm ? 'amber' : 'gray'))
+            ui: colorUI(rmValid ? 'green' : (rm ? 'amber' : 'gray')),
+            slot: 'representation-mandate'
         },
         {
             icon: icons.av,
@@ -213,17 +217,19 @@ const steps = computed(() => {
                     </div>
                 </template>
                 <template v-else>
-                    <UTimeline :items="steps" size="xl" icon="i-heroicons-check-circle" :ui="{ date: 'text-gray-500' }" orientation="vertical">
+                    <UTimeline :items="steps" size="xl" icon="i-heroicons-check-circle" :ui="{ date: 'text-gray-500' }"
+                        orientation="vertical">
                         <!-- Slots personnalisés pour la visite technique -->
                         <template #technical-visit-title="{ item: s }">
                             <div class="flex items-center justify-between gap-4">
                                 <span class="font-medium">{{ s.title }}</span>
                                 <div class="flex items-center gap-2">
-                                    <UButton v-if="!item?.technical_visit" icon="i-heroicons-clipboard-document-list"
-                                        color="primary" size="xs" label="Effectuer la visite technique"
+                                    <UButton v-if="!item?.technical_visit && auth.user?.is_staff"
+                                        icon="i-heroicons-clipboard-document-list" color="primary" size="xs"
+                                        label="Effectuer la visite technique"
                                         @click="technicalVisitAction = 'full'; openTechnicalVisit = true" />
                                     <UButton
-                                        v-else-if="auth.user?.is_staff ? !item?.technical_visit?.installer_signature : !item?.technical_visit?.client_signature"
+                                        v-else-if="item?.technical_visit && (auth.user?.is_staff ? !item?.technical_visit?.installer_signature : !item?.technical_visit?.client_signature)"
                                         icon="i-heroicons-pencil-square" color="secondary" size="xs"
                                         :label="auth.user?.is_staff ? 'Signer le rapport (installateur)' : 'Signer le rapport (client)'"
                                         @click="technicalVisitAction = 'signature'; openTechnicalVisit = true" />
@@ -246,11 +252,49 @@ const steps = computed(() => {
                         <template #technical-visit-date="{ item: s }">
                             <span>{{ s.date }}</span>
                         </template>
+
+                        <!-- Slots personnalisés pour le mandat de représentation -->
+                        <template #representation-mandate-title="{ item: s }">
+                            <div class="flex items-center justify-between gap-4">
+                                <span class="font-medium">{{ s.title }}</span>
+                                <div class="flex items-center gap-2">
+                                    <UButton
+                                        v-if="item?.technical_visit && !item?.representation_mandate && auth.user?.is_staff"
+                                        icon="i-heroicons-document-plus" color="primary" size="xs"
+                                        label="Créer le mandat" @click="mandateAction = 'full'; openMandate = true" />
+                                    <UButton
+                                        v-else-if="item?.technical_visit && item?.representation_mandate && (auth.user?.is_staff ?
+                                            !item?.representation_mandate?.installer_signature : !item?.representation_mandate?.client_signature)"
+                                        icon="i-heroicons-pencil-square" color="secondary" size="xs"
+                                        :label="auth.user?.is_staff ? 'Signer le mandat (installateur)' : 'Signer le mandat (client)'"
+                                        @click="mandateAction = 'signature'; openMandate = true" />
+                                </div>
+                            </div>
+                        </template>
+                        <template #representation-mandate-description="{ item: s }">
+                            <div class="flex flex-col md:flex-row gap-4 md:items-center">
+                                <span class="text-sm text-gray-600">{{ s.description }}</span>
+                                <div class="flex items-center gap-3 md:ml-auto">
+                                    <UButton
+                                        v-if="item?.representation_mandate && !item?.representation_mandate?.mandate_pdf"
+                                        variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye" label="Aperçu"
+                                        @click="mandateAction = 'preview'; openMandate = true" />
+                                    <UButton v-else-if="item?.representation_mandate?.mandate_pdf" variant="ghost"
+                                        size="xs" color="neutral" icon="i-heroicons-clipboard-document" target="_blank"
+                                        label="Voir le mandat" :to="item.representation_mandate.mandate_pdf" />
+                                </div>
+                            </div>
+                        </template>
+                        <template #representation-mandate-date="{ item: s }">
+                            <span>{{ s.date }}</span>
+                        </template>
                     </UTimeline>
                 </template>
             </div>
             <InstallationTechnicalVisitModal v-model="openTechnicalVisit" :form-id="item?.id" @submit="fetchOne"
                 :action="technicalVisitAction" :technical-visit="item?.technical_visit" />
+            <InstallationRepresentationMandateModal v-model="openMandate" :form-id="item?.id" @submit="fetchOne"
+                :action="mandateAction" :form="item" :mandate="item?.representation_mandate" />
         </div>
     </div>
 </template>
