@@ -236,7 +236,7 @@ const steps = computed(() => {
                 </template>
             </div>
             <InstallationTechnicalVisitModal v-model="openTechnicalVisit" :form-id="item?.id" @submit="fetchOne"
-                :action="technicalVisitAction" />
+                :action="technicalVisitAction" :technical-visit="item?.technical_visit" />
         </div>
     </div>
 </template>

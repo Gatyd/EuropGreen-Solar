@@ -27,7 +27,14 @@ type TechnicalVisitDraft = {
     installer_signature?: { signer_name: string; dataUrl?: string }
 }
 
-const props = defineProps<{ draft: TechnicalVisitDraft }>()
+const props = defineProps<{ draft: TechnicalVisitDraft & {
+    generated_at?: string
+    meter_location_photo_url?: string | null
+    client_signature_image_url?: string | null
+    client_signature_signed_at?: string | null
+    installer_signature_image_url?: string | null
+    installer_signature_signed_at?: string | null
+} }>()
 
 const yn = (v: boolean) => (v ? 'Oui' : 'Non')
 const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'Inconnu')
@@ -42,7 +49,9 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
             </div>
             <div class="text-right">
                 <p class="text-2xl text-black font-normal mb-1">RAPPORT DE VISITE TECHNIQUE</p>
-                <p class="text-[11px] text-gray-500">Généré le {{ new Date().toLocaleDateString('fr-FR') }}</p>
+                <p class="text-[11px] text-gray-500">Généré le {{
+                    props.draft.generated_at ? new Date(props.draft.generated_at).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR')
+                }}</p>
             </div>
         </div>
 
@@ -118,9 +127,15 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
                     <tr class="odd:bg-zinc-50">
                         <td class="p-2 text-gray-600">Photo localisation du compteur</td>
                         <td class="p-2">
-                            <span v-if="!props.draft.meter_location_photo" class="text-gray-500">Pas encore
-                                importée</span>
-                            <span v-else class="text-gray-500">Sera affichée après la soumission</span>
+                            <template v-if="props.draft.meter_location_photo_url">
+                                <img :src="props.draft.meter_location_photo_url" alt="Photo localisation compteur" class="max-h-40 rounded border" />
+                            </template>
+                            <template v-else-if="props.draft.meter_location_photo">
+                                <span class="text-gray-500">Sera affichée après la soumission</span>
+                            </template>
+                            <template v-else>
+                                <span class="text-gray-500">Pas encore importée</span>
+                            </template>
                         </td>
                     </tr>
                     <tr class="odd:bg-zinc-50">
@@ -141,11 +156,11 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Client -->
                 <div>
-                    <div class="text-xs text-gray-600 mb-1">Signature du client</div>
+                    <div class="text-xs text-gray-600 mb-1">Lu et approuvé – Signature du client</div>
                     <div
                         class="border rounded-md p-3 inline-flex w-full min-h-[120px] items-center justify-center bg-white">
-                        <template v-if="props.draft.client_signature?.dataUrl">
-                            <img :src="props.draft.client_signature?.dataUrl" alt="Signature client"
+                        <template v-if="props.draft.client_signature_image_url || props.draft.client_signature?.dataUrl">
+                            <img :src="props.draft.client_signature_image_url || props.draft.client_signature?.dataUrl" alt="Signature client"
                                 class="h-20 object-contain" />
                         </template>
                         <template v-else>
@@ -153,18 +168,18 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
                         </template>
                     </div>
                     <div class="mt-2 text-[11px] text-gray-700">
-                        Signé par <span class="font-semibold">{{ props.draft.client_signature?.signer_name || '—'
-                            }}</span>
+                        Signé par <span class="font-semibold">{{ props.draft.client_signature?.signer_name || '—' }}</span>
+                        <span v-if="props.draft.client_signature_signed_at"> • le {{ new Date(props.draft.client_signature_signed_at).toLocaleString('fr-FR') }}</span>
                     </div>
                 </div>
 
                 <!-- Installateur -->
                 <div>
-                    <div class="text-xs text-gray-600 mb-1">Signature de l'installateur</div>
+                    <div class="text-xs text-gray-600 mb-1">Lu et approuvé – Signature de l'installateur</div>
                     <div
                         class="border rounded-md p-3 inline-flex w-full min-h-[120px] items-center justify-center bg-white">
-                        <template v-if="props.draft.installer_signature?.dataUrl">
-                            <img :src="props.draft.installer_signature?.dataUrl" alt="Signature installateur"
+                        <template v-if="props.draft.installer_signature_image_url || props.draft.installer_signature?.dataUrl">
+                            <img :src="props.draft.installer_signature_image_url || props.draft.installer_signature?.dataUrl" alt="Signature installateur"
                                 class="h-20 object-contain" />
                         </template>
                         <template v-else>
@@ -172,8 +187,8 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
                         </template>
                     </div>
                     <div class="mt-2 text-[11px] text-gray-700">
-                        Signé par <span class="font-semibold">{{ props.draft.installer_signature?.signer_name || '—'
-                            }}</span>
+                        Signé par <span class="font-semibold">{{ props.draft.installer_signature?.signer_name || '—' }}</span>
+                        <span v-if="props.draft.installer_signature_signed_at"> • le {{ new Date(props.draft.installer_signature_signed_at).toLocaleString('fr-FR') }}</span>
                     </div>
                 </div>
             </div>

@@ -115,7 +115,11 @@ async function onSubmit() {
                 credentials: 'include',
                 body: formData,
             })
-            toast.add({ title: 'Signature enregistrée', color: 'success' })
+            if (res) {
+                toast.add({ title: 'Signature enregistrée', color: 'success', icon: 'i-heroicons-check-circle' })
+                loading.value = false
+                emit('submit')
+            }
             return
         }
 
@@ -379,7 +383,8 @@ const reuseExistingYN = computed<string>({
         <!-- Signatures -->
         <UCard>
             <template #header>
-                <div class="font-semibold">Signature {{ auth.user?.is_staff ? 'installateur' : 'client' }}</div>
+                <div class="font-semibold">Signature {{ auth.user?.is_staff ? 'installateur' : 'client' }} : Datée et
+                    précédée de la mention "Lu et approuvé"</div>
             </template>
             <div class="space-y-6">
                 <div v-if="auth.user?.is_staff">
@@ -392,9 +397,10 @@ const reuseExistingYN = computed<string>({
         </UCard>
 
         <div class="flex justify-end pt-2">
-            <UButton v-if="props.action === 'signature'" color="primary" icon="i-heroicons-pencil-square" type="submit"
-                label="Signer" />
-            <UButton v-else color="primary" icon="i-heroicons-check-circle" type="submit" label="Enregistrer" />
+            <UButton v-if="props.action === 'signature'" :loading="loading" color="primary"
+                icon="i-heroicons-pencil-square" type="submit" label="Signer" />
+            <UButton v-else color="primary" :loading="loading" icon="i-heroicons-check-circle" type="submit"
+                label="Enregistrer" />
         </div>
     </UForm>
 </template>
