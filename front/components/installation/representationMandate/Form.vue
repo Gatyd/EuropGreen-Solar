@@ -67,10 +67,79 @@ async function onSubmit() {
     const toast = useToast()
     loading.value = true
     try {
-        // Pas d’appel API ici (backend à venir). On émet seulement l’événement pour rafraîchir la fiche si besoin.
+        if (!props.formId) {
+            toast.add({ title: 'Formulaire manquant', description: 'Impossible de soumettre sans ID de fiche.', color: 'error' })
+            return
+        }
+
+        if (props.action === 'signature') {
+            // Signature générique du mandat
+            const role = auth.user?.is_staff ? 'installer' : 'client'
+            const sig = role === 'installer' ? state.value.installer_signature : state.value.client_signature
+            const fd = new FormData()
+            fd.append('document', 'representation_mandate')
+            fd.append('role', role)
+            fd.append('signer_name', sig.signer_name)
+            if (sig.file) fd.append('signature_file', sig.file)
+            else if (sig.dataUrl) fd.append('signature_data', sig.dataUrl)
+
+            await $fetch(`/api/installations/forms/${props.formId}/sign/`, {
+                method: 'POST',
+                credentials: 'include',
+                body: fd,
+            })
+            toast.add({ title: 'Signature enregistrée', color: 'success', icon: 'i-heroicons-check-circle' })
+            emit('submit')
+            return
+        }
+
+        // Création / mise à jour mandat
+        const s = state.value
+        // JSON simple si pas de fichier signature à la création
+        const civMap: Record<string, string> = { 'Madame': 'mme', 'Monsieur': 'mr' }
+        const payload: any = {
+            client_civility: s.client_civility ? civMap[s.client_civility] : undefined,
+            client_birth_date: s.client_birth_date,
+            client_birth_place: s.client_birth_place,
+            client_address: s.client_address,
+            company_name: s.company_name,
+            company_rcs_city: s.company_rcs_city,
+            company_siret: s.company_siret,
+            company_head_office_address: s.company_head_office_address,
+            represented_by: s.represented_by,
+            representative_role: s.representative_role,
+        }
+        // Ajouter signature installateur si fournie
+        if (s.installer_signature.signer_name && (s.installer_signature.file || s.installer_signature.dataUrl)) {
+            const hasFile = !!s.installer_signature.file
+            if (!hasFile) {
+                payload.installer_signer_name = s.installer_signature.signer_name
+                payload.installer_signature_data = s.installer_signature.dataUrl
+            }
+        }
+
+        const hasFile = !!s.installer_signature.file
+        if (!hasFile) {
+            await $fetch(`/api/installations/forms/${props.formId}/representation-mandate/`, {
+                method: 'POST',
+                credentials: 'include',
+                body: payload,
+            })
+        } else {
+            const fd = new FormData()
+            Object.entries(payload).forEach(([k, v]) => { if (v !== undefined && v !== null) fd.append(k, String(v)) })
+            fd.append('installer_signer_name', s.installer_signature.signer_name)
+            if (s.installer_signature.file) fd.append('installer_signature_file', s.installer_signature.file)
+            await $fetch(`/api/installations/forms/${props.formId}/representation-mandate/`, {
+                method: 'POST',
+                credentials: 'include',
+                body: fd,
+            })
+        }
+        toast.add({ title: 'Mandat enregistré', color: 'success', icon: 'i-heroicons-check-circle' })
         emit('submit')
     } catch (e: any) {
-        toast.add({ title: 'Erreur', description: e?.message || 'Échec de soumission', color: 'error' })
+        toast.add({ title: 'Erreur', description: e?.data?.detail || e?.message || 'Échec de soumission', color: 'error' })
     } finally {
         loading.value = false
     }

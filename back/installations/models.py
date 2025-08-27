@@ -65,16 +65,6 @@ class Form(models.Model):
     def __str__(self) -> str:
         return f"Fiche {self.id} - {self.created_at.strftime('%Y-%m-%d')}"
     
-    def save(self, *args, **kwargs):
-        # Gérer l'horodatage automatique lors de la validation administrative
-        if self.administrative_validated and self.administrative_validation_date is None:
-            from django.utils import timezone
-            self.administrative_validation_date = timezone.now()
-        if not self.administrative_validated:
-            # Si décoché a posteriori, ne pas effacer l'historique; on le garde tel quel
-            pass
-        super().save(*args, **kwargs)
-    
 class TechnicalVisit(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     form = models.OneToOneField(Form, on_delete=models.CASCADE, related_name="technical_visit")

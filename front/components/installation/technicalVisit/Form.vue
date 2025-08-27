@@ -110,10 +110,10 @@ async function onSubmit() {
             if (sig.file) formData.append('signature_file', sig.file)
             else if (sig.dataUrl) formData.append('signature_data', sig.dataUrl)
 
-            const res = await $fetch(`/api/installations/forms/${props.formId}/technical-visit/sign/`, {
+            const res = await $fetch(`/api/installations/forms/${props.formId}/sign/`, {
                 method: 'POST',
                 credentials: 'include',
-                body: formData,
+                body: (() => { formData.append('document', 'technical_visit'); return formData })(),
             })
             if (res) {
                 toast.add({ title: 'Signature enregistrée', color: 'success', icon: 'i-heroicons-check-circle' })

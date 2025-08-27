@@ -42,7 +42,8 @@ watch(
   () => props.mandate,
   (rm: any) => {
     if (!rm) return
-    draft.client_civility = (rm.client_civility === 'M' ? 'Monsieur' : rm.client_civility === 'Mme' ? 'Madame' : '') as any
+  // Les valeurs backend sont probablement 'mme' | 'mr'
+  draft.client_civility = (rm.client_civility === 'mr' ? 'Monsieur' : rm.client_civility === 'mme' ? 'Madame' : '') as any
     draft.client_birth_date = rm.client_birth_date || ''
     draft.client_birth_place = rm.client_birth_place || ''
     draft.client_address = rm.client_address || (props.form?.client_address || '')

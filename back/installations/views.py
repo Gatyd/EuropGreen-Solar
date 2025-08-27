@@ -1,11 +1,13 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import Form
-from .serializers import FormSerializer, FormDetailSerializer, TechnicalVisitSerializer
+from .models import Form, TechnicalVisit, Signature, RepresentationMandate
+from .serializers import (
+	FormSerializer, FormDetailSerializer,
+	TechnicalVisitSerializer, RepresentationMandateSerializer,
+)
 from django.db import transaction
 from django.core.files.base import ContentFile
-
 from billing.models import Quote
 from billing.views import render_quote_pdf
 from EuropGreenSolar.email_utils import send_mail
@@ -13,7 +15,6 @@ from users.models import User
 import secrets, string
 from django.utils import timezone
 from authentication.permissions import HasInstallationAccess
-from .models import TechnicalVisit, Signature
 import base64
 import re
 
@@ -31,16 +32,12 @@ class FormViewSet(viewsets.ModelViewSet):
 		if not user or not user.is_authenticated:
 			return qs.none()
 		if user.is_superuser:
-			# Administrateur: toutes les fiches
 			return qs
 		if user.is_staff:
-			# Employé: uniquement celles qu'il a créées
 			return qs.filter(created_by=user)
-		# Client: uniquement celles où il est client
 		return qs.filter(client=user)
 
 	def get_permissions(self):
-		# Rendre l'action print-data publique, sinon appliquer la logique habituelle
 		if getattr(self, 'action', None) == 'retrieve':
 			return [permissions.AllowAny()]
 		user = getattr(self.request, 'user', None)
@@ -62,12 +59,10 @@ class FormViewSet(viewsets.ModelViewSet):
 		serializer = self.get_serializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
 		form: Form = serializer.save(created_by=request.user)
-
 		# Marquer l'offre comme déplacée vers les installations
 		offer = form.offer
 		offer.installation_moved_at = timezone.now()
 		offer.save(update_fields=["installation_moved_at", "updated_at"])
-
 		# 1) Récupérer le dernier devis de l'offre et générer le PDF signé
 		quote = Quote.objects.filter(offer=form.offer).order_by('-version').first()
 		pdf_attachment = None
@@ -86,7 +81,6 @@ class FormViewSet(viewsets.ModelViewSet):
 					pdf_attachment = (fname, pdf_bytes, 'application/pdf')
 			except Exception:
 				pass
-
 		# 2) Créer un compte client si nécessaire et envoyer l'email d'initiation
 		client_email = form.offer.email
 		client_first = form.offer.first_name
@@ -108,7 +102,6 @@ class FormViewSet(viewsets.ModelViewSet):
 			if hasattr(form, 'client'):
 				form.client = user
 				form.save(update_fields=['client', 'updated_at'])
-
 		# Email au client
 		if client_email:
 			ctx = {
@@ -126,7 +119,6 @@ class FormViewSet(viewsets.ModelViewSet):
 				to=client_email,
 				attachments=attachments,
 			)
-
 		headers = self.get_success_headers(self.get_serializer(form).data)
 		return Response(self.get_serializer(form).data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -159,11 +151,6 @@ class FormViewSet(viewsets.ModelViewSet):
 	@action(detail=True, methods=['post'], url_path='technical-visit')
 	@transaction.atomic
 	def create_or_update_technical_visit(self, request, pk=None):
-		"""Créer ou mettre à jour la visite technique de la fiche.
-
-		Attend des champs correspondant aux choix du modèle (codes), p.ex. roof_type=tile, meter_type=linky, etc.
-		Peut recevoir un fichier 'meter_location_photo'.
-		"""
 		form = self.get_object()
 		payload = request.data
 		is_create = not hasattr(form, 'technical_visit') or form.technical_visit is None
@@ -197,12 +184,10 @@ class FormViewSet(viewsets.ModelViewSet):
 		for src, dst in field_map.items():
 			if src in payload:
 				setattr(tv, dst, payload.get(src))
-
 		# Fichier photo éventuel
 		photo = request.FILES.get('meter_location_photo')
 		if photo:
 			tv.meter_location_photo = photo
-
 		# Éventuelle signature installateur à la création
 		if is_create:
 			ins_name = (payload.get('installer_signer_name') or '').strip()
@@ -222,11 +207,9 @@ class FormViewSet(viewsets.ModelViewSet):
 						sig.signature_image.save(f"signature-{sig.id}.{ext or 'png'}", cf, save=False)
 				sig.save()
 				tv.installer_signature = sig
-
 		# Validation et sauvegarde
 		tv.full_clean()
 		tv.save()
-
 		# Email d'information au client (best-effort, non bloquant)
 		try:
 			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
@@ -250,32 +233,41 @@ class FormViewSet(viewsets.ModelViewSet):
 		serializer = TechnicalVisitSerializer(tv, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
 
-	@action(detail=True, methods=['post'], url_path='technical-visit/sign')
+	@action(detail=True, methods=['post'], url_path='sign')
 	@transaction.atomic
-	def sign_technical_visit(self, request, pk=None):
-		"""Enregistrer une signature (client ou installateur) pour la visite technique.
+	def sign_document(self, request, pk=None):
+		"""Action générique de signature pour différents documents liés à la fiche d'installation.
 
-		Payload:
+		Body attendu:
+		- document: 'technical_visit' | 'representation_mandate' | ... (à étendre)
 		- role: 'client' | 'installer' (optionnel; sinon déduit du rôle utilisateur)
 		- signer_name: str
 		- signature_file: fichier image (optionnel)
-		- signature_data: data URL d'une image (optionnel)
+		- signature_data: data URL image (optionnel)
 		"""
 		form = self.get_object()
-		if not hasattr(form, 'technical_visit') or form.technical_visit is None:
-			return Response({ 'detail': "Aucune visite technique n'est associée à cette fiche." }, status=status.HTTP_400_BAD_REQUEST)
-		tv: TechnicalVisit = form.technical_visit  # type: ignore
+		doc = (request.data.get('document') or '').strip().lower()
+		if doc not in ('technical_visit', 'representation_mandate'):
+			return Response({ 'document': 'Type de document non supporté.' }, status=status.HTTP_400_BAD_REQUEST)
+
+		# Récupérer l'instance cible
+		target = None
+		if doc == 'technical_visit':
+			target = getattr(form, 'technical_visit', None)
+		elif doc == 'representation_mandate':
+			target = getattr(form, 'representation_mandate', None)
+        
+		if target is None:
+			return Response({ 'detail': "Aucun objet n'est associé à cette fiche pour ce document." }, status=status.HTTP_400_BAD_REQUEST)
 
 		role = (request.data.get('role') or '').strip().lower()
 		if role not in ('client', 'installer'):
-			# Déduction basique: client si non staff, sinon installateur
 			role = 'installer' if getattr(request.user, 'is_staff', False) else 'client'
 
 		signer_name = (request.data.get('signer_name') or '').strip()
 		if not signer_name:
 			return Response({ 'signer_name': 'Ce champ est requis.' }, status=status.HTTP_400_BAD_REQUEST)
 
-		# Construire l'objet Signature
 		sig = Signature(
 			signer_name=signer_name,
 			ip_address=self._get_client_ip(request),
@@ -288,52 +280,157 @@ class FormViewSet(viewsets.ModelViewSet):
 			data_url = request.data.get('signature_data')
 			cf, ext = self._decode_data_url_image(data_url)
 			if cf:
-				# Nom par défaut
 				sig.signature_image.save(f"signature.{ext or 'png'}", cf, save=False)
-
 		sig.save()
 
-		# Affecter la signature au bon champ
-		if role == 'client':
-			# Remplacer la signature existante si besoin
-			if tv.client_signature_id:
-				try:
-					old = tv.client_signature
-					if old and old.signature_image:
-						old.signature_image.delete(save=False)
-				except Exception:
-					pass
-			tv.client_signature = sig
-		else:
-			if tv.installer_signature_id:
-				try:
-					old = tv.installer_signature
-					if old and old.signature_image:
-						old.signature_image.delete(save=False)
-				except Exception:
-					pass
-			tv.installer_signature = sig
-
-
-		# Sauvegarder la signature
-		tv.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
-
-		# Si les deux signatures sont présentes, générer le PDF du rapport de visite technique
-		try:
-			if tv.client_signature_id and tv.installer_signature_id:
-				from .pdf import render_technical_visit_pdf
-				pdf_bytes = render_technical_visit_pdf(form.id, request=request)
-				if pdf_bytes:
-					from django.core.files.base import ContentFile
-					filename = f"technical_visit_{form.id}.pdf"
-					# On suppose que le modèle comporte un champ FileField report_pdf
+		# Affectation selon le type
+		updated_fields = []
+		if doc == 'technical_visit':
+			tv: TechnicalVisit = target
+			if role == 'client':
+				if tv.client_signature_id:
 					try:
-						tv.report_pdf.save(filename, ContentFile(pdf_bytes), save=True)
+						old = tv.client_signature
+						if old and old.signature_image:
+							old.signature_image.delete(save=False)
 					except Exception:
-						# Si le champ n'existe pas, ignorer silencieusement
 						pass
+				tv.client_signature = sig
+			else:
+				if tv.installer_signature_id:
+					try:
+						old = tv.installer_signature
+						if old and old.signature_image:
+							old.signature_image.delete(save=False)
+					except Exception:
+						pass
+				tv.installer_signature = sig
+			tv.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
+			updated_fields = ['client_signature', 'installer_signature']
+
+			# Génération PDF si complet
+			try:
+				if tv.client_signature_id and tv.installer_signature_id:
+					from .pdf import render_technical_visit_pdf
+					pdf_bytes = render_technical_visit_pdf(form.id, request=request)
+					if pdf_bytes:
+						filename = f"technical_visit_{form.id}.pdf"
+						try:
+							tv.report_pdf.save(filename, ContentFile(pdf_bytes), save=True)
+						except Exception:
+							pass
+			except Exception:
+				pass
+
+			serializer = TechnicalVisitSerializer(tv, context=self.get_serializer_context())
+			return Response(serializer.data, status=status.HTTP_200_OK)
+
+		elif doc == 'representation_mandate':
+			rm: RepresentationMandate = target
+			if role == 'client':
+				if rm.client_signature_id:
+					try:
+						old = rm.client_signature
+						if old and old.signature_image:
+							old.signature_image.delete(save=False)
+					except Exception:
+						pass
+				rm.client_signature = sig
+			else:
+				if rm.installer_signature_id:
+					try:
+						old = rm.installer_signature
+						if old and old.signature_image:
+							old.signature_image.delete(save=False)
+					except Exception:
+						pass
+				rm.installer_signature = sig
+
+			rm.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
+
+			# Génération PDF mandat si les deux signatures présentes (à implémenter quand prêt)
+			try:
+				if rm.client_signature_id and rm.installer_signature_id:
+					from .pdf import render_representation_mandate_pdf  # à créer dans pdf.py
+					try:
+						pdf_bytes = render_representation_mandate_pdf(form.id, request=request)
+					except Exception:
+						pdf_bytes = None
+					if pdf_bytes:
+						filename = f"representation_mandate_{form.id}.pdf"
+						try:
+							rm.mandate_pdf.save(filename, ContentFile(pdf_bytes), save=True)
+						except Exception:
+							pass
+			except Exception:
+				pass
+
+			serializer = RepresentationMandateSerializer(rm, context=self.get_serializer_context())
+			return Response(serializer.data, status=status.HTTP_200_OK)
+
+	@action(detail=True, methods=['post'], url_path='representation-mandate')
+	@transaction.atomic
+	def create_or_update_representation_mandate(self, request, pk=None):
+		form = self.get_object()
+		payload = request.data
+		is_create = not hasattr(form, 'representation_mandate') or form.representation_mandate is None
+		
+		if is_create:
+			rm = RepresentationMandate(form=form, created_by=request.user)
+		else:
+			rm = form.representation_mandate  # type: ignore
+
+		# Mapping simple des champs
+		field_list = ['client_civility', 'client_birth_date', 'client_birth_place', 'client_address', 'company_name', 
+			'company_rcs_city', 'company_siret', 'company_head_office_address', 'represented_by', 'representative_role'
+		]
+		for field in field_list:
+			if field in payload:
+				setattr(rm, field, payload.get(field))
+		# Éventuelle signature installateur à la création
+		if is_create:
+			ins_name = (payload.get('installer_signer_name') or '').strip()
+			file = request.FILES.get('installer_signature_file')
+			data_url = payload.get('installer_signature_data')
+			if ins_name and (file or data_url):
+				sig = Signature(
+					signer_name=ins_name,
+					ip_address=self._get_client_ip(request),
+					user_agent=request.META.get('HTTP_USER_AGENT', ''),
+				)
+				if file:
+					sig.signature_image = file
+				else:
+					cf, ext = self._decode_data_url_image(str(data_url))
+					if cf:
+						sig.signature_image.save(f"signature-{sig.id}.{ext or 'png'}", cf, save=False)
+				sig.save()
+				rm.installer_signature = sig
+		# Validation et sauvegarde
+		rm.full_clean()
+		rm.save()
+		form.status = 'representation_mandate'
+		form.save()
+		# Email d'information au client (best-effort, non bloquant)
+		try:
+			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
+			if client_email:
+				ctx = {
+					'form': form,
+					'representation_mandate': rm,
+					'client_name': f"{form.client_first_name} {form.client_last_name}",
+					'link_signature': f"{request.scheme}://{request.get_host()}/home/installations/{form.id}",
+				}
+				subject = "Mandat de représentation créé – Signature requise"
+				send_mail(
+					template='emails/installation/representation_mandate_signature_pending.html',
+					context=ctx,
+					subject=subject,
+					to=client_email,
+				)
 		except Exception:
 			pass
 
-		serializer = TechnicalVisitSerializer(tv, context=self.get_serializer_context())
-		return Response(serializer.data, status=status.HTTP_200_OK)
+		serializer = RepresentationMandateSerializer(rm, context=self.get_serializer_context())
+		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
+
