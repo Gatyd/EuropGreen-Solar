@@ -135,32 +135,6 @@ class FormViewSet(viewsets.ModelViewSet):
 		serializer = FormDetailSerializer(instance, context=self.get_serializer_context())
 		return Response(serializer.data)
 
-	@action(detail=True, methods=['get'], url_path='technical-visit/generate-pdf')
-	def technical_visit_generate_pdf(self, request, pk=None):
-		"""Temporaire: Génère le PDF du rapport de visite technique à chaque appel."""
-		form = self.get_object()
-		if not hasattr(form, 'technical_visit') or form.technical_visit is None:
-			return Response({'detail': "Aucune visite technique."}, status=status.HTTP_404_NOT_FOUND)
-		tv: TechnicalVisit = form.technical_visit  # type: ignore
-
-		generated = False
-		try:
-			from .pdf import render_technical_visit_pdf
-			pdf_bytes = render_technical_visit_pdf(str(form.id), request=request)
-			if pdf_bytes:
-				filename = f"technical_visit_{form.id}.pdf"
-				try:
-					tv.report_pdf.save(filename, ContentFile(pdf_bytes), save=True)
-					generated = True
-				except Exception:
-					pass
-		except Exception:
-			pass
-
-		ser = TechnicalVisitSerializer(tv, context=self.get_serializer_context())
-		return Response({'generated': generated, 'technical_visit': ser.data})
-	# --- Actions personnalisées ---
-
 	def _decode_data_url_image(self, data_url: str):
 		"""Retourne (ContentFile, ext) à partir d'une data URL d'image, sinon (None, None)."""
 		if not data_url or not isinstance(data_url, str):

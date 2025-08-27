@@ -102,13 +102,24 @@ const steps = computed(() => {
         cm: 'i-heroicons-rocket-launch',
     }
 
+    // Helper de couleur par statut → applique des classes au composant (indicator + separator)
+    const colorUI = (status: 'green' | 'amber' | 'gray') => {
+        const map = {
+            green: 'bg-green-500 text-white',
+            amber: 'bg-amber-500 text-white',
+            gray: 'bg-gray-300'
+        } as const
+        const c = map[status]
+        return { indicator: c, separator: c }
+    }
+
     const items = [
         {
             icon: icons.tv,
             title: 'Visite technique',
             description: tv ? tvDesc : "En attente de planification de la visite technique.",
             date: tv ? fmtDate(tv.visit_date) : '',
-            color: tvValid ? 'green' : (tv ? 'amber' : 'gray'),
+            ui: colorUI(tvValid ? 'green' : (tv ? 'amber' : 'gray')),
             slot: 'technical-visit'
         },
         {
@@ -116,42 +127,42 @@ const steps = computed(() => {
             title: 'Mandat représentation',
             description: rm ? rmDesc : "En attente de création du mandat de représentation.",
             date: rm ? fmtDateTime(rm.updated_at) : '',
-            color: rmValid ? 'green' : (rm ? 'amber' : 'gray')
+            ui: colorUI(rmValid ? 'green' : (rm ? 'amber' : 'gray'))
         },
         {
             icon: icons.av,
             title: 'Validation des démarches administratives',
             description: av ? avDesc : "En attente de lancement des démarches administratives.",
             date: av ? fmtDateTime(av.validated_at) : '',
-            color: avValid ? 'green' : (av ? 'amber' : 'gray')
+            ui: colorUI(avValid ? 'green' : (av ? 'amber' : 'gray'))
         },
         {
             icon: icons.ic,
             title: 'Installation effectuée',
             description: ic ? icDesc : "Installation non encore réalisée.",
             date: ic ? fmtDateTime(ic.updated_at) : '',
-            color: icValid ? 'green' : (ic ? 'amber' : 'gray')
+            ui: colorUI(icValid ? 'green' : (ic ? 'amber' : 'gray'))
         },
         {
             icon: icons.cv,
             title: 'Visite CONSUEL',
             description: cv ? cvDesc : "Visite CONSUEL non encore planifiée.",
             date: cv ? fmtDateTime(cv.updated_at) : '',
-            color: cvValid ? 'green' : (cv ? 'amber' : 'gray')
+            ui: colorUI(cvValid ? 'green' : (cv ? 'amber' : 'gray'))
         },
         {
             icon: icons.ec,
             title: 'Raccordement ENEDIS',
             description: ec ? ecDesc : "Raccordement ENEDIS non encore validé.",
             date: ec ? fmtDateTime(ec.validated_at) : '',
-            color: ecValid ? 'green' : (ec ? 'amber' : 'gray')
+            ui: colorUI(ecValid ? 'green' : (ec ? 'amber' : 'gray'))
         },
         {
             icon: icons.cm,
             title: 'Mise en service',
             description: cm ? cmDesc : "Mise en service non encore effectuée.",
             date: cm ? fmtDateTime(cm.updated_at) : '',
-            color: cmValid ? 'green' : (cm ? 'amber' : 'gray')
+            ui: colorUI(cmValid ? 'green' : (cm ? 'amber' : 'gray'))
         },
     ]
 
@@ -202,7 +213,7 @@ const steps = computed(() => {
                     </div>
                 </template>
                 <template v-else>
-                    <UTimeline :items="steps" size="xl" icon="i-heroicons-check-circle" orientation="vertical">
+                    <UTimeline :items="steps" size="xl" icon="i-heroicons-check-circle" :ui="{ date: 'text-gray-500' }" orientation="vertical">
                         <!-- Slots personnalisés pour la visite technique -->
                         <template #technical-visit-title="{ item: s }">
                             <div class="flex items-center justify-between gap-4">
@@ -222,11 +233,13 @@ const steps = computed(() => {
                         <template #technical-visit-description="{ item: s }">
                             <div class="flex flex-col md:flex-row gap-4 md:items-center">
                                 <span class="text-sm text-gray-600">{{ s.description }}</span>
-                                <div v-if="item?.technical_visit && !item?.technical_visit?.report_pdf"
-                                    class="flex items-center gap-3 md:ml-auto">
-                                    <UButton variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye"
-                                        label="Aperçu"
+                                <div class="flex items-center gap-3 md:ml-auto">
+                                    <UButton v-if="item?.technical_visit && !item?.technical_visit?.report_pdf"
+                                        variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye" label="Aperçu"
                                         @click="technicalVisitAction = 'preview'; openTechnicalVisit = true" />
+                                    <UButton v-else-if="item?.technical_visit?.report_pdf" variant="ghost" size="xs"
+                                        color="neutral" icon="i-heroicons-clipboard-document-check" target="_blank"
+                                        label="Voir le rapport" :to="item.technical_visit.report_pdf" />
                                 </div>
                             </div>
                         </template>
