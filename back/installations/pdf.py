@@ -21,7 +21,14 @@ async def _render_technical_visit_pdf_playwright_async(form_id: str, request: Op
             pdf_bytes = await page.pdf(
                 format="A4",
                 print_background=True,
+                display_header_footer=True,
                 # margin={"top": "10mm", "right": "10mm", "bottom": "10mm", "left": "10mm"},
+                # header_template='<div style="font-size:8px; color:#999; width:100%; padding:4px 10px;"></div>',
+                footer_template='''
+                    <div style="font-size:11px; color:#666; width:100%; padding:6px 10px; text-align:center;">
+                        Page <span class="pageNumber"></span> / <span class="totalPages"></span>
+                    </div>
+                ''',
             )
             return pdf_bytes
         finally:
@@ -70,6 +77,14 @@ async def _render_representation_mandate_pdf_playwright_async(form_id: str, requ
             pdf_bytes = await page.pdf(
                 format="A4",
                 print_background=True,
+                display_header_footer=True,
+                margin={"top": "12mm", "right": "10mm", "bottom": "16mm", "left": "10mm"},
+                header_template='<div style="font-size:8px; color:#999; width:100%; padding:4px 10px;"></div>',
+                footer_template='''
+                    <div style="font-size:10px; color:#666; width:100%; padding:6px 10px; text-align:center;">
+                        Page <span class="pageNumber"></span> / <span class="totalPages"></span>
+                    </div>
+                ''',
             )
             return pdf_bytes
         finally:

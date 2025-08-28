@@ -68,6 +68,11 @@ const draft = computed(() => {
 </template>
 
 <style>
+@page {
+	size: A4;
+	margin: 0;
+}
+html, body { margin: 0; padding: 0; }
 @media print {
 	body { background: white; }
 }

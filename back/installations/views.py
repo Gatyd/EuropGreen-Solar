@@ -280,11 +280,10 @@ class FormViewSet(viewsets.ModelViewSet):
 			data_url = request.data.get('signature_data')
 			cf, ext = self._decode_data_url_image(data_url)
 			if cf:
-				sig.signature_image.save(f"signature.{ext or 'png'}", cf, save=False)
+				sig.signature_image.save(f"{role}-signature-{doc}-{target.id}.{ext or 'png'}", cf, save=False)
 		sig.save()
 
 		# Affectation selon le type
-		updated_fields = []
 		if doc == 'technical_visit':
 			tv: TechnicalVisit = target
 			if role == 'client':
@@ -306,19 +305,25 @@ class FormViewSet(viewsets.ModelViewSet):
 						pass
 				tv.installer_signature = sig
 			tv.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
-			updated_fields = ['client_signature', 'installer_signature']
 
-			# Génération PDF si complet
+			# Génération PDF si complet (après COMMIT pour éviter un état non visible par la page print)
 			try:
 				if tv.client_signature_id and tv.installer_signature_id:
-					from .pdf import render_technical_visit_pdf
-					pdf_bytes = render_technical_visit_pdf(form.id, request=request)
-					if pdf_bytes:
-						filename = f"technical_visit_{form.id}.pdf"
+					def _gen_tv_pdf_after_commit(form_id: str):
 						try:
-							tv.report_pdf.save(filename, ContentFile(pdf_bytes), save=True)
+							from .models import Form as _Form
+							from .pdf import render_technical_visit_pdf
+							f = _Form.objects.select_related('technical_visit').get(pk=form_id)
+							pdf_bytes = render_technical_visit_pdf(str(form_id))
+							if pdf_bytes and getattr(f, 'technical_visit', None):
+								filename = f"technical_visit_{form_id}.pdf"
+								try:
+									f.technical_visit.report_pdf.save(filename, ContentFile(pdf_bytes), save=True)  # type: ignore
+								except Exception:
+									pass
 						except Exception:
 							pass
+					transaction.on_commit(lambda fid=str(form.id): _gen_tv_pdf_after_commit(fid))
 			except Exception:
 				pass
 
@@ -348,20 +353,24 @@ class FormViewSet(viewsets.ModelViewSet):
 
 			rm.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
 
-			# Génération PDF mandat si les deux signatures présentes (à implémenter quand prêt)
+			# Génération PDF mandat si les deux signatures présentes (après COMMIT)
 			try:
 				if rm.client_signature_id and rm.installer_signature_id:
-					from .pdf import render_representation_mandate_pdf  # à créer dans pdf.py
-					try:
-						pdf_bytes = render_representation_mandate_pdf(form.id, request=request)
-					except Exception:
-						pdf_bytes = None
-					if pdf_bytes:
-						filename = f"representation_mandate_{form.id}.pdf"
+					def _gen_rm_pdf_after_commit(form_id: str):
 						try:
-							rm.mandate_pdf.save(filename, ContentFile(pdf_bytes), save=True)
+							from .models import Form as _Form
+							from .pdf import render_representation_mandate_pdf
+							f = _Form.objects.select_related('representation_mandate').get(pk=form_id)
+							pdf_bytes = render_representation_mandate_pdf(str(form_id))
+							if pdf_bytes and getattr(f, 'representation_mandate', None):
+								filename = f"representation_mandate_{form_id}.pdf"
+								try:
+									f.representation_mandate.mandate_pdf.save(filename, ContentFile(pdf_bytes), save=True)  # type: ignore
+								except Exception:
+									pass
 						except Exception:
 							pass
+					transaction.on_commit(lambda fid=str(form.id): _gen_rm_pdf_after_commit(fid))
 			except Exception:
 				pass
 
