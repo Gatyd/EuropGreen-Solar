@@ -47,6 +47,24 @@ const links = [
         },
     },
     {
+        id: "installations",
+        label: "Installations",
+        icon: "i-heroicons-wrench-screwdriver",
+        to: "/home/installations",
+        tooltip: {
+            text: "Installations",
+        },
+    },
+    {
+        id: "users",
+        label: "Utilisateurs",
+        icon: "i-heroicons-users",
+        to: "/home/users",
+        tooltip: {
+            text: "Utilisateurs",
+        },
+    },
+    {
         id: "customers",
         label: "Prospects / Clients",
         icon: "i-heroicons-user-group",
@@ -64,24 +82,6 @@ const links = [
         ],
         tooltip: {
             text: "Clients",
-        },
-    },
-    {
-        id: "installations",
-        label: "Installations",
-        icon: "i-heroicons-wrench-screwdriver",
-        to: "/home/installations",
-        tooltip: {
-            text: "Installations",
-        },
-    },
-    {
-        id: "users",
-        label: "Utilisateurs",
-        icon: "i-heroicons-users",
-        to: "/home/users",
-        tooltip: {
-            text: "Utilisateurs",
         },
     },
     {
