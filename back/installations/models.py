@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 import uuid
 
 
@@ -347,3 +348,10 @@ class Commissioning(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Mise en service"
         verbose_name_plural = "Mises en service"
+
+
+# ==============================
+# Documents administratifs (3.2)
+# ==============================
+
+## Documents administratifs déplacés dans l'app `administrative`.

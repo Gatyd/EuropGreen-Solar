@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     'request',
     'offers',
     'billing',
-    'installations'
+    'installations',
+    'administrative'
 ]
 
 MIDDLEWARE = [

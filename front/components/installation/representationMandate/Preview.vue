@@ -292,6 +292,7 @@ const fullName = computed(() => {
 @media print {
 	.mandate-print-root {
 		font-size: 14px;
+		padding: 24px 40px 64px 40px;
 	}
 
 	/* Forcer l'alignement des signatures sur une seule ligne à l'impression */
