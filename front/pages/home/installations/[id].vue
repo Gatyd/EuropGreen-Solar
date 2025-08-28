@@ -32,7 +32,7 @@ const fetchOne = async () => {
 onMounted(fetchOne)
 
 // Helpers d’affichage
-const fmtDateTime = (v?: string | null) => v ? new Date(v).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : ''
+const fmtDateTime = (v?: string | null) => v ? new Date(v).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 const fmtDate = (v?: string | null) => v ? new Date(v).toLocaleDateString('fr-FR', { dateStyle: 'medium' }) : '';
 
 const steps = computed(() => {
@@ -171,7 +171,8 @@ const steps = computed(() => {
     ]
 
     return items
-})
+});
+
 </script>
 
 <template>
@@ -182,24 +183,7 @@ const steps = computed(() => {
         </div>
 
         <div class="px-4 md:px-6 lg:px-8">
-            <UCard class="mt-6">
-                <template v-if="!loading">
-                    <div class="flex flex-col gap-1">
-                        <div class="font-semibold">{{ item?.client_last_name }} {{ item?.client_first_name }}</div>
-                        <div class="text-sm text-gray-500">{{ item?.client_address }}</div>
-                        <div class="text-xs text-gray-400">Puissance: {{ item?.installation_power }} kWc • {{
-                            item?.installation_type }}</div>
-                    </div>
-                </template>
-                <template v-else>
-                    <div class="space-y-2">
-                        <USkeleton class="h-5 w-48" />
-                        <USkeleton class="h-4 w-64" />
-                        <USkeleton class="h-3 w-56" />
-                    </div>
-                </template>
-            </UCard>
-
+            <InstallationHeader :item="item" :loading="loading" />
             <div class="xl:me-40 mt-8">
                 <template v-if="loading">
                     <div class="flex flex-col gap-6">

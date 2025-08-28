@@ -8,12 +8,10 @@ from .models import (
 	InstallationCompleted,
 	ConsuelVisit,
 	EnedisConnection,
+	Commissioning
 )
-try:
-	# Commissioning may be defined; fallback if not
-	from .models import Commissioning  # type: ignore
-except Exception:  # pragma: no cover - optional model
-	Commissioning = None  # type: ignore
+from administrative.serializers import Cerfa16702Serializer, ElectricalDiagramSerializer, EnedisMandateSerializer
+from billing.serializers import QuoteSerializer
 
 class SignatureSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -86,14 +84,10 @@ class EnedisConnectionSerializer(serializers.ModelSerializer):
 		model = EnedisConnection
 		fields = ['id', 'is_validated', 'validated_at']
 
-if Commissioning:
-	class CommissioningSerializer(serializers.ModelSerializer):  # type: ignore
-		class Meta:  # type: ignore
-			model = Commissioning  # type: ignore
-			fields = '__all__'
-else:
-	CommissioningSerializer = None  # type: ignore
-
+class CommissioningSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Commissioning
+		fields = '__all__'
 
 class UserMiniSerializer(serializers.Serializer):
 	id = serializers.CharField()
@@ -120,9 +114,15 @@ class FormDetailSerializer(serializers.ModelSerializer):
 	installation_completed = InstallationCompletedSerializer(read_only=True)
 	consuel_visit = ConsuelVisitSerializer(read_only=True)
 	enedis_connection = EnedisConnectionSerializer(read_only=True)
-	# Commissioning may be optional
-	if CommissioningSerializer:
-		commissioning = CommissioningSerializer(read_only=True)  # type: ignore
+	commissioning = CommissioningSerializer(read_only=True)
+
+	# Documents administratifs
+	cerfa16702 = Cerfa16702Serializer(read_only=True)
+	electrical_diagram = ElectricalDiagramSerializer(read_only=True)
+	enedis_mandate = EnedisMandateSerializer(read_only=True)
+
+	# Devis
+	quote = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Form
@@ -131,5 +131,16 @@ class FormDetailSerializer(serializers.ModelSerializer):
 			'installation_power', 'installation_type', 'status',
 			'created_by', 'client', 'created_at', 'updated_at',
 			'technical_visit', 'representation_mandate', 'administrative_validation',
-			'installation_completed', 'consuel_visit', 'enedis_connection'
-		] + (['commissioning'] if CommissioningSerializer else [])
+			'installation_completed', 'consuel_visit', 'enedis_connection', 'commissioning',
+			'cerfa16702', 'electrical_diagram', 'enedis_mandate', 'quote'
+		]
+
+	def get_quote(self, obj):
+		offer = getattr(obj, 'offer', None)
+		if not offer:
+			return None
+		if hasattr(offer, 'quotes'):
+			quote = offer.quotes.order_by('-version', '-created_at').first()
+		if quote:
+			return QuoteSerializer(quote, context=self.context).data
+		return None

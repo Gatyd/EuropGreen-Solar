@@ -1,3 +1,5 @@
+import type { Quote } from './billing'
+
 export type InstallationStatus =
   | 'technical_visit'
   | 'representation_mandate'
@@ -139,4 +141,152 @@ export interface InstallationForm {
   consuel_visit?: ConsuelVisit | null
   enedis_connection?: EnedisConnection | null
   commissioning?: Commissioning | null
+  // Documents administratifs
+  cerfa16702?: Cerfa16702 | null
+  electrical_diagram?: ElectricalDiagram | null
+  enedis_mandate?: EnedisMandate | null
+  // Devis
+  quote?: Quote | null
+}
+
+// ————————————————
+// Documents administratifs
+// ————————————————
+
+export type DeclarantType = 'individual' | 'company'
+
+export interface Cerfa16702 {
+  id: string
+  // Identité du déclarant
+  declarant_type: DeclarantType
+  last_name: string
+  first_name: string
+  birth_date?: string | null
+  birth_place?: string
+  birth_department?: string
+  birth_country?: string
+
+  // Coordonnées du déclarant
+  address_street?: string
+  address_number?: string
+  address_lieu_dit?: string
+  address_locality?: string
+  address_postal_code?: string
+  address_bp?: string
+  address_cedex?: string
+  phone_country_code?: string
+  phone?: string
+  email?: string
+  email_consent?: boolean
+
+  // Terrain
+  land_street?: string
+  land_number?: string
+  land_lieu_dit?: string
+  land_locality?: string
+  land_postal_code?: string
+
+  cadastral_prefix?: string
+  cadastral_section?: string
+  cadastral_number?: string
+  cadastral_surface_m2?: number | null
+
+  // Projet
+  project_new_construction?: boolean
+  project_existing_works?: boolean
+  project_description?: string
+  destination_primary_residence?: boolean
+  destination_secondary_residence?: boolean
+  agrivoltaic_project?: boolean
+  electrical_power_text?: string
+  peak_power_text?: string
+  energy_destination?: string
+
+  // Périmètres de protection
+  protection_site_patrimonial?: boolean
+  protection_site_classe_or_instance?: boolean
+  protection_monument_abords?: boolean
+
+  // Engagement du déclarant
+  engagement_city?: string
+  engagement_date?: string
+  declarant_signature?: Signature | null
+
+  // Pièces jointes
+  dpc1?: string | null
+  dpc2?: string | null
+  dpc3?: string | null
+  dpc4?: string | null
+  dpc5?: string | null
+  dpc6?: string | null
+  dpc7?: string | null
+  dpc8?: string | null
+  dpc11?: string | null
+  dpc11_notice_materiaux?: string
+
+  // PDF généré
+  pdf?: string | null
+
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ElectricalDiagram {
+  id: string
+  file?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export type ClientType = 'individual' | 'company' | 'collectivity'
+export type Civility = 'mr' | 'mme'
+export type MandateType = 'simple' | 'special'
+export type ConnectionNature =
+  | 'indiv_or_group_housing'
+  | 'commercial_or_production'
+  | 'branch_modification'
+  | 'power_change_or_ev'
+
+export interface EnedisMandate {
+  id: string
+  client_type: ClientType
+  client_civility?: Civility | null
+
+  // Adresse complète du client
+  client_address_street?: string
+  client_address_number?: string
+  client_address_locality?: string
+  client_address_postal_code?: string
+
+  // Société / Collectivité
+  client_company_name?: string
+  client_company_siret?: string
+  client_company_represented_by?: string
+
+  // Entreprise en charge
+  contractor_company_name?: string
+  contractor_company_siret?: string
+  contractor_represented_by_name?: string
+  contractor_represented_by_role?: string
+
+  // Mandat
+  mandate_type: MandateType
+  authorize_signature?: boolean
+  authorize_payment?: boolean
+  authorize_l342?: boolean
+  authorize_network_access?: boolean
+
+  // Localisation
+  geographic_area?: string
+  connection_nature?: ConnectionNature | null
+
+  // Signatures
+  client_signature?: Signature | null
+  installer_signature?: Signature | null
+
+  // PDF
+  pdf?: string | null
+
+  created_at?: string
+  updated_at?: string
 }
