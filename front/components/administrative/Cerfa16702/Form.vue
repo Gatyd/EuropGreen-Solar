@@ -11,6 +11,10 @@ type cerfa16702Draft = {
     birth_place: string,
     birth_department: string,
     birth_country: string,
+    company_denomination: string,
+    company_reason: string,
+    company_siret: string,
+    company_type: string,
     address_street: string,
     address_number: string,
     address_lieu_dit: string,
@@ -84,6 +88,12 @@ const validate = (s: cerfa16702Draft) => {
         if (!s.birth_department.trim()) errors.push({ name: 'birth_department', message: 'Département de naissance requis.' })
         if (!s.birth_country.trim()) errors.push({ name: 'birth_country', message: 'Pays de naissance requis.' })
     }
+    if (s.declarant_type === 'company') {
+        if (!s.company_denomination.trim()) errors.push({ name: 'company_denomination', message: 'Dénomination requise.' })
+        if (!s.company_reason.trim()) errors.push({ name: 'company_reason', message: 'Raison sociale requise.' })
+        if (!s.company_siret.trim()) errors.push({ name: 'company_siret', message: 'N° SIRET requis.' })
+        if (!s.company_type.trim()) errors.push({ name: 'company_type', message: 'Type d\'entreprise requis.' })
+    }
 
     // Coordonnées
     if (!s.address_street.trim()) errors.push({ name: 'address_street', message: 'Rue requise.' })
@@ -121,142 +131,81 @@ async function onSubmit() {
     const toast = useToast()
     loading.value = true
 
-    if (!props.formId) {
-        toast.add({ title: 'Formulaire manquant', description: 'Impossible de soumettre sans ID de fiche.', color: 'error' })
-        loading.value = false
-        return
-    }
-
     try {
         // Création/MàJ du CERFA 16702
         const s = props.draft
-        const hasFiles = s.dpc1 || s.dpc2 || s.dpc3 || s.dpc4 || s.dpc5 || s.dpc6 || s.dpc7 || s.dpc8 || s.dpc11
+        const fd = new FormData()
+        fd.append('declarant_type', s.declarant_type)
+        fd.append('last_name', s.last_name)
+        fd.append('first_name', s.first_name)
+        if (s.birth_date) fd.append('birth_date', s.birth_date)
+        fd.append('birth_place', s.birth_place)
+        fd.append('birth_department', s.birth_department)
+        fd.append('birth_country', s.birth_country)
+        fd.append('company_denomination', s.company_denomination)
+        fd.append('company_reason', s.company_reason)
+        fd.append('company_siret', s.company_siret)
+        fd.append('address_street', s.address_street)
+        fd.append('address_number', s.address_number)
+        fd.append('address_lieu_dit', s.address_lieu_dit)
+        fd.append('address_locality', s.address_locality)
+        fd.append('address_postal_code', s.address_postal_code)
+        fd.append('address_bp', s.address_bp)
+        fd.append('address_cedex', s.address_cedex)
+        fd.append('phone_country_code', s.phone_country_code)
+        fd.append('phone', s.phone)
+        fd.append('email', s.email)
+        fd.append('email_consent', s.email_consent ? '1' : '0')
+        fd.append('land_street', s.land_street)
+        fd.append('land_number', s.land_number)
+        fd.append('land_lieu_dit', s.land_lieu_dit)
+        fd.append('land_locality', s.land_locality)
+        fd.append('land_postal_code', s.land_postal_code)
+        fd.append('cadastral_prefix', s.cadastral_prefix)
+        fd.append('cadastral_section', s.cadastral_section)
+        fd.append('cadastral_number', s.cadastral_number)
+        if (s.cadastral_surface_m2 !== null) fd.append('cadastral_surface_m2', String(s.cadastral_surface_m2))
+        fd.append('project_new_construction', s.project_new_construction ? '1' : '0')
+        fd.append('project_existing_works', s.project_existing_works ? '1' : '0')
+        fd.append('project_description', s.project_description)
+        fd.append('destination_primary_residence', s.destination_primary_residence ? '1' : '0')
+        fd.append('destination_secondary_residence', s.destination_secondary_residence ? '1' : '0')
+        fd.append('agrivoltaic_project', s.agrivoltaic_project ? '1' : '0')
+        fd.append('electrical_power_text', s.electrical_power_text)
+        fd.append('peak_power_text', s.peak_power_text)
+        fd.append('energy_destination', s.energy_destination)
+        fd.append('protection_site_patrimonial', s.protection_site_patrimonial ? '1' : '0')
+        fd.append('protection_site_classe_or_instance', s.protection_site_classe_or_instance ? '1' : '0')
+        fd.append('protection_monument_abords', s.protection_monument_abords ? '1' : '0')
+        fd.append('engagement_city', s.engagement_city)
+        fd.append('engagement_date', s.engagement_date)
+        if (s.declarant_signature.signer_name) {
+            fd.append('declarant_signer_name', s.declarant_signature.signer_name)
+            if (s.declarant_signature.file) fd.append('declarant_signature_file', s.declarant_signature.file)
+            else if (s.declarant_signature.dataUrl) fd.append('declarant_signature_data', s.declarant_signature.dataUrl)
+        }
+        fd.append('dpc11_notice_materiaux', s.dpc11_notice_materiaux)
 
-        if (!hasFiles) {
-            // JSON simple
-            const payload = {
-                declarant_type: s.declarant_type,
-                last_name: s.last_name,
-                first_name: s.first_name,
-                birth_date: s.birth_date,
-                birth_place: s.birth_place,
-                birth_department: s.birth_department,
-                birth_country: s.birth_country,
-                address_street: s.address_street,
-                address_number: s.address_number,
-                address_lieu_dit: s.address_lieu_dit,
-                address_locality: s.address_locality,
-                address_postal_code: s.address_postal_code,
-                address_bp: s.address_bp,
-                address_cedex: s.address_cedex,
-                phone_country_code: s.phone_country_code,
-                phone: s.phone,
-                email: s.email,
-                email_consent: s.email_consent,
-                land_street: s.land_street,
-                land_number: s.land_number,
-                land_lieu_dit: s.land_lieu_dit,
-                land_locality: s.land_locality,
-                land_postal_code: s.land_postal_code,
-                cadastral_prefix: s.cadastral_prefix,
-                cadastral_section: s.cadastral_section,
-                cadastral_number: s.cadastral_number,
-                cadastral_surface_m2: s.cadastral_surface_m2,
-                project_new_construction: s.project_new_construction,
-                project_existing_works: s.project_existing_works,
-                project_description: s.project_description,
-                destination_primary_residence: s.destination_primary_residence,
-                destination_secondary_residence: s.destination_secondary_residence,
-                agrivoltaic_project: s.agrivoltaic_project,
-                electrical_power_text: s.electrical_power_text,
-                peak_power_text: s.peak_power_text,
-                energy_destination: s.energy_destination,
-                protection_site_patrimonial: s.protection_site_patrimonial,
-                protection_site_classe_or_instance: s.protection_site_classe_or_instance,
-                protection_monument_abords: s.protection_monument_abords,
-                engagement_city: s.engagement_city,
-                engagement_date: s.engagement_date,
-                declarant_signer_name: s.declarant_signature.signer_name,
-                declarant_signature_data: s.declarant_signature.dataUrl,
-                dpc11_notice_materiaux: s.dpc11_notice_materiaux,
-            }
-            await $fetch(`/api/installations/forms/${props.formId}/cerfa16702/`, {
-                method: 'POST',
-                credentials: 'include',
-                body: payload,
-            })
-        } else {
-            // FormData si fichiers présents
-            const fd = new FormData()
-            fd.append('declarant_type', s.declarant_type)
-            fd.append('last_name', s.last_name)
-            fd.append('first_name', s.first_name)
-            if (s.birth_date) fd.append('birth_date', s.birth_date)
-            fd.append('birth_place', s.birth_place)
-            fd.append('birth_department', s.birth_department)
-            fd.append('birth_country', s.birth_country)
-            fd.append('address_street', s.address_street)
-            fd.append('address_number', s.address_number)
-            fd.append('address_lieu_dit', s.address_lieu_dit)
-            fd.append('address_locality', s.address_locality)
-            fd.append('address_postal_code', s.address_postal_code)
-            fd.append('address_bp', s.address_bp)
-            fd.append('address_cedex', s.address_cedex)
-            fd.append('phone_country_code', s.phone_country_code)
-            fd.append('phone', s.phone)
-            fd.append('email', s.email)
-            fd.append('email_consent', s.email_consent ? '1' : '0')
-            fd.append('land_street', s.land_street)
-            fd.append('land_number', s.land_number)
-            fd.append('land_lieu_dit', s.land_lieu_dit)
-            fd.append('land_locality', s.land_locality)
-            fd.append('land_postal_code', s.land_postal_code)
-            fd.append('cadastral_prefix', s.cadastral_prefix)
-            fd.append('cadastral_section', s.cadastral_section)
-            fd.append('cadastral_number', s.cadastral_number)
-            if (s.cadastral_surface_m2 !== null) fd.append('cadastral_surface_m2', String(s.cadastral_surface_m2))
-            fd.append('project_new_construction', s.project_new_construction ? '1' : '0')
-            fd.append('project_existing_works', s.project_existing_works ? '1' : '0')
-            fd.append('project_description', s.project_description)
-            fd.append('destination_primary_residence', s.destination_primary_residence ? '1' : '0')
-            fd.append('destination_secondary_residence', s.destination_secondary_residence ? '1' : '0')
-            fd.append('agrivoltaic_project', s.agrivoltaic_project ? '1' : '0')
-            fd.append('electrical_power_text', s.electrical_power_text)
-            fd.append('peak_power_text', s.peak_power_text)
-            fd.append('energy_destination', s.energy_destination)
-            fd.append('protection_site_patrimonial', s.protection_site_patrimonial ? '1' : '0')
-            fd.append('protection_site_classe_or_instance', s.protection_site_classe_or_instance ? '1' : '0')
-            fd.append('protection_monument_abords', s.protection_monument_abords ? '1' : '0')
-            fd.append('engagement_city', s.engagement_city)
-            fd.append('engagement_date', s.engagement_date)
-            if (s.declarant_signature.signer_name) {
-                fd.append('declarant_signer_name', s.declarant_signature.signer_name)
-                if (s.declarant_signature.file) fd.append('declarant_signature_file', s.declarant_signature.file)
-                else if (s.declarant_signature.dataUrl) fd.append('declarant_signature_data', s.declarant_signature.dataUrl)
-            }
-            fd.append('dpc11_notice_materiaux', s.dpc11_notice_materiaux)
+        // Pièces jointes
+        if (s.dpc1) fd.append('dpc1', s.dpc1)
+        if (s.dpc2) fd.append('dpc2', s.dpc2)
+        if (s.dpc3) fd.append('dpc3', s.dpc3)
+        if (s.dpc4) fd.append('dpc4', s.dpc4)
+        if (s.dpc5) fd.append('dpc5', s.dpc5)
+        if (s.dpc6) fd.append('dpc6', s.dpc6)
+        if (s.dpc7) fd.append('dpc7', s.dpc7)
+        if (s.dpc8) fd.append('dpc8', s.dpc8)
+        if (s.dpc11) fd.append('dpc11', s.dpc11)
 
-            // Pièces jointes
-            if (s.dpc1) fd.append('dpc1', s.dpc1)
-            if (s.dpc2) fd.append('dpc2', s.dpc2)
-            if (s.dpc3) fd.append('dpc3', s.dpc3)
-            if (s.dpc4) fd.append('dpc4', s.dpc4)
-            if (s.dpc5) fd.append('dpc5', s.dpc5)
-            if (s.dpc6) fd.append('dpc6', s.dpc6)
-            if (s.dpc7) fd.append('dpc7', s.dpc7)
-            if (s.dpc8) fd.append('dpc8', s.dpc8)
-            if (s.dpc11) fd.append('dpc11', s.dpc11)
-
-            const res = await $fetch(`/api/installations/forms/${props.formId}/cerfa16702/`, {
-                method: 'POST',
-                credentials: 'include',
-                body: fd,
-            })
-            if (res) {
-                toast.add({ title: 'CERFA 16702 enregistré', color: 'success', icon: 'i-heroicons-check-circle' })
-                emit('submit')
-                loading.value = false
-            }
+        const res = await $fetch(`/api/administrative/cerfa16702/forms/${props.formId}/cerfa16702/`, {
+            method: 'POST',
+            credentials: 'include',
+            body: fd,
+        })
+        if (res) {
+            toast.add({ title: 'CERFA 16702 enregistré', color: 'success', icon: 'i-heroicons-check-circle' })
+            emit('submit')
+            loading.value = false
         }
     } catch (e: any) {
         const msg = e?.data?.detail || e.message || 'Erreur inconnue'
@@ -319,6 +268,21 @@ const agrivoltaicYN = computed<string>({
                             <UInput v-model="state.birth_country" class="w-full" />
                         </UFormField>
                     </div>
+
+                    <div v-if="state.declarant_type === 'company'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <UFormField name="company_denomination" label="Dénomination" required>
+                            <UInput v-model="state.company_denomination" class="w-full" />
+                        </UFormField>
+                        <UFormField name="company_reason" label="Raison sociale" required>
+                            <UInput v-model="state.company_reason" class="w-full" />
+                        </UFormField>
+                        <UFormField name="company_siret" label="N° SIRET" required>
+                            <UInput v-model="state.company_siret" class="w-full" />
+                        </UFormField>
+                        <UFormField name="company_type" label="Type d'entreprise" required>
+                            <UInput v-model="state.company_type" class="w-full" />
+                        </UFormField>
+                    </div>
                 </div>
             </UCard>
 
@@ -370,8 +334,9 @@ const agrivoltaicYN = computed<string>({
                         </UFormField>
                     </div>
 
-                    <UFormField name="email_consent" label="Consentement à la communication par courrier électronique">
-                        <UCheckbox v-model="state.email_consent" />
+                    <UFormField name="email_consent">
+                        <UCheckbox v-model="state.email_consent"
+                            label="Consentement à la communication par courrier électronique" />
                     </UFormField>
                 </div>
             </UCard>
@@ -421,36 +386,37 @@ const agrivoltaicYN = computed<string>({
                 </div>
             </UCard>
 
-            <!-- 4.1 Le projet -->
+            <!-- 4 Le projet -->
             <UCard>
                 <template #header>
-                    <div class="font-semibold">4.1 Le projet</div>
+                    <div class="font-semibold">4 Le projet</div>
                 </template>
                 <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <UFormField name="project_new_construction" label="Nouvelle construction">
-                            <UCheckbox v-model="state.project_new_construction" />
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <UFormField name="project_type">
+                            <UFormField name="project_new_construction">
+                                <UCheckbox v-model="state.project_new_construction" label="Nouvelle construction" />
+                            </UFormField>
+                            <UFormField name="project_existing_works" class="mt-1.5">
+                                <UCheckbox v-model="state.project_existing_works" label="Construction existante" />
+                            </UFormField>
                         </UFormField>
-                        <UFormField name="project_existing_works" label="Travaux sur une construction existante">
-                            <UCheckbox v-model="state.project_existing_works" />
+                        <UFormField name="destination">
+                            <UFormField name="destination_primary_residence">
+                                <UCheckbox v-model="state.destination_primary_residence" label="Résidence principale" />
+                            </UFormField>
+                            <UFormField class="mt-1.5" name="destination_secondary_residence">
+                                <UCheckbox v-model="state.destination_secondary_residence"
+                                    label="Résidence secondaire" />
+                            </UFormField>
+                        </UFormField>
+                        <UFormField name="agrivoltaic_project" label="Projet agrivoltaïque">
+                            <URadioGroup v-model="agrivoltaicYN" :items="yesNoItems" orientation="horizontal" />
                         </UFormField>
                     </div>
 
                     <UFormField name="project_description" label="Description du projet" required>
                         <UTextarea v-model="state.project_description" :rows="4" class="w-full" />
-                    </UFormField>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <UFormField name="destination_primary_residence" label="Résidence principale">
-                            <UCheckbox v-model="state.destination_primary_residence" />
-                        </UFormField>
-                        <UFormField name="destination_secondary_residence" label="Résidence secondaire">
-                            <UCheckbox v-model="state.destination_secondary_residence" />
-                        </UFormField>
-                    </div>
-
-                    <UFormField name="agrivoltaic_project" label="Projet agrivoltaïque">
-                        <URadioGroup v-model="agrivoltaicYN" :items="yesNoItems" orientation="horizontal" />
                     </UFormField>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -474,15 +440,16 @@ const agrivoltaicYN = computed<string>({
                 <template #header>
                     <div class="font-semibold">5. Périmètres de protection</div>
                 </template>
-                <div class="space-y-3">
-                    <UFormField name="protection_site_patrimonial" label="Site patrimonial">
-                        <UCheckbox v-model="state.protection_site_patrimonial" />
+                <div class="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+                    <UFormField name="protection_site_patrimonial">
+                        <UCheckbox v-model="state.protection_site_patrimonial" label="Site patrimonial" />
                     </UFormField>
-                    <UFormField name="protection_site_classe_or_instance" label="Site classé/instance de classement">
-                        <UCheckbox v-model="state.protection_site_classe_or_instance" />
+                    <UFormField name="protection_site_classe_or_instance">
+                        <UCheckbox v-model="state.protection_site_classe_or_instance"
+                            label="Site classé/instance de classement" />
                     </UFormField>
-                    <UFormField name="protection_monument_abords" label="Abords d'un monument historique">
-                        <UCheckbox v-model="state.protection_monument_abords" />
+                    <UFormField name="protection_monument_abords">
+                        <UCheckbox v-model="state.protection_monument_abords" label="Abords d'un monument historique" />
                     </UFormField>
                 </div>
             </UCard>
@@ -510,36 +477,36 @@ const agrivoltaicYN = computed<string>({
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <UFormField name="dpc1" label="DPC1 - Plan de masse des constructions à édifier">
-                            <UFileUpload v-model="state.dpc1" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc1" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                         <UFormField name="dpc2" label="DPC2 - Plan en coupe du terrain et des constructions">
-                            <UFileUpload v-model="state.dpc2" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc2" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                         <UFormField name="dpc3" label="DPC3 - Notice descriptive">
-                            <UFileUpload v-model="state.dpc3" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc3" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                         <UFormField name="dpc4" label="DPC4 - Plan des façades et des toitures">
-                            <UFileUpload v-model="state.dpc4" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc4" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                         <UFormField name="dpc5" label="DPC5 - Document graphique du terrain">
-                            <UFileUpload v-model="state.dpc5" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc5" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                         <UFormField name="dpc6" label="DPC6 - Photographie du terrain nu et de son environnement">
-                            <UFileUpload v-model="state.dpc6" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc6" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                         <UFormField name="dpc7" label="DPC7 - Photographie du terrain nu et de son environnement">
-                            <UFileUpload v-model="state.dpc7" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc7" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                         <UFormField name="dpc8" label="DPC8 - Photographie du terrain nu et de son environnement">
-                            <UFileUpload v-model="state.dpc8" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc8" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                     </div>
 
@@ -549,7 +516,7 @@ const agrivoltaicYN = computed<string>({
                                 description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
                         </UFormField>
                         <UFormField name="dpc11_notice_materiaux" label="Notice descriptive des matériaux (texte)">
-                            <UTextarea v-model="state.dpc11_notice_materiaux" :rows="3" class="w-full" />
+                            <UTextarea v-model="state.dpc11_notice_materiaux" :rows="6" class="w-full" />
                         </UFormField>
                     </div>
                 </div>
@@ -559,8 +526,7 @@ const agrivoltaicYN = computed<string>({
         <!-- Signature -->
         <UCard>
             <template #header>
-                <div class="font-semibold">Signature du déclarant : Datée et précédée de la mention "Lu et approuvé"
-                </div>
+                <div class="font-semibold">Signature du déclarant</div>
             </template>
             <div class="space-y-6">
                 <SignatureField v-model="state.declarant_signature" :required="true" label="Nom du signataire" />
@@ -568,8 +534,7 @@ const agrivoltaicYN = computed<string>({
         </UCard>
 
         <div class="flex justify-end pt-2">
-            <UButton :loading="loading" icon="i-heroicons-check-circle" type="submit"
-                label="Enregistrer" />
+            <UButton :loading="loading" icon="i-heroicons-check-circle" type="submit" label="Enregistrer" />
         </div>
     </UForm>
 </template>

@@ -14,13 +14,17 @@ const emit = defineEmits<{ (e: 'submit'): void }>()
 // État partagé du brouillon du mandat
 const draft = reactive({
     // Identité du déclarant
-    declarant_type: '' as DeclarantType,
+    declarant_type: 'individual' as DeclarantType,
     last_name: '',
     first_name: '',
     birth_date: '',
     birth_place: '',
     birth_department: '',
     birth_country: '',
+    company_denomination: '',
+    company_reason: '',
+    company_siret: '',
+    company_type: '',
 
     // Coordonnées du déclarant
     address_street: '',
@@ -72,14 +76,23 @@ const draft = reactive({
 
     // Pièces jointes
     dpc1: null,
+    dpc1_url: null as string | null,
     dpc2: null,
+    dpc2_url: null as string | null,
     dpc3: null,
+    dpc3_url: null as string | null,
     dpc4: null,
+    dpc4_url: null as string | null,
     dpc5: null,
+    dpc5_url: null as string | null,
     dpc6: null,
+    dpc6_url: null as string | null,
     dpc7: null,
+    dpc7_url: null as string | null,
     dpc8: null,
+    dpc8_url: null as string | null,
     dpc11: null,
+    dpc11_url: null as string | null,
     dpc11_notice_materiaux: '',
 })
 
@@ -96,6 +109,10 @@ watch(
         draft.birth_place = cf.birth_place || ''
         draft.birth_department = cf.birth_department || ''
         draft.birth_country = cf.birth_country || ''
+        draft.company_denomination = cf.company_denomination || ''
+        draft.company_reason = cf.company_reason || ''
+        draft.company_siret = cf.company_siret || ''
+        draft.company_type = cf.company_type || ''
 
         draft.address_street = cf.address_street || ''
         draft.address_number = cf.address_number || ''
@@ -136,20 +153,32 @@ watch(
 
         draft.engagement_city = cf.engagement_city || ''
         draft.engagement_date = cf.engagement_date || ''
-        draft.declarant_signature = { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null }
-        draft.declarant_signature_image_url = null as string | null
-        draft.declarant_signature_signed_at = null as string | null
+        const ds = cf.declarant_signature
+        if (ds) {
+            draft.declarant_signature.signer_name = ds.signer_name || ''
+            draft.declarant_signature_image_url = ds.signature_image || (typeof ds.signature_data === 'string' && ds.signature_data.startsWith('data:image/') ? ds.signature_data : null)
+            draft.declarant_signature_signed_at = ds.signed_at || null
+        }
 
         draft.dpc1 = null
+        draft.dpc1_url = cf.dcp1 || null
         draft.dpc2 = null
+        draft.dpc2_url = cf.dcp2 || null
         draft.dpc3 = null
+        draft.dpc3_url = cf.dcp3 || null
         draft.dpc4 = null
+        draft.dpc4_url = cf.dcp4 || null
         draft.dpc5 = null
+        draft.dpc5_url = cf.dcp5 || null
         draft.dpc6 = null
+        draft.dpc6_url = cf.dcp6 || null
         draft.dpc7 = null
+        draft.dpc7_url = cf.dcp7 || null
         draft.dpc8 = null
+        draft.dpc8_url = cf.dcp8 || null
         draft.dpc11 = null
-        draft.dpc11_notice_materiaux = ''
+        draft.dpc11_url = cf.dcp11 || null
+        draft.dpc11_notice_materiaux = cf.dpc11_notice_materiaux || ''
     },
     { immediate: true }
 )
