@@ -5,6 +5,7 @@ class Cerfa16702Serializer(serializers.ModelSerializer):
     class Meta:
         model = Cerfa16702
         fields = '__all__'
+        read_only_fields = ('id', 'form', 'created_by', 'created_at', 'updated_at')
 
 class ElectricalDiagramSerializer(serializers.ModelSerializer):
     class Meta:
