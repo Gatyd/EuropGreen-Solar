@@ -26,6 +26,12 @@ class Cerfa16702(models.Model):
     birth_place = models.CharField(max_length=100, blank=True)
     birth_department = models.CharField(max_length=100, blank=True)
     birth_country = models.CharField(max_length=100, blank=True)
+    
+    # Champs entreprise (si declarant_type = 'company')
+    company_denomination = models.CharField(max_length=255, blank=True)
+    company_reason = models.CharField(max_length=255, blank=True)
+    company_siret = models.CharField(max_length=20, blank=True)
+    company_type = models.CharField(max_length=100, blank=True)
 
     # 2. Coordonnées du déclarant (adresse + contact)
     address_street = models.CharField(max_length=255, blank=True)
