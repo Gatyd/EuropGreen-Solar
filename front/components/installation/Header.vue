@@ -35,7 +35,7 @@ const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.i
                 <div v-if="showAdminDocs" class="w-full sm:w-auto">
                     <div class="flex flex-col">
                         <div class="text-sm font-semibold mb-2">Documents administratifs</div>
-                        <div class="flex flex-row gap-2">
+                        <div class="flex flex-col md:flex-row gap-2">
                             <UButton v-if="props.item?.quote?.pdf" color="primary" variant="subtle"
                                 :icon="'i-heroicons-document-check'" :to="props.item.quote.pdf" target="_blank"
                                 label="Devis" />

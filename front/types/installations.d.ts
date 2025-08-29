@@ -165,6 +165,10 @@ export interface Cerfa16702 {
   birth_place?: string
   birth_department?: string
   birth_country?: string
+  company_denomination?: string
+  company_reason?: string
+  company_siret?: string
+  company_type?: string
 
   // Coordonnées du déclarant
   address_street?: string
