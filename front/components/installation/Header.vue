@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { button } from '#build/ui';
 import { useAuthStore } from '~/store/auth';
 import type { InstallationForm } from '~/types/installations';
 
@@ -13,6 +12,7 @@ const emit = defineEmits<{
 
 const auth = useAuthStore()
 const openCerfa16702 = ref(false)
+const openElectricalDiagram = ref(false)
 
 // Affichage conditionnel de la section "Documents administratifs"
 const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.is_staff && auth.user?.useraccess?.administrative_procedures) || !auth.user?.is_staff))
@@ -20,6 +20,7 @@ const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.i
 </script>
 <template>
     <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form-id="item?.id" @submit="emit('submit')" />
+    <AdministrativeElectricalDiagramModal v-model="openElectricalDiagram" :form-id="item?.id" @submit="emit('submit')" />
     <UCard class="mt-6">
         <template v-if="!loading">
             <div class="flex items-start justify-between gap-6">
@@ -49,7 +50,7 @@ const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.i
                                 label="Schéma électrique"
                                 :icon="props.item?.electrical_diagram?.file ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                 :to="props.item?.electrical_diagram?.file || undefined" target="_blank"
-                                @click="() => console.log('create-diagram')" />
+                                @click="openElectricalDiagram = true" />
                             <UButton v-if="auth.user?.is_staff || props.item?.enedis_mandate"
                                 :color="props.item?.enedis_mandate?.pdf ? 'primary' : 'neutral'" variant="subtle"
                                 :icon="props.item?.enedis_mandate?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"

@@ -200,7 +200,7 @@ async function onSubmit() {
         if (s.dpc8) fd.append('dpc8', s.dpc8)
         if (s.dpc11) fd.append('dpc11', s.dpc11)
 
-        const res = await $fetch(`/api/administrative/forms/${props.formId}/cerfa16702/`, {
+        const res = await $fetch(`/api/administrative/cerfa16702/form/${props.formId}/`, {
             method: 'POST',
             credentials: 'include',
             body: fd,

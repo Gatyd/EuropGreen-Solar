@@ -55,3 +55,18 @@ class HasInstallationAccess(permissions.BasePermission):
             return bool(getattr(user.useraccess, 'installation', False)) or bool(user.is_superuser)
         except Exception:
             return bool(user.is_superuser)
+        
+class HasAdministrativeAccess(permissions.BasePermission):
+    """
+    Permission personnalisée pour vérifier que l'utilisateur a accès aux fonctionnalités administratives.
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        # Autorise si l'utilisateur a l'accès administrative ou est superuser
+        try:
+            return bool(getattr(user.useraccess, 'administrative_procedures', False)) or bool(user.is_superuser)
+        except Exception:
+            return bool(user.is_superuser)

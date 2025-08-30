@@ -5,25 +5,28 @@ from rest_framework.viewsets import GenericViewSet
 from django.db import transaction
 from django.core.files.base import ContentFile
 from EuropGreenSolar.utils.helpers import get_client_ip, decode_data_url_image
-
-from .models import Cerfa16702
+from authentication.permissions import HasAdministrativeAccess
+from .models import Cerfa16702, ElectricalDiagram
 from installations.models import AdministrativeValidation
-from .serializers import Cerfa16702Serializer
+from .serializers import Cerfa16702Serializer, ElectricalDiagramSerializer
 from installations.models import Form, Signature
 
 
 class Cerfa16702ViewSet(GenericViewSet):
     queryset = Cerfa16702.objects.all()
     serializer_class = Cerfa16702Serializer
+    permission_classes = [HasAdministrativeAccess]
 
-    @action(detail=False, methods=['post'], url_path='forms/(?P<form_id>[^/.]+)/cerfa16702')
+    @action(detail=False, methods=['post'], url_path='form/(?P<form_id>[^/.]+)')
     def create_cerfa16702(self, request, form_id=None):
         """Créer ou mettre à jour un CERFA 16702 avec signature."""
         try:
             form = Form.objects.get(pk=form_id)
         except Form.DoesNotExist:
             return Response({'detail': 'Fiche d\'installation non trouvée.'}, status=status.HTTP_404_NOT_FOUND)
-        if not form.administrative_validation:
+        # safe check: accessing a reverse one-to-one may raise RelatedObjectDoesNotExist
+        administrative_validation = getattr(form, 'administrative_validation', None)
+        if not administrative_validation:
             AdministrativeValidation.objects.create(form=form, created_by=request.user)
 
         payload = request.data
@@ -112,39 +115,35 @@ class Cerfa16702ViewSet(GenericViewSet):
 
         serializer = Cerfa16702Serializer(cerfa, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class ElectricalDiagramViewSet(GenericViewSet):
+    queryset = ElectricalDiagram.objects.all()
+    serializer_class = ElectricalDiagramSerializer
+    permission_classes = [HasAdministrativeAccess]
 
-    @action(detail=False, methods=['get'], url_path='forms/(?P<form_id>[^/.]+)/cerfa16702/print')
-    def print_cerfa_pdf(self, request, form_id=None):
-        """Vue de test: génère le PDF CERFA pour la fiche `form_id` et le renvoie inline (ne sauvegarde pas)."""
+    @action(detail=False, methods=['post'], url_path='form/(?P<form_id>[^/.]+)')
+    def create_electrical_diagram(self, request, form_id=None):
+        """Créer ou mettre à jour un Schéma électrique."""
         try:
             form = Form.objects.get(pk=form_id)
         except Form.DoesNotExist:
-            return Response({'detail': "Fiche d'installation non trouvée."}, status=status.HTTP_404_NOT_FOUND)
-        # Récupérer l'instance CERFA liée
-        cerfa = getattr(form, 'cerfa16702', None)
-        if not cerfa:
-            return Response({'detail': 'Aucun CERFA 16702 associé à cette fiche.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Fiche d\'installation non trouvée.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        administrative_validation = getattr(form, 'administrative_validation', None)
+        if not administrative_validation:
+            AdministrativeValidation.objects.create(form=form, created_by=request.user)
 
-        try:
-            from .pdf import render_cerfa16702_pdf
-            pdf_bytes = render_cerfa16702_pdf(str(form_id))
-            if not pdf_bytes:
-                return Response({'detail': 'Échec de génération du PDF.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        electric_diagram, created = ElectricalDiagram.objects.get_or_create(
+            form=form,
+            defaults={'created_by': request.user}
+        )
+        
+        file = request.FILES['file']
+        if not file:
+            return Response({'detail': 'Aucun fichier fourni.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            filename = f"cerfa16702_{form_id}.pdf"
-            try:
-                # Remplacer le fichier PDF existant si présent
-                if getattr(cerfa, 'pdf', None):
-                    try:
-                        cerfa.pdf.delete(save=False)
-                    except Exception:
-                        pass
-                cerfa.pdf.save(filename, ContentFile(pdf_bytes), save=True)
-            except Exception:
-                return Response({'detail': "Échec de l'enregistrement du PDF."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        setattr(electric_diagram, 'file', file)
+        electric_diagram.save()
 
-            serializer = Cerfa16702Serializer(cerfa, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception:
-            return Response({'detail': 'Erreur lors de la génération du PDF.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+        serializer = ElectricalDiagramSerializer(electric_diagram, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
