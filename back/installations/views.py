@@ -16,8 +16,8 @@ from users.models import User
 import secrets, string
 from django.utils import timezone
 from authentication.permissions import HasInstallationAccess
-import base64
-import re
+from administrative.models import EnedisMandate
+from administrative.serializers import EnedisMandateSerializer
 
 
 class FormViewSet(viewsets.ModelViewSet):
@@ -141,29 +141,15 @@ class FormViewSet(viewsets.ModelViewSet):
 			tv = form.technical_visit  # type: ignore
 
 		# Mapping simple des champs
-		field_map = {
-			'visit_date': 'visit_date',
-			'expected_installation_date': 'expected_installation_date',
-			'roof_type': 'roof_type',
-			'tiles_spare_provided': 'tiles_spare_provided',
-			'roof_shape': 'roof_shape',
-			'roof_access': 'roof_access',
-			'roof_access_other': 'roof_access_other',
-			'nacelle_needed': 'nacelle_needed',
-			'truck_access': 'truck_access',
-			'truck_access_comment': 'truck_access_comment',
-			'meter_type': 'meter_type',
-			'meter_type_other': 'meter_type_other',
-			'current_type': 'current_type',
-			'existing_grid_connection': 'existing_grid_connection',
-			'meter_position': 'meter_position',
-			'panels_to_board_distance_m': 'panels_to_board_distance_m',
-			'additional_equipment_needed': 'additional_equipment_needed',
-			'additional_equipment_details': 'additional_equipment_details',
-		}
-		for src, dst in field_map.items():
-			if src in payload:
-				setattr(tv, dst, payload.get(src))
+		field_list = [
+			'visit_date', 'expected_installation_date', 'roof_type', 'tiles_spare_provided', 'roof_shape', 'roof_access',
+			'roof_access_other', 'nacelle_needed', 'truck_access', 'truck_access_comment', 'meter_type', 'meter_type_other',
+			'current_type', 'existing_grid_connection', 'meter_position', 'panels_to_board_distance_m', 'additional_equipment_needed',
+			'additional_equipment_details'
+		]
+		for field in field_list:
+			if field in payload:
+				setattr(tv, field, payload.get(field))
 		# Fichier photo éventuel
 		photo = request.FILES.get('meter_location_photo')
 		if photo:
@@ -184,7 +170,7 @@ class FormViewSet(viewsets.ModelViewSet):
 				else:
 					cf, ext = decode_data_url_image(str(data_url))
 					if cf:
-						sig.signature_image.save(f"signature-{sig.id}.{ext or 'png'}", cf, save=False)
+						sig.signature_image.save(f"installer-signature-technical_visit-{tv.id}.{ext or 'png'}", cf, save=False)
 				sig.save()
 				tv.installer_signature = sig
 		# Validation et sauvegarde
@@ -392,7 +378,7 @@ class FormViewSet(viewsets.ModelViewSet):
 				else:
 					cf, ext = decode_data_url_image(str(data_url))
 					if cf:
-						sig.signature_image.save(f"signature-{sig.id}.{ext or 'png'}", cf, save=False)
+						sig.signature_image.save(f"installer-signature-representation_mandate-{rm.id}.{ext or 'png'}", cf, save=False)
 				sig.save()
 				rm.installer_signature = sig
 		# Validation et sauvegarde
@@ -422,4 +408,69 @@ class FormViewSet(viewsets.ModelViewSet):
 
 		serializer = RepresentationMandateSerializer(rm, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
+	
+	@action(detail=True, methods=['post'], url_path='enedis-mandate')
+	@transaction.atomic
+	def create_or_update_enedis_mandate(self, request, pk=None):
+		form = self.get_object()
+		payload = request.data
+		is_create = not hasattr(form, 'enedis_mandate') or form.enedis_mandate is None
+		
+		if is_create:
+			em = EnedisMandate(form=form, created_by=request.user)
+		else:
+			em = form.enedis_mandate  # type: ignore
 
+		# Mapping simple des champs
+		field_list = ['client_type', 'client_civility', 'client_address', 'client_company_name', 'client_company_siret', 'client_company_represented_by',
+			'contractor_company_name', 'contractor_company_siret', 'contractor_represented_by_name', 'contractor_represented_by_role', 'mandate_type',
+			'authorize_signature', 'authorize_payment', 'authorize_l342', 'authorize_network_access', 'geographic_area', 'connection_nature'
+		]
+		for field in field_list:
+			if field in payload:
+				setattr(em, field, payload.get(field))
+		# Éventuelle signature installateur à la création
+		if is_create:
+			ins_name = (payload.get('installer_signer_name') or '').strip()
+			file = request.FILES.get('installer_signature_file')
+			data_url = payload.get('installer_signature_data')
+			if ins_name and (file or data_url):
+				sig = Signature(
+					signer_name=ins_name,
+					ip_address=get_client_ip(request),
+					user_agent=request.META.get('HTTP_USER_AGENT', ''),
+				)
+				if file:
+					sig.signature_image = file
+				else:
+					cf, ext = decode_data_url_image(str(data_url))
+					if cf:
+						# {role}-signature-{doc}-{target.id}
+						sig.signature_image.save(f"installer-signature-enedis_mandate-{em.id}.{ext or 'png'}", cf, save=False)
+				sig.save()
+				em.installer_signature = sig
+		# Validation et sauvegarde
+		em.full_clean()
+		em.save()
+		# Email d'information au client (best-effort, non bloquant)
+		try:
+			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
+			if client_email:
+				ctx = {
+					'form': form,
+					'enedis_mandate': em,
+					'client_name': f"{form.client_first_name} {form.client_last_name}",
+					'link_signature': f"{request.scheme}://{request.get_host()}/home/installations/{form.id}",
+				}
+				subject = "Mandat Enedis créé – Signature requise"
+				send_mail(
+					template='emails/installation/enedis_mandate_signature_pending.html',
+					context=ctx,
+					subject=subject,
+					to=client_email,
+				)
+		except Exception:
+			pass
+
+		serializer = EnedisMandateSerializer(em, context=self.get_serializer_context())
+		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)

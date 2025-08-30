@@ -251,7 +251,7 @@ async function onSubmit() {
                         <UCheckbox v-model="state.authorize_payment" label="Paiement du client" />
                     </div>
                     <div class="space-y-1">
-                        <UCheckbox v-model="state.authorize_l342" label="L342 du client" />
+                        <UCheckbox v-model="state.authorize_l342" label="L342" />
                         <UCheckbox v-model="state.authorize_network_access" label="Accès réseau" />
                     </div>
                 </div>

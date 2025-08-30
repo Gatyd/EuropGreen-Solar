@@ -57,6 +57,12 @@ const fullName = computed(() => {
 	if (!f) return '—'
 	return `${f.client_last_name ?? ''} ${f.client_first_name ?? ''}`.trim() || '—'
 })
+const natureRaccordement = (n: ConnectionNature) => {
+    if(n === 'indiv_or_group_housing') return "Raccordement de logements individuels ou groupés"
+    if(n === 'commercial_or_production') return "Locaux commerciaux/professionnels ou installation de production"
+    if(n === 'branch_modification') return "Modification de branchement"
+    if(n === 'power_change_or_ev') return "Modification de la puissance de raccordement / IRVE"
+}
 
 const yn = (v: boolean) => (v ? 'Oui' : 'Non')
 </script>
@@ -195,7 +201,7 @@ const yn = (v: boolean) => (v ? 'Oui' : 'Non')
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">Nature de raccordement</td>
-                            <td class="p-2">{{ props.draft.connection_nature || '—' }}</td>
+                            <td class="p-2">{{ natureRaccordement(props.draft.connection_nature) || '—' }}</td>
                         </tr>
                     </tbody>
                 </table>

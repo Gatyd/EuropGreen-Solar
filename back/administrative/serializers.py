@@ -22,6 +22,8 @@ class ElectricalDiagramSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class EnedisMandateSerializer(serializers.ModelSerializer):
+    client_signature = SignatureSerializer(read_only=True)
+    installer_signature = SignatureSerializer(read_only=True)
     class Meta:
         model = EnedisMandate
         fields = '__all__'

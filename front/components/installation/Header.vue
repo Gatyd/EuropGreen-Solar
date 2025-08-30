@@ -35,6 +35,18 @@ const manageEnedisMandate = () => {
     }
 }
 
+const signEnedisMandate = () => {
+    openEnedisMandate.value = true
+    if (
+        (auth.user?.is_staff && !props.item?.enedis_mandate?.installer_signature) ||
+        (!auth.user?.is_staff && !props.item?.enedis_mandate?.client_signature)
+    ) {
+        enedisMandateAction.value = 'signature'
+    } else {
+        enedisMandateAction.value = 'preview'
+    }
+}
+
 // Affichage conditionnel de la section "Documents administratifs"
 const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.is_staff && auth.user?.useraccess?.administrative_procedures) || !auth.user?.is_staff))
 
@@ -76,11 +88,15 @@ const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.i
                                 :icon="props.item?.electrical_diagram?.file ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                 :to="props.item?.electrical_diagram?.file || undefined" target="_blank"
                                 @click="manageElectricalDiagram" />
-                            <UButton v-if="auth.user?.is_staff || props.item?.enedis_mandate"
+                            <UButton v-if="(auth.user?.is_staff && !props.item?.enedis_mandate) || props.item?.enedis_mandate?.pdf"
                                 :color="props.item?.enedis_mandate?.pdf ? 'primary' : 'neutral'" variant="subtle"
                                 :icon="props.item?.enedis_mandate?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                 :to="props.item?.enedis_mandate?.pdf || undefined" target="_blank" label="Mandat Enedis"
                                 @click="manageEnedisMandate" />
+                            <UButton v-if="item?.enedis_mandate && !item?.enedis_mandate?.pdf" color="secondary"
+                                :icon="`i-heroicons-${(auth.user?.is_staff && !item?.enedis_mandate?.installer_signature) || (!auth.user?.is_staff && !item?.enedis_mandate?.client_signature) ? 'pencil-square' : 'eye'}`"
+                                :label="(auth.user?.is_staff && !item?.enedis_mandate?.installer_signature) || (!auth.user?.is_staff && !item?.enedis_mandate?.client_signature) ? 'Signer ENEDIS' : 'Aperçu ENEDIS'"
+                                variant="subtle" @click="signEnedisMandate" />
                         </div>
                     </div>
                 </div>
