@@ -183,7 +183,7 @@ const steps = computed(() => {
         </div>
 
         <div class="px-4 md:px-6 lg:px-8">
-            <InstallationHeader :item="item" :loading="loading" />
+            <InstallationHeader :item="item" :loading="loading" @submit="fetchOne" />
             <div class="xl:me-40 mt-8">
                 <template v-if="loading">
                     <div class="flex flex-col gap-6">

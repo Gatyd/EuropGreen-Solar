@@ -69,7 +69,7 @@ const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.i
                 </div>
                 <div v-if="showAdminDocs" class="w-full sm:w-64">
                     <div class="text-sm font-semibold mb-2">Documents administratifs</div>
-                    <div class="flex flex-col gap-2">
+                    <div class="flex flex-col md:flex-row gap-2">
                         <USkeleton class="h-9 w-full" />
                         <USkeleton class="h-9 w-full" />
                         <USkeleton class="h-9 w-full" />

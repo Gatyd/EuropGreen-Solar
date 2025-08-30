@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/store/auth'
 import SignatureField from '~/components/common/SignatureField.vue'
 import type { DeclarantType } from '~/types/installations'
 
@@ -72,8 +71,6 @@ const emit = defineEmits<{
 const state = toRef(props, 'draft')
 const loading = ref(false)
 
-const auth = useAuthStore()
-
 // Validation globale
 const validate = (s: cerfa16702Draft) => {
     const errors: { name: string; message: string }[] = []
@@ -115,14 +112,20 @@ const validate = (s: cerfa16702Draft) => {
         errors.push({ name: 'destination', message: 'Sélectionnez au moins une destination.' })
     }
 
+    // Pièces jointes
+    if (!s.dpc1) errors.push({ name: 'dpc1', message: 'DPC 1 requis.' })
+    if (!s.dpc2) errors.push({ name: 'dpc2', message: 'DPC 2 requis.' })
+    if (!s.dpc3) errors.push({ name: 'dpc3', message: 'DPC 3 requis.' })
+    if (!s.dpc4) errors.push({ name: 'dpc4', message: 'DPC 4 requis.' })
+    if (!s.dpc5) errors.push({ name: 'dpc5', message: 'DPC 5 requis.' })
+    if (!s.dpc6) errors.push({ name: 'dpc6', message: 'DPC 6 requis.' })
+    if (!s.dpc7) errors.push({ name: 'dpc7', message: 'DPC 7 requis.' })
+    if (!s.dpc8) errors.push({ name: 'dpc8', message: 'DPC 8 requis.' })
+    if (!s.dpc11) errors.push({ name: 'dpc11', message: 'DPC 11 requis.' })
+
     // Engagement
     if (!s.engagement_city.trim()) errors.push({ name: 'engagement_city', message: 'Ville d\'engagement requise.' })
     if (!s.engagement_date) errors.push({ name: 'engagement_date', message: 'Date d\'engagement requise.' })
-
-    // Signature
-    if (!s.declarant_signature.signer_name.trim()) {
-        errors.push({ name: 'declarant_signature.signer_name', message: 'Nom du signataire requis.' })
-    }
 
     return errors
 }
@@ -197,7 +200,7 @@ async function onSubmit() {
         if (s.dpc8) fd.append('dpc8', s.dpc8)
         if (s.dpc11) fd.append('dpc11', s.dpc11)
 
-        const res = await $fetch(`/api/administrative/cerfa16702/forms/${props.formId}/cerfa16702/`, {
+        const res = await $fetch(`/api/administrative/forms/${props.formId}/cerfa16702/`, {
             method: 'POST',
             credentials: 'include',
             body: fd,
@@ -211,6 +214,7 @@ async function onSubmit() {
         const msg = e?.data?.detail || e.message || 'Erreur inconnue'
         const toast = useToast()
         toast.add({ title: 'Échec de soumission', description: String(msg), color: 'error' })
+        loading.value = false
     }
 }
 
@@ -320,7 +324,7 @@ const agrivoltaicYN = computed<string>({
                         <UFormField name="address_cedex" label="CEDEX">
                             <UInput v-model="state.address_cedex" class="w-full" />
                         </UFormField>
-                        <UFormField name="phone_country_code" label="Code pays téléphone">
+                        <UFormField name="phone_country_code" label="Indicatif pour le pays étranger">
                             <UInput v-model="state.phone_country_code" class="w-full" placeholder="+33" />
                         </UFormField>
                     </div>
@@ -476,42 +480,42 @@ const agrivoltaicYN = computed<string>({
                 </template>
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <UFormField name="dpc1" label="DPC1 - Plan de masse des constructions à édifier">
+                        <UFormField name="dpc1" label="DPC1 - Plan de masse des constructions à édifier" required>
                             <UFileUpload v-model="state.dpc1" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc2" label="DPC2 - Plan en coupe du terrain et des constructions">
+                        <UFormField name="dpc2" label="DPC2 - Plan en coupe du terrain et des constructions" required>
                             <UFileUpload v-model="state.dpc2" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc3" label="DPC3 - Notice descriptive">
+                        <UFormField name="dpc3" label="DPC3 - Notice descriptive" required>
                             <UFileUpload v-model="state.dpc3" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc4" label="DPC4 - Plan des façades et des toitures">
+                        <UFormField name="dpc4" label="DPC4 - Plan des façades et des toitures" required>
                             <UFileUpload v-model="state.dpc4" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc5" label="DPC5 - Document graphique du terrain">
+                        <UFormField name="dpc5" label="DPC5 - Document graphique du terrain" required>
                             <UFileUpload v-model="state.dpc5" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc6" label="DPC6 - Photographie du terrain nu et de son environnement">
+                        <UFormField name="dpc6" label="DPC6 - Photographie du terrain nu et de son environnement" required>
                             <UFileUpload v-model="state.dpc6" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc7" label="DPC7 - Photographie du terrain nu et de son environnement">
+                        <UFormField name="dpc7" label="DPC7 - Photographie du terrain nu et de son environnement" required>
                             <UFileUpload v-model="state.dpc7" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc8" label="DPC8 - Photographie du terrain nu et de son environnement">
+                        <UFormField name="dpc8" label="DPC8 - Photographie du terrain nu et de son environnement" required>
                             <UFileUpload v-model="state.dpc8" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <UFormField name="dpc11" label="DPC11 - Notice descriptive des matériaux">
+                        <UFormField name="dpc11" label="DPC11 - Notice descriptive des matériaux" required>
                             <UFileUpload v-model="state.dpc11" icon="i-lucide-file-text" label="Importer un document"
                                 description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
                         </UFormField>

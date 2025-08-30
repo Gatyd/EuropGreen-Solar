@@ -1,7 +1,16 @@
 from rest_framework import serializers
 from .models import Cerfa16702, ElectricalDiagram, EnedisMandate
+from installations.models import Signature
+
+class SignatureSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Signature
+		fields = [
+			'id', 'signer_name', 'ip_address', 'user_agent', 'signed_at', 'signature_image', 'created_at'
+		]
 
 class Cerfa16702Serializer(serializers.ModelSerializer):
+    declarant_signature = SignatureSerializer(read_only=True)
     class Meta:
         model = Cerfa16702
         fields = '__all__'

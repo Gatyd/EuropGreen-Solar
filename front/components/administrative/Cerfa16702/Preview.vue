@@ -62,15 +62,15 @@ const props = defineProps<{ draft: Cerfa16702Draft & {
     generated_at?: string
     declarant_signature_image_url?: string | null
     declarant_signature_signed_at?: string | null
-    dcp1_url?: string | null
-    dcp2_url?: string | null
-    dcp3_url?: string | null
-    dcp4_url?: string | null
-    dcp5_url?: string | null
-    dcp6_url?: string | null
-    dcp7_url?: string | null
-    dcp8_url?: string | null
-    dcp11_url?: string | null
+    dpc1_url?: string | null
+    dpc2_url?: string | null
+    dpc3_url?: string | null
+    dpc4_url?: string | null
+    dpc5_url?: string | null
+    dpc6_url?: string | null
+    dpc7_url?: string | null
+    dpc8_url?: string | null
+    dpc11_url?: string | null
 } }>()
 
 const getFileName = (file: File | string | null): string => {
@@ -83,6 +83,8 @@ const getFileName = (file: File | string | null): string => {
 
 const yn = (v: boolean) => (v ? 'Oui' : 'Non')
 const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
+
+console.log('[Preview.vue]:', props.draft)
 
 </script>
 
@@ -160,21 +162,37 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
                 <table class="w-full text-sm border-collapse">
                     <tbody>
                         <tr class="odd:bg-zinc-50">
-                            <td class="w-[45%] p-2 text-gray-600">Adresse</td>
-                            <td class="p-2">
-                                {{ props.draft.address_street || '—' }}
-                                <span v-if="props.draft.address_number">, {{ props.draft.address_number }}</span>
-                                <span v-if="props.draft.address_lieu_dit">, {{ props.draft.address_lieu_dit }}</span>
-                                <span v-if="props.draft.address_locality">, {{ props.draft.address_locality }}</span>
-                                <span v-if="props.draft.address_postal_code">, {{ props.draft.address_postal_code }}</span>
-                                <span v-if="props.draft.address_bp">, BP {{ props.draft.address_bp }}</span>
-                                <span v-if="props.draft.address_cedex">, CEDEX {{ props.draft.address_cedex }}</span>
-                            </td>
+                            <td class="p-2 text-gray-600">Adresse (numéro)</td>
+                            <td class="p-2">{{ props.draft.address_number || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse (voie)</td>
+                            <td class="p-2">{{ props.draft.address_street || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse (Lieu-dit)</td>
+                            <td class="p-2">{{ props.draft.address_lieu_dit || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse (Localité)</td>
+                            <td class="p-2">{{ props.draft.address_locality || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse (Code postal)</td>
+                            <td class="p-2">{{ props.draft.address_postal_code || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse (BP)</td>
+                            <td class="p-2">{{ props.draft.address_bp || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse (CEDEX)</td>
+                            <td class="p-2">{{ props.draft.address_cedex || '—' }}</td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">Téléphone</td>
                             <td class="p-2">
-                                <span v-if="props.draft.phone_country_code">{{ props.draft.phone_country_code }} </span>
+                                <span v-if="props.draft.phone_country_code">({{ props.draft.phone_country_code }}) </span>
                                 {{ props.draft.phone || '—' }}
                             </td>
                         </tr>
@@ -198,23 +216,40 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
                 <table class="w-full text-sm border-collapse">
                     <tbody>
                         <tr class="odd:bg-zinc-50">
-                            <td class="w-[45%] p-2 text-gray-600">Adresse du terrain</td>
-                            <td class="p-2">
-                                {{ props.draft.land_street || '—' }}
-                                <span v-if="props.draft.land_number">, {{ props.draft.land_number }}</span>
-                                <span v-if="props.draft.land_lieu_dit">, {{ props.draft.land_lieu_dit }}</span>
-                                <span v-if="props.draft.land_locality">, {{ props.draft.land_locality }}</span>
-                                <span v-if="props.draft.land_postal_code">, {{ props.draft.land_postal_code }}</span>
-                            </td>
+                            <td class="p-2 text-gray-600">Adresse du terrain (voie)</td>
+                            <td class="p-2">{{ props.draft.land_street || '—' }}</td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Références cadastrales</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.cadastral_prefix">{{ props.draft.cadastral_prefix }}</span>
-                                <span v-if="props.draft.cadastral_section">, Section {{ props.draft.cadastral_section }}</span>
-                                <span v-if="props.draft.cadastral_number">, N° {{ props.draft.cadastral_number }}</span>
-                                <span v-if="props.draft.cadastral_surface_m2">, {{ props.draft.cadastral_surface_m2 }} m²</span>
-                            </td>
+                            <td class="p-2 text-gray-600">Adresse du terrain (numéro)</td>
+                            <td class="p-2">{{ props.draft.land_number || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse du terrain (Lieu-dit)</td>
+                            <td class="p-2">{{ props.draft.land_lieu_dit || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse du terrain (Localité)</td>
+                            <td class="p-2">{{ props.draft.land_locality || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse du terrain (Code postal)</td>
+                            <td class="p-2">{{ props.draft.land_postal_code || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Préfixe cadastral</td>
+                            <td class="p-2">{{ props.draft.cadastral_prefix || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Section cadastral</td>
+                            <td class="p-2">{{ props.draft.cadastral_section || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Numéro cadastral</td>
+                            <td class="p-2">{{ props.draft.cadastral_number || '—' }}</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Surface (m²)</td>
+                            <td class="p-2">{{ props.draft.cadastral_surface_m2 || '—' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -294,7 +329,7 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
         </div>
 
         <!-- 8. Engagement du déclarant -->
-        <div class="mb-4">
+        <!-- <div class="mb-4">
             <div class="text-sm font-semibold text-zinc-700 mb-2">8. Engagement du déclarant</div>
             <div class="overflow-hidden rounded-md border border-zinc-200">
                 <table class="w-full text-sm border-collapse">
@@ -310,7 +345,7 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div> -->
 
         <!-- Pièces jointes DPC -->
         <div class="mb-4">
@@ -328,56 +363,56 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">DPC2 - Plan en coupe</td>
                             <td class="p-2">
-                                <span v-if="props.draft.dpc2" class="text-green-600 font-medium">{{ getFileName(props.draft.dpc2) }}</span>
+                                <span v-if="props.draft.dpc2" class="text-gray-500">{{ getFileName(props.draft.dpc2) }}</span>
                                 <span v-else class="text-gray-400">—</span>
                             </td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">DPC3 - Notice descriptive</td>
                             <td class="p-2">
-                                <span v-if="props.draft.dpc3" class="text-green-600 font-medium">{{ getFileName(props.draft.dpc3) }}</span>
+                                <span v-if="props.draft.dpc3" class="text-gray-500">{{ getFileName(props.draft.dpc3) }}</span>
                                 <span v-else class="text-gray-400">—</span>
                             </td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">DPC4 - Façades et toitures</td>
                             <td class="p-2">
-                                <span v-if="props.draft.dpc4" class="text-green-600 font-medium">{{ getFileName(props.draft.dpc4) }}</span>
+                                <span v-if="props.draft.dpc4" class="text-gray-500">{{ getFileName(props.draft.dpc4) }}</span>
                                 <span v-else class="text-gray-400">—</span>
                             </td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">DPC5 - Document graphique</td>
                             <td class="p-2">
-                                <span v-if="props.draft.dpc5" class="text-green-600 font-medium">{{ getFileName(props.draft.dpc5) }}</span>
+                                <span v-if="props.draft.dpc5" class="text-gray-500">{{ getFileName(props.draft.dpc5) }}</span>
                                 <span v-else class="text-gray-400">—</span>
                             </td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">DPC6 - Photo terrain</td>
                             <td class="p-2">
-                                <span v-if="props.draft.dpc6" class="text-green-600 font-medium">{{ getFileName(props.draft.dpc6) }}</span>
+                                <span v-if="props.draft.dpc6" class="text-gray-500">{{ getFileName(props.draft.dpc6) }}</span>
                                 <span v-else class="text-gray-400">—</span>
                             </td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">DPC7 - Photo terrain</td>
                             <td class="p-2">
-                                <span v-if="props.draft.dpc7" class="text-green-600 font-medium">{{ getFileName(props.draft.dpc7) }}</span>
+                                <span v-if="props.draft.dpc7" class="text-gray-500">{{ getFileName(props.draft.dpc7) }}</span>
                                 <span v-else class="text-gray-400">—</span>
                             </td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">DPC8 - Photo terrain</td>
                             <td class="p-2">
-                                <span v-if="props.draft.dpc8" class="text-green-600 font-medium">{{ getFileName(props.draft.dpc8) }}</span>
+                                <span v-if="props.draft.dpc8" class="text-gray-500">{{ getFileName(props.draft.dpc8) }}</span>
                                 <span v-else class="text-gray-400">—</span>
                             </td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">DPC11 - Notice matériaux</td>
                             <td class="p-2">
-                                <span v-if="props.draft.dpc11" class="text-green-600 font-medium">{{ getFileName(props.draft.dpc11) }}</span>
+                                <span v-if="props.draft.dpc11" class="text-gray-500">{{ getFileName(props.draft.dpc11) }}</span>
                                 <span v-else class="text-gray-400">—</span>
                             </td>
                         </tr>
@@ -395,7 +430,6 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
             <div class="mb-3 text-sm font-semibold text-zinc-700">Signature</div>
             <div class="flex justify-center">
                 <div class="w-full max-w-md">
-                    <div class="text-xs text-gray-600 mb-1">Lu et approuvé – Signature du déclarant</div>
                     <div class="border rounded-md p-3 inline-flex w-full min-h-[120px] items-center justify-center bg-white">
                         <template v-if="props.draft.declarant_signature_image_url || props.draft.declarant_signature?.dataUrl">
                             <img :src="props.draft.declarant_signature_image_url || props.draft.declarant_signature?.dataUrl" alt="Signature déclarant"
@@ -405,9 +439,9 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
                             <div class="text-gray-500 italic">Pas encore signée</div>
                         </template>
                     </div>
-                    <div class="mt-2 text-[11px] text-gray-700">
-                        Signé par <span class="font-semibold">{{ props.draft.declarant_signature?.signer_name || '—' }}</span>
-                        <span v-if="props.draft.declarant_signature_signed_at"> • le {{ new Date(props.draft.declarant_signature_signed_at).toLocaleString('fr-FR') }}</span>
+                    <div class="mt-2 text-gray-700">
+                        À <span class="font-semibold">{{ props.draft.engagement_city || '—' }}</span>
+                        <span v-if="props.draft.engagement_date"> • le {{ new Date(props.draft.engagement_date).toLocaleString('fr-FR', { year: 'numeric', month: 'numeric', day: 'numeric' }) }}</span>
                     </div>
                 </div>
             </div>
@@ -418,111 +452,115 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
             <div class="mb-3 text-sm font-semibold text-zinc-700">Pièces jointes (DPC)</div>
             
             <!-- DPC1 -->
-            <div v-if="props.draft.dpc1" class="mb-6">
+            <div v-if="draft.dpc1_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC1 - Plan de masse des constructions à édifier</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp1_url" class="text-center">
-                        <img :src="draft.dcp1_url" alt="Photo DPC1" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc1_url" alt="Photo DPC1" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
             </div>
 
             <!-- DPC2 -->
-            <div v-if="props.draft.dpc2" class="mb-6">
+            <div v-if="draft.dpc2_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC2 - Plan en coupe du terrain et des constructions</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp2_url" class="text-center">
-                        <img :src="draft.dcp2_url" alt="Photo DPC2" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc2_url" alt="Photo DPC2" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
             </div>
 
             <!-- DPC3 -->
-            <div v-if="props.draft.dpc3" class="mb-6">
+            <div v-if="draft.dpc3_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC3 - Notice descriptive</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp3_url" class="text-center">
-                        <img :src="draft.dcp3_url" alt="Photo DPC3" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc3_url" alt="Photo DPC3" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
             </div>
 
             <!-- DPC4 -->
-            <div v-if="props.draft.dpc4" class="mb-6">
+            <div v-if="draft.dpc4_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC4 - Plan des façades et des toitures</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp4_url" class="text-center">
-                        <img :src="draft.dcp4_url" alt="Photo DPC4" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc4_url" alt="Photo DPC4" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
             </div>
 
             <!-- DPC5 -->
-            <div v-if="props.draft.dpc5" class="mb-6">
+            <div v-if="draft.dpc5_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC5 - Document graphique du terrain</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp5_url" class="text-center">
-                        <img :src="draft.dcp5_url" alt="Photo DPC5" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc5_url" alt="Photo DPC5" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
             </div>
 
             <!-- DPC6 -->
-            <div v-if="props.draft.dpc6" class="mb-6">
+            <div v-if="draft.dpc6_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC6 - Photographie du terrain nu et de son environnement</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp6_url" class="text-center">
-                        <img :src="draft.dcp6_url" alt="Photo DPC6" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc6_url" alt="Photo DPC6" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
             </div>
 
             <!-- DPC7 -->
-            <div v-if="props.draft.dpc7" class="mb-6">
+            <div v-if="draft.dpc7_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC7 - Photographie du terrain nu et de son environnement</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp7_url" class="text-center">
-                        <img :src="draft.dcp7_url" alt="Photo DPC7" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc7_url" alt="Photo DPC7" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
             </div>
 
             <!-- DPC8 -->
-            <div v-if="props.draft.dpc8" class="mb-6">
+            <div v-if="draft.dpc8_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC8 - Photographie du terrain nu et de son environnement</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp8_url" class="text-center">
-                        <img :src="draft.dcp8_url" alt="Photo DPC8" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc8_url" alt="Photo DPC8" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
             </div>
 
             <!-- DPC11 -->
-            <div v-if="props.draft.dpc11 || props.draft.dpc11_notice_materiaux" class="mb-6">
+            <div v-if="draft.dpc11_url" class="mb-6">
                 <div class="page-break-before"></div>
                 <div class="text-sm font-semibold text-zinc-700 mb-2">DPC11 - Notice descriptive des matériaux</div>
-                <div class="border rounded-md p-4 bg-white">
-                    <div v-if="draft.dcp11_url" class="text-center">
-                        <img :src="draft.dcp11_url" alt="Photo DPC11" 
+                <div class="rounded-md p-4 bg-white">
+                    <div class="text-center">
+                        <img :src="draft.dpc11_url" alt="Photo DPC11" 
                              class="max-w-full h-auto max-h-96 mx-auto border rounded" />
                     </div>
                 </div>
+            </div>
+
+            <div v-else-if="!draft.dpc1_url">
+                Les pièces jointes DPC seront affichées après la soumission.
             </div>
         </div>
     </div>

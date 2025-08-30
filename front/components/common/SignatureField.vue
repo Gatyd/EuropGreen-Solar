@@ -181,7 +181,7 @@ const validate = () => {
     if (props.required && state.method === 'upload' && !state.file) {
         errors.push({ name: 'file', message: 'Veuillez sélectionner une image de signature.' })
     }
-    if (props.required && state.method === 'draw' && !state.dataUrl) {
+    if (props.required && state.method === 'draw' && !hasDrawn.value) {
         errors.push({ name: 'signature', message: 'Veuillez dessiner votre signature.' })
     }
     return errors
