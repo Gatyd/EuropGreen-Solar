@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Logo from '~/components/Logo.vue'
 
 type Cerfa16702Draft = {
     declarant_type: string
@@ -58,22 +59,29 @@ type Cerfa16702Draft = {
     declarant_signature?: { signer_name: string; dataUrl?: string }
 }
 
-const props = defineProps<{ draft: Cerfa16702Draft & {
-    generated_at?: string
-    declarant_signature_image_url?: string | null
-    declarant_signature_signed_at?: string | null
-    dpc1_url?: string | null
-    dpc2_url?: string | null
-    dpc3_url?: string | null
-    dpc4_url?: string | null
-    dpc5_url?: string | null
-    dpc6_url?: string | null
-    dpc7_url?: string | null
-    dpc8_url?: string | null
-    dpc11_url?: string | null
-} }>()
+const props = defineProps<{
+    draft: Cerfa16702Draft & {
+        generated_at?: string
+        declarant_signature_image_url?: string | null
+        declarant_signature_signed_at?: string | null
+        dpc1_url?: string | null
+        dpc2_url?: string | null
+        dpc3_url?: string | null
+        dpc4_url?: string | null
+        dpc5_url?: string | null
+        dpc6_url?: string | null
+        dpc7_url?: string | null
+        dpc8_url?: string | null
+        dpc11_url?: string | null
+    }
+    mode?: 'print' | 'edit'
+}>()
 
-const getFileName = (file: File | string | null): string => {
+const currentMode = computed(() => props.mode || 'print')
+const isPrint = computed(() => currentMode.value === 'print')
+const isEdit = computed(() => currentMode.value === 'edit')
+
+const getFileName = (file: File | string | null | undefined): string => {
     if (!file) return ''
     if (typeof file === 'string') {
         return file.split('/').pop()?.split('?')[0] || 'Document'
@@ -86,208 +94,185 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
 
 console.log('[Preview.vue]:', props.draft)
 
+// Liste ordonnée des pièces jointes (ordre de pages 4..12)
+const dpcLabels = [
+    { key: 'dpc1', name: 'DPC1 - Plan de masse' },
+    { key: 'dpc2', name: 'DPC2 - Plan en coupe' },
+    { key: 'dpc3', name: 'DPC3 - Notice descriptive' },
+    { key: 'dpc4', name: 'DPC4 - Façades et toitures' },
+    { key: 'dpc5', name: 'DPC5 - Document graphique' },
+    { key: 'dpc6', name: 'DPC6 - Photo terrain' },
+    { key: 'dpc7', name: 'DPC7 - Photo terrain' },
+    { key: 'dpc8', name: 'DPC8 - Photo terrain' },
+    { key: 'dpc11', name: 'DPC11 - Notice descriptive des matériaux' },
+]
+
+const getAttachmentUrl = (key: string): string | undefined => {
+    switch (key) {
+        case 'dpc1': return props.draft.dpc1_url || undefined
+        case 'dpc2': return props.draft.dpc2_url || undefined
+        case 'dpc3': return props.draft.dpc3_url || undefined
+        case 'dpc4': return props.draft.dpc4_url || undefined
+        case 'dpc5': return props.draft.dpc5_url || undefined
+        case 'dpc6': return props.draft.dpc6_url || undefined
+        case 'dpc7': return props.draft.dpc7_url || undefined
+        case 'dpc8': return props.draft.dpc8_url || undefined
+        case 'dpc11': return props.draft.dpc11_url || undefined
+        default: return undefined
+    }
+}
+
+// idx 0 -> page 4, idx 1 -> page 5, ..., idx 8 -> page 12
+const attachmentPageNumber = (idx: number) => props.draft.dpc11_notice_materiaux ? 3 : 2 + idx
+
 </script>
 
 <template>
-    <div class="inline-block w-full xl:min-h-[1122.66px] xl:mx-auto bg-white text-xs px-6 py-4">
-        <!-- En-tête -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
+    <div :class="isPrint ? 'cerfa-print-root' : 'p-6'">
+        <!-- Page 1 -->
+        <section :class="isPrint ? 'cerfa-page' : ''">
+            <header class="flex justify-between items-center mb-6">
                 <Logo size="sm" />
-            </div>
-            <div class="text-right">
-                <p class="text-2xl text-black font-normal mb-1">CERFA 16702</p>
-                <p class="text-[11px] text-gray-500">Déclaration préalable en Mairie</p>
-                <!-- <p class="text-[11px] text-gray-500">Généré le {{
-                    props.draft.generated_at ? new Date(props.draft.generated_at).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR')
-                }}</p> -->
-            </div>
-        </div>
+                <div class="text-right">
+                    <p class="text-2xl text-black font-normal mb-1">CERFA 16702</p>
+                    <p class="text-[11px] text-gray-500">Déclaration préalable en Mairie</p>
+                </div>
+            </header>
 
-        <!-- 1. Identité du déclarant -->
-        <div class="mb-4">
-            <div class="text-sm font-semibold text-zinc-700 mb-2">1. Identité du déclarant</div>
-            <div class="overflow-hidden rounded-md border border-zinc-200">
+            <div class="mb-4">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">1. Identité du déclarant</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200">
+                    <table class="w-full text-sm border-collapse">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="w-[45%] p-2 text-gray-600">Type de déclarant</td>
+                                <td class="p-2">{{ props.draft.declarant_type === 'individual' ? 'Individu' :
+                                    'Entreprise' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Nom</td>
+                                <td class="p-2">{{ props.draft.last_name || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Prénom</td>
+                                <td class="p-2">{{ props.draft.first_name || '—' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">2. Coordonnées du déclarant</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200">
+                    <table class="w-full text-sm border-collapse">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse (numéro)</td>
+                                <td class="p-2">{{ props.draft.address_number || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse (voie)</td>
+                                <td class="p-2">{{ props.draft.address_street || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse (Localité)</td>
+                                <td class="p-2">{{ props.draft.address_locality || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse (Code postal)</td>
+                                <td class="p-2">{{ props.draft.address_postal_code || '—' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">3. Le terrain</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200">
+                    <table class="w-full text-sm border-collapse">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse du terrain (voie)</td>
+                                <td class="p-2">{{ props.draft.land_street || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse du terrain (numéro)</td>
+                                <td class="p-2">{{ props.draft.land_number || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse du terrain (Lieu-dit)</td>
+                                <td class="p-2">{{ props.draft.land_lieu_dit || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse du terrain (Localité)</td>
+                                <td class="p-2">{{ props.draft.land_locality || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse du terrain (Code postal)</td>
+                                <td class="p-2">{{ props.draft.land_postal_code || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Préfixe cadastral</td>
+                                <td class="p-2">{{ props.draft.cadastral_prefix || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Section cadastrale</td>
+                                <td class="p-2">{{ props.draft.cadastral_section || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Numéro cadastral</td>
+                                <td class="p-2">{{ props.draft.cadastral_number || '—' }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Surface (m²)</td>
+                                <td class="p-2">{{ props.draft.cadastral_surface_m2 || '—' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">4.1 Le projet</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200">
+                    <table class="w-full text-sm border-collapse">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Nouvelle construction</td>
+                                <td class="p-2">{{ yn(props.draft.project_new_construction) }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Construction existante</td>
+                                <td class="p-2">{{ yn(props.draft.project_existing_works) }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Résidence principale</td>
+                                <td class="p-2">{{ yn(props.draft.destination_primary_residence) }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Résidence secondaire</td>
+                                <td class="p-2">{{ yn(props.draft.destination_secondary_residence) }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Projet agrivoltaïque</td>
+                                <td class="p-2">{{ yn(props.draft.agrivoltaic_project) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Page 2 -->
+        <section :class="isPrint ? 'cerfa-page' : ''">
+            <div class="mt-8"></div>
+
+            <div v-if="props.draft.electrical_power_text || props.draft.peak_power_text"
+                class="mb-4 overflow-hidden rounded-md border border-zinc-200">
                 <table class="w-full text-sm border-collapse">
                     <tbody>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="w-[45%] p-2 text-gray-600">Type de déclarant</td>
-                            <td class="p-2">{{ props.draft.declarant_type === 'individual' ? 'Individu' : 'Entreprise' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Nom</td>
-                            <td class="p-2">{{ props.draft.last_name || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Prénom</td>
-                            <td class="p-2">{{ props.draft.first_name || '—' }}</td>
-                        </tr>
-                        <tr v-if="props.draft.declarant_type === 'individual'" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Date de naissance</td>
-                            <td class="p-2">{{ props.draft.birth_date || '—' }}</td>
-                        </tr>
-                        <tr v-if="props.draft.declarant_type === 'individual'" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Lieu de naissance</td>
-                            <td class="p-2">{{ props.draft.birth_place || '—' }}</td>
-                        </tr>
-                        <tr v-if="props.draft.declarant_type === 'individual'" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Département de naissance</td>
-                            <td class="p-2">{{ props.draft.birth_department || '—' }}</td>
-                        </tr>
-                        <tr v-if="props.draft.declarant_type === 'individual'" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Pays de naissance</td>
-                            <td class="p-2">{{ props.draft.birth_country || '—' }}</td>
-                        </tr>
-                        <tr v-if="props.draft.declarant_type === 'company'" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Dénomination</td>
-                            <td class="p-2">{{ props.draft.company_denomination || '—' }}</td>
-                        </tr>
-                        <tr v-if="props.draft.declarant_type === 'company'" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Raison sociale</td>
-                            <td class="p-2">{{ props.draft.company_reason || '—' }}</td>
-                        </tr>
-                        <tr v-if="props.draft.declarant_type === 'company'" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">N° SIRET</td>
-                            <td class="p-2">{{ props.draft.company_siret || '—' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 2. Coordonnées du déclarant -->
-        <div class="mb-4">
-            <div class="text-sm font-semibold text-zinc-700 mb-2">2. Coordonnées du déclarant</div>
-            <div class="overflow-hidden rounded-md border border-zinc-200">
-                <table class="w-full text-sm border-collapse">
-                    <tbody>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse (numéro)</td>
-                            <td class="p-2">{{ props.draft.address_number || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse (voie)</td>
-                            <td class="p-2">{{ props.draft.address_street || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse (Lieu-dit)</td>
-                            <td class="p-2">{{ props.draft.address_lieu_dit || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse (Localité)</td>
-                            <td class="p-2">{{ props.draft.address_locality || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse (Code postal)</td>
-                            <td class="p-2">{{ props.draft.address_postal_code || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse (BP)</td>
-                            <td class="p-2">{{ props.draft.address_bp || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse (CEDEX)</td>
-                            <td class="p-2">{{ props.draft.address_cedex || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Téléphone</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.phone_country_code">({{ props.draft.phone_country_code }}) </span>
-                                {{ props.draft.phone || '—' }}
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse électronique</td>
-                            <td class="p-2">{{ props.draft.email || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Consentement email</td>
-                            <td class="p-2">{{ yn(props.draft.email_consent) }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 3. Le terrain -->
-        <div class="mb-4">
-            <div class="text-sm font-semibold text-zinc-700 mb-2">3. Le terrain</div>
-            <div class="overflow-hidden rounded-md border border-zinc-200">
-                <table class="w-full text-sm border-collapse">
-                    <tbody>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse du terrain (voie)</td>
-                            <td class="p-2">{{ props.draft.land_street || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse du terrain (numéro)</td>
-                            <td class="p-2">{{ props.draft.land_number || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse du terrain (Lieu-dit)</td>
-                            <td class="p-2">{{ props.draft.land_lieu_dit || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse du terrain (Localité)</td>
-                            <td class="p-2">{{ props.draft.land_locality || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Adresse du terrain (Code postal)</td>
-                            <td class="p-2">{{ props.draft.land_postal_code || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Préfixe cadastral</td>
-                            <td class="p-2">{{ props.draft.cadastral_prefix || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Section cadastral</td>
-                            <td class="p-2">{{ props.draft.cadastral_section || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Numéro cadastral</td>
-                            <td class="p-2">{{ props.draft.cadastral_number || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Surface (m²)</td>
-                            <td class="p-2">{{ props.draft.cadastral_surface_m2 || '—' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 4.1 Le projet -->
-        <div class="mb-4">
-            <div class="text-sm font-semibold text-zinc-700 mb-2">4.1 Le projet</div>
-            <div class="overflow-hidden rounded-md border border-zinc-200">
-                <table class="w-full text-sm border-collapse">
-                    <tbody>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="w-[45%] p-2 text-gray-600">Type de projet</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.project_new_construction">Nouvelle construction</span>
-                                <span v-if="props.draft.project_new_construction && props.draft.project_existing_works">, </span>
-                                <span v-if="props.draft.project_existing_works">Travaux sur construction existante</span>
-                                <span v-if="!props.draft.project_new_construction && !props.draft.project_existing_works">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Description du projet</td>
-                            <td class="p-2 whitespace-pre-line">{{ props.draft.project_description || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Destination</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.destination_primary_residence">Résidence principale</span>
-                                <span v-if="props.draft.destination_primary_residence && props.draft.destination_secondary_residence">, </span>
-                                <span v-if="props.draft.destination_secondary_residence">Résidence secondaire</span>
-                                <span v-if="!props.draft.destination_primary_residence && !props.draft.destination_secondary_residence">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Projet agrivoltaïque</td>
-                            <td class="p-2">{{ ynu(props.draft.agrivoltaic_project) }}</td>
-                        </tr>
                         <tr v-if="props.draft.electrical_power_text" class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">Puissance électrique</td>
                             <td class="p-2">{{ props.draft.electrical_power_text }}</td>
@@ -296,286 +281,230 @@ console.log('[Preview.vue]:', props.draft)
                             <td class="p-2 text-gray-600">Puissance crête</td>
                             <td class="p-2">{{ props.draft.peak_power_text }}</td>
                         </tr>
-                        <tr v-if="props.draft.energy_destination" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Destination de l'énergie</td>
-                            <td class="p-2">{{ props.draft.energy_destination }}</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- 5. Périmètres de protection -->
-        <div class="mb-4">
-            <div class="text-sm font-semibold text-zinc-700 mb-2">5. Périmètres de protection</div>
-            <div class="overflow-hidden rounded-md border border-zinc-200">
-                <table class="w-full text-sm border-collapse">
-                    <tbody>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="w-[45%] p-2 text-gray-600">Site patrimonial</td>
-                            <td class="p-2">{{ yn(props.draft.protection_site_patrimonial) }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Site classé/instance de classement</td>
-                            <td class="p-2">{{ yn(props.draft.protection_site_classe_or_instance) }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Abords d'un monument historique</td>
-                            <td class="p-2">{{ yn(props.draft.protection_monument_abords) }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 8. Engagement du déclarant -->
-        <!-- <div class="mb-4">
-            <div class="text-sm font-semibold text-zinc-700 mb-2">8. Engagement du déclarant</div>
-            <div class="overflow-hidden rounded-md border border-zinc-200">
-                <table class="w-full text-sm border-collapse">
-                    <tbody>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="w-[45%] p-2 text-gray-600">Ville</td>
-                            <td class="p-2">{{ props.draft.engagement_city || '—' }}</td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Date</td>
-                            <td class="p-2">{{ props.draft.engagement_date || '—' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div> -->
-
-        <!-- Pièces jointes DPC -->
-        <div class="mb-4">
-            <div class="text-sm font-semibold text-zinc-700 mb-2">Pièces jointes (DPC)</div>
-            <div class="overflow-hidden rounded-md border border-zinc-200">
-                <table class="w-full text-sm border-collapse">
-                    <tbody>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="w-[45%] p-2 text-gray-600">DPC1 - Plan de masse</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc1" class="text-gray-500">{{ getFileName(props.draft.dpc1) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">DPC2 - Plan en coupe</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc2" class="text-gray-500">{{ getFileName(props.draft.dpc2) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">DPC3 - Notice descriptive</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc3" class="text-gray-500">{{ getFileName(props.draft.dpc3) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">DPC4 - Façades et toitures</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc4" class="text-gray-500">{{ getFileName(props.draft.dpc4) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">DPC5 - Document graphique</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc5" class="text-gray-500">{{ getFileName(props.draft.dpc5) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">DPC6 - Photo terrain</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc6" class="text-gray-500">{{ getFileName(props.draft.dpc6) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">DPC7 - Photo terrain</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc7" class="text-gray-500">{{ getFileName(props.draft.dpc7) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">DPC8 - Photo terrain</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc8" class="text-gray-500">{{ getFileName(props.draft.dpc8) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">DPC11 - Notice matériaux</td>
-                            <td class="p-2">
-                                <span v-if="props.draft.dpc11" class="text-gray-500">{{ getFileName(props.draft.dpc11) }}</span>
-                                <span v-else class="text-gray-400">—</span>
-                            </td>
-                        </tr>
-                        <tr v-if="props.draft.dpc11_notice_materiaux" class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Notice matériaux (texte)</td>
-                            <td class="p-2 whitespace-pre-line">{{ props.draft.dpc11_notice_materiaux }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Signature -->
-        <div class="mt-8">
-            <div class="mb-3 text-sm font-semibold text-zinc-700">Signature</div>
-            <div class="flex justify-center">
-                <div class="w-full max-w-md">
-                    <div class="border rounded-md p-3 inline-flex w-full min-h-[120px] items-center justify-center bg-white">
-                        <template v-if="props.draft.declarant_signature_image_url || props.draft.declarant_signature?.dataUrl">
-                            <img :src="props.draft.declarant_signature_image_url || props.draft.declarant_signature?.dataUrl" alt="Signature déclarant"
-                                class="h-20 object-contain" />
-                        </template>
-                        <template v-else>
-                            <div class="text-gray-500 italic">Pas encore signée</div>
-                        </template>
-                    </div>
-                    <div class="mt-2 text-gray-700">
-                        À <span class="font-semibold">{{ props.draft.engagement_city || '—' }}</span>
-                        <span v-if="props.draft.engagement_date"> • le {{ new Date(props.draft.engagement_date).toLocaleString('fr-FR', { year: 'numeric', month: 'numeric', day: 'numeric' }) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pièces jointes DPC -->
-        <div class="mt-8">
-            <div class="mb-3 text-sm font-semibold text-zinc-700">Pièces jointes (DPC)</div>
-            
-            <!-- DPC1 -->
-            <div v-if="draft.dpc1_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC1 - Plan de masse des constructions à édifier</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc1_url" alt="Photo DPC1" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
+            <div v-if="draft.project_description" class="mb-6">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">Description du projet</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200 p-3">
+                    <div class="whitespace-pre-line text-sm text-gray-800">{{ props.draft.project_description }}
                     </div>
                 </div>
             </div>
 
-            <!-- DPC2 -->
-            <div v-if="draft.dpc2_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC2 - Plan en coupe du terrain et des constructions</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc2_url" alt="Photo DPC2" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
+            <div class="mb-4">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">5. Périmètres de protection</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200">
+                    <table class="w-full text-sm border-collapse">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Site patrimonial</td>
+                                <td class="p-2">{{ yn(props.draft.protection_site_patrimonial) }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Site classé/instance de classement</td>
+                                <td class="p-2">{{ yn(props.draft.protection_site_classe_or_instance) }}</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Abords d'un monument historique</td>
+                                <td class="p-2">{{ yn(props.draft.protection_monument_abords) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mb-4">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">Pièces jointes (DPC)</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200">
+                    <table class="w-full text-sm border-collapse">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50" v-for="(label, idx) in dpcLabels" :key="label.key">
+                                <td class="w-[65%] p-2 text-gray-600">{{ label.name }}</td>
+                                <td class="p-2">
+                                    <template v-if="getAttachmentUrl(label.key)">
+                                        {{ getFileName(getAttachmentUrl(label.key)) }}
+                                    </template>
+                                    <template v-else>
+                                        —
+                                    </template>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div v-if="!draft.dpc11_notice_materiaux" class="mt-8">
+                <div class="mb-3 text-sm font-semibold text-zinc-700">Signature</div>
+                <div class="flex justify-center">
+                    <div class="w-full max-w-md">
+                        <div
+                            class="border rounded-md p-3 inline-flex w-full min-h-[120px] items-center justify-center bg-white">
+                            <template
+                                v-if="props.draft.declarant_signature_image_url || props.draft.declarant_signature?.dataUrl">
+                                <img :src="props.draft.declarant_signature_image_url || props.draft.declarant_signature?.dataUrl"
+                                    alt="Signature déclarant" class="max-w-full h-auto" />
+                            </template>
+                            <template v-else>
+                                <div class="text-gray-500 italic">Pas encore signée</div>
+                            </template>
+                        </div>
+                        <div class="mt-2 text-gray-700">
+                            À <span class="font-semibold">{{ props.draft.engagement_city || '—' }}</span>
+                            <span v-if="props.draft.engagement_date"> • le {{ new
+                                Date(props.draft.engagement_date).toLocaleString('fr-FR', {
+                                    year: 'numeric', month:
+                                        'numeric', day:
+                                        'numeric'
+                                }) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section v-if="draft.dpc11_notice_materiaux" :class="isPrint ? 'cerfa-page' : ''">
+            <div class="mt-8"></div>
+            <!-- Notice matériaux (pleine largeur) -->
+            <div v-if="props.draft.dpc11_notice_materiaux" class="mb-6">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">Notice matériaux</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200 p-3">
+                    <div class="whitespace-pre-line text-sm text-gray-800">{{ props.draft.dpc11_notice_materiaux }}
                     </div>
                 </div>
             </div>
 
-            <!-- DPC3 -->
-            <div v-if="draft.dpc3_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC3 - Notice descriptive</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc3_url" alt="Photo DPC3" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
+            <div class="mt-8">
+                <div class="mb-3 text-sm font-semibold text-zinc-700">Signature</div>
+                <div class="flex justify-center">
+                    <div class="w-full max-w-md">
+                        <div
+                            class="border rounded-md p-3 inline-flex w-full min-h-[120px] items-center justify-center bg-white">
+                            <template
+                                v-if="props.draft.declarant_signature_image_url || props.draft.declarant_signature?.dataUrl">
+                                <img :src="props.draft.declarant_signature_image_url || props.draft.declarant_signature?.dataUrl"
+                                    alt="Signature déclarant" class="max-w-full h-auto" />
+                            </template>
+                            <template v-else>
+                                <div class="text-gray-500 italic">Pas encore signée</div>
+                            </template>
+                        </div>
+                        <div class="mt-2 text-gray-700">
+                            À <span class="font-semibold">{{ props.draft.engagement_city || '—' }}</span>
+                            <span v-if="props.draft.engagement_date"> • le {{ new
+                                Date(props.draft.engagement_date).toLocaleString('fr-FR', {
+                                    year: 'numeric', month:
+                                        'numeric', day:
+                                        'numeric'
+                                }) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- DPC4 -->
-            <div v-if="draft.dpc4_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC4 - Plan des façades et des toitures</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc4_url" alt="Photo DPC4" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
-                    </div>
-                </div>
+        <!-- Pages 4..12: une pièce jointe par page (impression seulement) -->
+        <section v-if="isPrint" v-for="(label, idx) in dpcLabels" :key="label.key" :class="isPrint ? 'cerfa-page' : ''">
+            <div class="text-sm font-semibold text-zinc-700 mb-2">{{ label.name }}</div>
+            <div class="rounded-md p-4 bg-white h-full flex items-center justify-center">
+                <template v-if="getAttachmentUrl(label.key)">
+                    <img :src="getAttachmentUrl(label.key)" :alt="label.name"
+                        class="max-w-full h-auto max-h-[95vh] mx-auto" />
+                </template>
+                <template v-else>
+                    <div class="text-gray-500">Aucun document fourni — Page {{ attachmentPageNumber(idx) }}</div>
+                </template>
             </div>
-
-            <!-- DPC5 -->
-            <div v-if="draft.dpc5_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC5 - Document graphique du terrain</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc5_url" alt="Photo DPC5" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- DPC6 -->
-            <div v-if="draft.dpc6_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC6 - Photographie du terrain nu et de son environnement</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc6_url" alt="Photo DPC6" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- DPC7 -->
-            <div v-if="draft.dpc7_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC7 - Photographie du terrain nu et de son environnement</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc7_url" alt="Photo DPC7" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- DPC8 -->
-            <div v-if="draft.dpc8_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC8 - Photographie du terrain nu et de son environnement</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc8_url" alt="Photo DPC8" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- DPC11 -->
-            <div v-if="draft.dpc11_url" class="mb-6">
-                <div class="page-break-before"></div>
-                <div class="text-sm font-semibold text-zinc-700 mb-2">DPC11 - Notice descriptive des matériaux</div>
-                <div class="rounded-md p-4 bg-white">
-                    <div class="text-center">
-                        <img :src="draft.dpc11_url" alt="Photo DPC11" 
-                             class="max-w-full h-auto max-h-96 mx-auto border rounded" />
-                    </div>
-                </div>
-            </div>
-
-            <div v-else-if="!draft.dpc1_url">
-                Les pièces jointes DPC seront affichées après la soumission.
-            </div>
-        </div>
+        </section>
     </div>
 </template>
 
 <style scoped>
+.cerfa-print-root {
+    width: 100%;
+    min-height: 297mm;
+    /* A4 height */
+    background: white;
+    color: #222;
+    font-size: 15px;
+    padding: 24px 32px 64px 32px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.cerfa-page {
+    width: 100%;
+    min-height: 297mm;
+    box-sizing: border-box;
+    /* page-break-after: always; */
+    /* break-after: page; */
+    padding: 12mm 14mm;
+    /* internal page margins */
+    background: white;
+    display: block;
+}
+
+.cerfa-page img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.pdf-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 32px;
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+    width: 100vw;
+    background: white;
+    z-index: 100;
+}
+
 .page-break-before {
     page-break-before: always;
     break-before: page;
 }
 
+.page-break-after {
+    page-break-after: always;
+    break-after: page;
+}
+
+/* Force A4 size and remove browser default margins when printing (helps Playwright) */
+@page {
+    size: A4;
+    margin: 0;
+}
+
 @media print {
+    .cerfa-print-root {
+        font-size: 14px;
+        padding: 0;
+        /* use @page margins instead */
+    }
+
+    .cerfa-page {
+        padding: 12mm 14mm;
+    }
+
+    .pdf-footer {
+        display: none;
+        /* Playwright can add its own footer */
+    }
+
     .page-break-before {
         page-break-before: always;
         break-before: page;
+    }
+
+    .page-break-after {
+        page-break-after: always;
+        break-after: page;
     }
 }
 </style>

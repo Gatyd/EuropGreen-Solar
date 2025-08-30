@@ -195,7 +195,7 @@ const onSubmit = () => {
             <div class="flex flex-col xl:flex-row gap-4">
                 <AdministrativeCerfa16702Form class="xl:basis-1/2" :draft="draft" :form="props.form"
                     :cerfa16702="props.cerfa16702" :form-id="props.formId" @submit="onSubmit" />
-                <AdministrativeCerfa16702Preview class="xl:basis-1/2 shadow-md rounded-lg" :draft="draft" :form="form" />
+                <AdministrativeCerfa16702Preview class="xl:basis-1/2 shadow-md rounded-lg" mode="edit" :draft="draft" :form="form" />
             </div>
         </template>
     </UModal>

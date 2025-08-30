@@ -4,10 +4,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from django.db import transaction
 from django.core.files.base import ContentFile
-from django.http import HttpResponse
 from EuropGreenSolar.utils.helpers import get_client_ip, decode_data_url_image
 
 from .models import Cerfa16702
+from installations.models import AdministrativeValidation
 from .serializers import Cerfa16702Serializer
 from installations.models import Form, Signature
 
@@ -23,6 +23,8 @@ class Cerfa16702ViewSet(GenericViewSet):
             form = Form.objects.get(pk=form_id)
         except Form.DoesNotExist:
             return Response({'detail': 'Fiche d\'installation non trouvée.'}, status=status.HTTP_404_NOT_FOUND)
+        if not form.administrative_validation:
+            AdministrativeValidation.objects.create(form=form, created_by=request.user)
 
         payload = request.data
         # Récupérer ou créer l'instance CERFA 16702
