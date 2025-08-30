@@ -184,7 +184,7 @@ class FormViewSet(viewsets.ModelViewSet):
 					'form': form,
 					'technical_visit': tv,
 					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_signature': f"{request.scheme}://{request.get_host()}/home/installations/{form.id}",
+					'link_signature': f"/home/installations/{form.id}",
 				}
 				subject = "Visite technique effectuée – Signature requise"
 				send_mail(
@@ -394,7 +394,7 @@ class FormViewSet(viewsets.ModelViewSet):
 					'form': form,
 					'representation_mandate': rm,
 					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_signature': f"{request.scheme}://{request.get_host()}/home/installations/{form.id}",
+					'link_signature': f"/home/installations/{form.id}",
 				}
 				subject = "Mandat de représentation créé – Signature requise"
 				send_mail(
@@ -460,7 +460,7 @@ class FormViewSet(viewsets.ModelViewSet):
 					'form': form,
 					'enedis_mandate': em,
 					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_signature': f"{request.scheme}://{request.get_host()}/home/installations/{form.id}",
+					'link_signature': f"/home/installations/{form.id}",
 				}
 				subject = "Mandat Enedis créé – Signature requise"
 				send_mail(
