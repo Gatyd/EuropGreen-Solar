@@ -154,10 +154,7 @@ class EnedisMandate(models.Model):
     client_civility = models.CharField(max_length=5, choices=Civility.choices, null=True, blank=True)
 
     # Adresse complète du client
-    client_address_street = models.CharField(max_length=255, blank=True)
-    client_address_number = models.CharField(max_length=30, blank=True)
-    client_address_locality = models.CharField(max_length=255, blank=True)
-    client_address_postal_code = models.CharField(max_length=10, blank=True)
+    client_address = models.TextField(blank=True)  # pré-remplie depuis le mandat de représentation
 
     # Si Société/Collectivité
     client_company_name = models.CharField(max_length=255, blank=True)

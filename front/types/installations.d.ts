@@ -52,7 +52,7 @@ export interface TechnicalVisit {
 
 export interface RepresentationMandate {
   id: string
-  client_civility?: string | null
+  client_civility?: Civility | null
   client_birth_date?: string | null
   client_birth_place?: string
   client_address?: string
@@ -257,10 +257,7 @@ export interface EnedisMandate {
   client_civility?: Civility | null
 
   // Adresse complète du client
-  client_address_street?: string
-  client_address_number?: string
-  client_address_locality?: string
-  client_address_postal_code?: string
+  client_address?: string
 
   // Société / Collectivité
   client_company_name?: string

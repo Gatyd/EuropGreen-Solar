@@ -13,16 +13,25 @@ const emit = defineEmits<{
 const auth = useAuthStore()
 const openCerfa16702 = ref(false)
 const openElectricalDiagram = ref(false)
+const openEnedisMandate = ref(false)
+const enedisMandateAction = ref<'full' | 'signature' | 'preview'>('full')
 
 const manageCerfa16702 = () => {
-    if(!props.item?.cerfa16702?.pdf) {
+    if (!props.item?.cerfa16702?.pdf) {
         openCerfa16702.value = true
     }
 }
 
 const manageElectricalDiagram = () => {
-    if(!props.item?.electrical_diagram?.file) {
+    if (!props.item?.electrical_diagram?.file) {
         openElectricalDiagram.value = true
+    }
+}
+
+const manageEnedisMandate = () => {
+    if (!props.item?.enedis_mandate?.pdf) {
+        openEnedisMandate.value = true
+        enedisMandateAction.value = 'full'
     }
 }
 
@@ -32,7 +41,11 @@ const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.i
 </script>
 <template>
     <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form-id="item?.id" @submit="emit('submit')" />
-    <AdministrativeElectricalDiagramModal v-model="openElectricalDiagram" :form-id="item?.id" @submit="emit('submit')" />
+    <AdministrativeElectricalDiagramModal v-model="openElectricalDiagram" :form-id="item?.id"
+        @submit="emit('submit')" />
+    <AdministrativeEnedisMandateModal v-model="openEnedisMandate" :action="enedisMandateAction"
+        :representation-mandate="item?.representation_mandate" :enedis-mandate="item?.enedis_mandate"
+        :form-id="item?.id" :form="item" @submit="emit('submit')" />
     <UCard class="mt-6">
         <template v-if="!loading">
             <div class="flex items-start justify-between gap-6">
@@ -67,7 +80,7 @@ const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.i
                                 :color="props.item?.enedis_mandate?.pdf ? 'primary' : 'neutral'" variant="subtle"
                                 :icon="props.item?.enedis_mandate?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                 :to="props.item?.enedis_mandate?.pdf || undefined" target="_blank" label="Mandat Enedis"
-                                @click="() => console.log('create-enedis-mandate')" />
+                                @click="manageEnedisMandate" />
                         </div>
                     </div>
                 </div>
