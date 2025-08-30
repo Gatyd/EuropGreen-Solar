@@ -14,6 +14,18 @@ const auth = useAuthStore()
 const openCerfa16702 = ref(false)
 const openElectricalDiagram = ref(false)
 
+const manageCerfa16702 = () => {
+    if(!props.item?.cerfa16702?.pdf) {
+        openCerfa16702.value = true
+    }
+}
+
+const manageElectricalDiagram = () => {
+    if(!props.item?.electrical_diagram?.file) {
+        openElectricalDiagram.value = true
+    }
+}
+
 // Affichage conditionnel de la section "Documents administratifs"
 const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.is_staff && auth.user?.useraccess?.administrative_procedures) || !auth.user?.is_staff))
 
@@ -44,13 +56,13 @@ const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.i
                                 :color="props.item?.cerfa16702?.pdf ? 'primary' : 'neutral'" variant="subtle"
                                 :icon="props.item?.cerfa16702?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                 :to="props.item?.cerfa16702?.pdf || undefined" target="_blank" label="CERFA 16702"
-                                @click="openCerfa16702 = true" />
+                                @click="manageCerfa16702" />
                             <UButton v-if="auth.user?.is_staff"
                                 :color="props.item?.electrical_diagram?.file ? 'primary' : 'neutral'" variant="subtle"
                                 label="Schéma électrique"
                                 :icon="props.item?.electrical_diagram?.file ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                 :to="props.item?.electrical_diagram?.file || undefined" target="_blank"
-                                @click="openElectricalDiagram = true" />
+                                @click="manageElectricalDiagram" />
                             <UButton v-if="auth.user?.is_staff || props.item?.enedis_mandate"
                                 :color="props.item?.enedis_mandate?.pdf ? 'primary' : 'neutral'" variant="subtle"
                                 :icon="props.item?.enedis_mandate?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
