@@ -213,7 +213,7 @@ class FormViewSet(viewsets.ModelViewSet):
 		"""
 		form = self.get_object()
 		doc = (request.data.get('document') or '').strip().lower()
-		if doc not in ('technical_visit', 'representation_mandate'):
+		if doc not in ('technical_visit', 'representation_mandate', 'enedis_mandate'):
 			return Response({ 'document': 'Type de document non supporté.' }, status=status.HTTP_400_BAD_REQUEST)
 
 		# Récupérer l'instance cible
@@ -222,7 +222,9 @@ class FormViewSet(viewsets.ModelViewSet):
 			target = getattr(form, 'technical_visit', None)
 		elif doc == 'representation_mandate':
 			target = getattr(form, 'representation_mandate', None)
-        
+		elif doc == 'enedis_mandate':
+			target = getattr(form, 'enedis_mandate', None)
+
 		if target is None:
 			return Response({ 'detail': "Aucun objet n'est associé à cette fiche pour ce document." }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -342,6 +344,54 @@ class FormViewSet(viewsets.ModelViewSet):
 
 			serializer = RepresentationMandateSerializer(rm, context=self.get_serializer_context())
 			return Response(serializer.data, status=status.HTTP_200_OK)
+
+		elif doc == 'enedis_mandate':
+			em: EnedisMandate = target
+			if role == 'client':
+				if em.client_signature_id:
+					try:
+						old = em.client_signature
+						if old and old.signature_image:
+							old.signature_image.delete(save=False)
+					except Exception:
+						pass
+				em.client_signature = sig
+			else:
+				if em.installer_signature_id:
+					try:
+						old = em.installer_signature
+						if old and old.signature_image:
+							old.signature_image.delete(save=False)
+					except Exception:
+						pass
+				em.installer_signature = sig
+
+			em.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
+
+			# Génération PDF mandat si les deux signatures présentes (après COMMIT)
+			try:
+				if em.client_signature_id and em.installer_signature_id:
+					def _gen_em_pdf_after_commit(form_id: str):
+						try:
+							from .models import Form as _Form
+							from .pdf import render_enedis_mandate_pdf
+							f = _Form.objects.select_related('enedis_mandate').get(pk=form_id)
+							pdf_bytes = render_enedis_mandate_pdf(str(form_id))
+							if pdf_bytes and getattr(f, 'enedis_mandate', None):
+								filename = f"enedis_mandate_{form_id}.pdf"
+								try:
+									f.enedis_mandate.pdf.save(filename, ContentFile(pdf_bytes), save=True)  # type: ignore
+								except Exception:
+									pass
+						except Exception:
+							pass
+					transaction.on_commit(lambda fid=str(form.id): _gen_em_pdf_after_commit(fid))
+			except Exception:
+				pass
+
+			serializer = EnedisMandateSerializer(em, context=self.get_serializer_context())
+			return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 	@action(detail=True, methods=['post'], url_path='representation-mandate')
 	@transaction.atomic

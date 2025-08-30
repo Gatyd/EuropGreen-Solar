@@ -122,7 +122,7 @@ const onSubmit = () => {
                 <AdministrativeEnedisMandateForm v-if="action !== 'preview'" class="xl:basis-1/2" :draft="draft"
                     :enedis-mandate="props.enedisMandate" :form-id="props.formId" :action="props.action ?? 'full'"
                     @submit="onSubmit" />
-                <AdministrativeEnedisMandatePreview :form="form"
+                <AdministrativeEnedisMandatePreview :form="form" mode="edit"
                     :class="action !== 'preview' ? 'xl:basis-1/2 shadow-md rounded-lg' : ''" :draft="draft" />
             </div>
         </template>

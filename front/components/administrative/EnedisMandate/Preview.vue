@@ -69,7 +69,7 @@ const yn = (v: boolean) => (v ? 'Oui' : 'Non')
 
 
 <template>
-    <div class="inline-block w-full xl:min-h-[1122.66px] xl:mx-auto bg-white text-xs px-6 py-4">
+    <div class="inline-block w-full xl:min-h-[1122.66px] xl:mx-auto bg-white text-xs px-6 pt-4" :class="{ 'pt-12': isPrint }">
         <!-- En-tête -->
         <div class="flex justify-between items-center mb-6">
             <div>
