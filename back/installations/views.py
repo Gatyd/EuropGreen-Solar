@@ -8,6 +8,7 @@ from .serializers import (
 )
 from django.db import transaction
 from django.core.files.base import ContentFile
+from EuropGreenSolar.utils.helpers import get_client_ip, decode_data_url_image
 from billing.models import Quote
 from billing.views import render_quote_pdf
 from EuropGreenSolar.email_utils import send_mail
@@ -127,27 +128,6 @@ class FormViewSet(viewsets.ModelViewSet):
 		serializer = FormDetailSerializer(instance, context=self.get_serializer_context())
 		return Response(serializer.data)
 
-	def _decode_data_url_image(self, data_url: str):
-		"""Retourne (ContentFile, ext) à partir d'une data URL d'image, sinon (None, None)."""
-		if not data_url or not isinstance(data_url, str):
-			return None, None
-		match = re.match(r"^data:image/(png|jpeg|jpg);base64,(.+)$", data_url)
-		if not match:
-			return None, None
-		ext = match.group(1)
-		b64 = match.group(2)
-		try:
-			decoded = base64.b64decode(b64)
-			return ContentFile(decoded), ext
-		except Exception:
-			return None, None
-
-	def _get_client_ip(self, request):
-		xff = request.META.get('HTTP_X_FORWARDED_FOR')
-		if xff:
-			return xff.split(',')[0].strip()
-		return request.META.get('REMOTE_ADDR')
-
 	@action(detail=True, methods=['post'], url_path='technical-visit')
 	@transaction.atomic
 	def create_or_update_technical_visit(self, request, pk=None):
@@ -196,13 +176,13 @@ class FormViewSet(viewsets.ModelViewSet):
 			if ins_name and (file or data_url):
 				sig = Signature(
 					signer_name=ins_name,
-					ip_address=self._get_client_ip(request),
+					ip_address=get_client_ip(request),
 					user_agent=request.META.get('HTTP_USER_AGENT', ''),
 				)
 				if file:
 					sig.signature_image = file
 				else:
-					cf, ext = self._decode_data_url_image(str(data_url))
+					cf, ext = decode_data_url_image(str(data_url))
 					if cf:
 						sig.signature_image.save(f"signature-{sig.id}.{ext or 'png'}", cf, save=False)
 				sig.save()
@@ -270,7 +250,7 @@ class FormViewSet(viewsets.ModelViewSet):
 
 		sig = Signature(
 			signer_name=signer_name,
-			ip_address=self._get_client_ip(request),
+			ip_address=get_client_ip(request),
 			user_agent=request.META.get('HTTP_USER_AGENT', ''),
 		)
 		file = request.FILES.get('signature_file')
@@ -278,7 +258,7 @@ class FormViewSet(viewsets.ModelViewSet):
 			sig.signature_image = file
 		else:
 			data_url = request.data.get('signature_data')
-			cf, ext = self._decode_data_url_image(data_url)
+			cf, ext = decode_data_url_image(data_url)
 			if cf:
 				sig.signature_image.save(f"{role}-signature-{doc}-{target.id}.{ext or 'png'}", cf, save=False)
 		sig.save()
@@ -404,13 +384,13 @@ class FormViewSet(viewsets.ModelViewSet):
 			if ins_name and (file or data_url):
 				sig = Signature(
 					signer_name=ins_name,
-					ip_address=self._get_client_ip(request),
+					ip_address=get_client_ip(request),
 					user_agent=request.META.get('HTTP_USER_AGENT', ''),
 				)
 				if file:
 					sig.signature_image = file
 				else:
-					cf, ext = self._decode_data_url_image(str(data_url))
+					cf, ext = decode_data_url_image(str(data_url))
 					if cf:
 						sig.signature_image.save(f"signature-{sig.id}.{ext or 'png'}", cf, save=False)
 				sig.save()

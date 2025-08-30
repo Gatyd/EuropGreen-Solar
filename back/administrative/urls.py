@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import Cerfa16702ViewSet
 
 router = DefaultRouter()
-router.register(r'cerfa16702', Cerfa16702ViewSet)
+router.register(r'', Cerfa16702ViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('administrative/', include(router.urls)),
 ]

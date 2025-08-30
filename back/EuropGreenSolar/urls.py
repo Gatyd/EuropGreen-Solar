@@ -36,6 +36,7 @@ urlpatterns = [
     path('', include('offers.urls')),
     path('', include('billing.urls')),
     path('', include('installations.urls')),
+    path('', include('administrative.urls')),
     path('auth/', include('authentication.urls')),
 ]
 
