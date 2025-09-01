@@ -29,6 +29,17 @@ const fetchOne = async () => {
     )
     if (data) item.value = data
     loading.value = false
+    const action = route.query.action as string | undefined
+    if (action === 'sign-technical-visit' && item.value?.technical_visit && !item.value.technical_visit.client_signature) {
+        openTechnicalVisit.value = true
+        technicalVisitAction.value = 'signature'
+    } else if (action === 'sign-representation-mandate' && item.value?.representation_mandate && !item.value.representation_mandate.client_signature) {
+        openMandate.value = true
+        mandateAction.value = 'signature'
+    } else if (action === 'sign-installation-completed' && item.value?.installation_completed && !item.value.installation_completed.client_signature) {
+        openCompleted.value = true
+        completedAction.value = 'signature'
+    }
 }
 
 onMounted(fetchOne)
@@ -293,7 +304,7 @@ const steps = computed(() => {
                                 <span class="font-medium">{{ s.title }}</span>
                                 <div class="flex items-center gap-2">
                                     <UButton
-                                        v-if="item?.administrative_validation && !item.installation_completed && auth.user?.is_staff"
+                                        v-if="item?.administrative_validation && item.administrative_validation.is_validated && !item.installation_completed && auth.user?.is_staff"
                                         icon="i-heroicons-clipboard-document-list" color="primary" size="xs"
                                         label="Effectuer l'installation"
                                         @click="completedAction = 'full'; openCompleted = true" />

@@ -12,6 +12,7 @@ type Cerfa16702Draft = {
     company_denomination: string
     company_reason: string
     company_siret: string
+    company_type: string
     dpc1: File | null
     dpc2: File | null
     dpc3: File | null
@@ -157,31 +158,104 @@ const attachmentPageNumber = (idx: number) => props.draft.dpc11_notice_materiaux
                                 <td class="p-2 text-gray-600">Prénom</td>
                                 <td class="p-2">{{ props.draft.first_name || '—' }}</td>
                             </tr>
+                            <template v-if="props.draft.declarant_type === 'individual'">
+                                <tr class="odd:bg-zinc-50">
+                                    <td class="p-2 text-gray-600">Date de naissance</td>
+                                    <td class="p-2">{{ props.draft.birth_date || '—' }}</td>
+                                </tr>
+                                <tr class="odd:bg-zinc-50">
+                                    <td class="p-2 text-gray-600">Commune de naissance</td>
+                                    <td class="p-2">{{ props.draft.birth_place || '—' }}</td>
+                                </tr>
+                                <tr class="odd:bg-zinc-50">
+                                    <td class="p-2 text-gray-600">Département de naissance</td>
+                                    <td class="p-2">{{ props.draft.birth_department || '—' }}</td>
+                                </tr>
+                                <tr class="odd:bg-zinc-50">
+                                    <td class="p-2 text-gray-600">Pays de naissance</td>
+                                    <td class="p-2">{{ props.draft.birth_country || '—' }}</td>
+                                </tr>
+                            </template>
+                            <template v-if="props.draft.declarant_type === 'company'">
+                                <tr class="odd:bg-zinc-50">
+                                    <td class="p-2 text-gray-600">Dénomination</td>
+                                    <td class="p-2">{{ props.draft.company_denomination || '—' }}</td>
+                                </tr>
+                                <tr class="odd:bg-zinc-50">
+                                    <td class="p-2 text-gray-600">Raison sociale</td>
+                                    <td class="p-2">{{ props.draft.company_reason || '—' }}</td>
+                                </tr>
+                                <tr class="odd:bg-zinc-50">
+                                    <td class="p-2 text-gray-600">N° SIRET</td>
+                                    <td class="p-2">{{ props.draft.company_siret || '—' }}</td>
+                                </tr>
+                                <tr class="odd:bg-zinc-50">
+                                    <td class="p-2 text-gray-600">Type de société</td>
+                                    <td class="p-2">{{ props.draft.company_type || '—' }}</td>
+                                </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div class="mb-4">
-                <div class="text-sm font-semibold text-zinc-700 mb-2">2. Coordonnées du déclarant</div>
-                <div class="overflow-hidden rounded-md border border-zinc-200">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">2. Coordonnées du déclarant 
+                    ({{ `${draft.email_consent ? 'Consentement' : 'Non consentement'} à la communication par courrier électronique` }})</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200 mb-1">
                     <table class="w-full text-sm border-collapse">
                         <tbody>
                             <tr class="odd:bg-zinc-50">
                                 <td class="p-2 text-gray-600">Adresse (numéro)</td>
-                                <td class="p-2">{{ props.draft.address_number || '—' }}</td>
+                                <td class="p-2 text-gray-600">Adresse (voie)</td>
                             </tr>
                             <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Adresse (voie)</td>
+                                <td class="p-2">{{ props.draft.address_number || '—' }}</td>
                                 <td class="p-2">{{ props.draft.address_street || '—' }}</td>
                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="overflow-hidden rounded-md border border-zinc-200 mb-1">
+                    <table class="w-full text-sm border-collapse mb-1">
+                        <tbody>
                             <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Adresse (Localité)</td>
-                                <td class="p-2">{{ props.draft.address_locality || '—' }}</td>
+                                <td class="p-2 text-gray-600">Lieu-dit</td>
+                                <td class="p-2 text-gray-600">Localité</td>
                             </tr>
                             <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Adresse (Code postal)</td>
+                                <td class="p-2">{{ props.draft.address_lieu_dit || '—' }}</td>
+                                <td class="p-2">{{ props.draft.address_locality || '—' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="overflow-hidden rounded-md border border-zinc-200 mb-1">
+                    <table class="w-full text-sm border-collapse mb-1">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Code Postal</td>
+                                <td class="p-2 text-gray-600">BP</td>
+                                <td class="p-2 text-gray-600">Cedex</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
                                 <td class="p-2">{{ props.draft.address_postal_code || '—' }}</td>
+                                <td class="p-2">{{ props.draft.address_bp || '—' }}</td>
+                                <td class="p-2">{{ props.draft.address_cedex || '—' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="overflow-hidden rounded-md border border-zinc-200 mb-1">
+                    <table class="w-full text-sm border-collapse">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Téléphone</td>
+                                <td class="p-2 text-gray-600">Adresse électronique</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2">{{ draft.phone_country_code ? `(+${draft.phone_country_code}) ` : ''}}{{ draft.phone || '—' }}</td>
+                                <td class="p-2">{{ props.draft.email || '—' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -190,76 +264,48 @@ const attachmentPageNumber = (idx: number) => props.draft.dpc11_notice_materiaux
 
             <div class="mb-4">
                 <div class="text-sm font-semibold text-zinc-700 mb-2">3. Le terrain</div>
-                <div class="overflow-hidden rounded-md border border-zinc-200">
+                <div class="overflow-hidden rounded-md border border-zinc-200 mb-1">
                     <table class="w-full text-sm border-collapse">
                         <tbody>
                             <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Adresse du terrain (voie)</td>
-                                <td class="p-2">{{ props.draft.land_street || '—' }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
                                 <td class="p-2 text-gray-600">Adresse du terrain (numéro)</td>
-                                <td class="p-2">{{ props.draft.land_number || '—' }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Adresse du terrain (Lieu-dit)</td>
-                                <td class="p-2">{{ props.draft.land_lieu_dit || '—' }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Adresse du terrain (Localité)</td>
-                                <td class="p-2">{{ props.draft.land_locality || '—' }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Adresse du terrain (voie)</td>
                                 <td class="p-2 text-gray-600">Adresse du terrain (Code postal)</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2">{{ props.draft.land_street || '—' }}</td>
+                                <td class="p-2">{{ props.draft.land_number || '—' }}</td>
                                 <td class="p-2">{{ props.draft.land_postal_code || '—' }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Préfixe cadastral</td>
-                                <td class="p-2">{{ props.draft.cadastral_prefix || '—' }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Section cadastrale</td>
-                                <td class="p-2">{{ props.draft.cadastral_section || '—' }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Numéro cadastral</td>
-                                <td class="p-2">{{ props.draft.cadastral_number || '—' }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Surface (m²)</td>
-                                <td class="p-2">{{ props.draft.cadastral_surface_m2 || '—' }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            <div class="mb-4">
-                <div class="text-sm font-semibold text-zinc-700 mb-2">4.1 Le projet</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200 mb-1">
+                    <table class="w-full text-sm border-collapse">
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Adresse du terrain (Lieu-dit)</td>
+                            <td class="p-2 text-gray-600">Adresse du terrain (Localité)</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2">{{ props.draft.land_lieu_dit || '—' }}</td>
+                            <td class="p-2">{{ props.draft.land_locality || '—' }}</td>
+                        </tr>
+                    </table>
+                </div>
                 <div class="overflow-hidden rounded-md border border-zinc-200">
                     <table class="w-full text-sm border-collapse">
-                        <tbody>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Nouvelle construction</td>
-                                <td class="p-2">{{ yn(props.draft.project_new_construction) }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Construction existante</td>
-                                <td class="p-2">{{ yn(props.draft.project_existing_works) }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Résidence principale</td>
-                                <td class="p-2">{{ yn(props.draft.destination_primary_residence) }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Résidence secondaire</td>
-                                <td class="p-2">{{ yn(props.draft.destination_secondary_residence) }}</td>
-                            </tr>
-                            <tr class="odd:bg-zinc-50">
-                                <td class="p-2 text-gray-600">Projet agrivoltaïque</td>
-                                <td class="p-2">{{ yn(props.draft.agrivoltaic_project) }}</td>
-                            </tr>
-                        </tbody>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Préfixe cadastral</td>
+                            <td class="p-2 text-gray-600">Section cadastrale</td>
+                            <td class="p-2 text-gray-600">Numéro cadastral</td>
+                            <td class="p-2 text-gray-600">Surface (m²)</td>
+                        </tr>
+                        <tr class="odd:bg-zinc-50">
+                            <td class="p-2">{{ props.draft.cadastral_prefix || '—' }}</td>
+                            <td class="p-2">{{ props.draft.cadastral_section || '—' }}</td>
+                            <td class="p-2">{{ props.draft.cadastral_number || '—' }}</td>
+                            <td class="p-2">{{ props.draft.cadastral_surface_m2 || '—' }}</td>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -269,17 +315,45 @@ const attachmentPageNumber = (idx: number) => props.draft.dpc11_notice_materiaux
         <section :class="isPrint ? 'cerfa-page' : ''">
             <div class="mt-8"></div>
 
-            <div v-if="props.draft.electrical_power_text || props.draft.peak_power_text"
+            <div class="mb-4">
+                <div class="text-sm font-semibold text-zinc-700 mb-2">4.1 Le projet</div>
+                <div class="overflow-hidden rounded-md border border-zinc-200">
+                    <table class="w-full text-sm border-collapse">
+                        <tbody>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2 text-gray-600">Nouvelle construction</td>
+                                <td class="p-2 text-gray-600">Construction existante</td>
+                                <td class="p-2 text-gray-600">Résidence principale</td>
+                                <td class="p-2 text-gray-600">Résidence secondaire</td>
+                                <td class="p-2 text-gray-600">Projet agrivoltaïque</td>
+                            </tr>
+                            <tr class="odd:bg-zinc-50">
+                                <td class="p-2">{{ yn(props.draft.project_new_construction) }}</td>
+                                <td class="p-2">{{ yn(props.draft.project_existing_works) }}</td>
+                                <td class="p-2">{{ yn(props.draft.destination_primary_residence) }}</td>
+                                <td class="p-2">{{ yn(props.draft.destination_secondary_residence) }}</td>
+                                <td class="p-2">{{ yn(props.draft.agrivoltaic_project) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div v-if="draft.electrical_power_text || draft.peak_power_text || draft.energy_destination"
                 class="mb-4 overflow-hidden rounded-md border border-zinc-200">
                 <table class="w-full text-sm border-collapse">
                     <tbody>
-                        <tr v-if="props.draft.electrical_power_text" class="odd:bg-zinc-50">
+                        <tr v-if="draft.electrical_power_text" class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">Puissance électrique</td>
-                            <td class="p-2">{{ props.draft.electrical_power_text }}</td>
+                            <td class="p-2">{{ draft.electrical_power_text }}</td>
                         </tr>
-                        <tr v-if="props.draft.peak_power_text" class="odd:bg-zinc-50">
+                        <tr v-if="draft.peak_power_text" class="odd:bg-zinc-50">
                             <td class="p-2 text-gray-600">Puissance crête</td>
-                            <td class="p-2">{{ props.draft.peak_power_text }}</td>
+                            <td class="p-2">{{ draft.peak_power_text }}</td>
+                        </tr>
+                        <tr v-if="draft.energy_destination" class="odd:bg-zinc-50">
+                            <td class="p-2 text-gray-600">Destination de l'énergie</td>
+                            <td class="p-2">{{ draft.energy_destination }}</td>
                         </tr>
                     </tbody>
                 </table>

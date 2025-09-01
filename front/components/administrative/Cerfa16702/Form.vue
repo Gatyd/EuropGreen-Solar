@@ -262,7 +262,7 @@ const agrivoltaicYN = computed<string>({
                         <UFormField name="birth_date" label="Date de naissance" required>
                             <UInput v-model="state.birth_date" type="date" class="w-full" />
                         </UFormField>
-                        <UFormField name="birth_place" label="Lieu de naissance" required>
+                        <UFormField name="birth_place" label="Commune de naissance" required>
                             <UInput v-model="state.birth_place" class="w-full" />
                         </UFormField>
                         <UFormField name="birth_department" label="Département de naissance" required>
@@ -516,8 +516,8 @@ const agrivoltaicYN = computed<string>({
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <UFormField name="dpc11" label="DPC11 - Notice descriptive des matériaux" required>
-                            <UFileUpload v-model="state.dpc11" icon="i-lucide-file-text" label="Importer un document"
-                                description="PDF, PNG, JPG ou JPEG" accept=".pdf,image/*" />
+                            <UFileUpload v-model="state.dpc11" icon="i-lucide-image" label="Importer une image"
+                                description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
                         <UFormField name="dpc11_notice_materiaux" label="Notice descriptive des matériaux (texte)">
                             <UTextarea v-model="state.dpc11_notice_materiaux" :rows="6" class="w-full" />

@@ -10,6 +10,7 @@ const emit = defineEmits<{
     (e: 'submit'): void
 }>()
 
+const route = useRoute()
 const auth = useAuthStore()
 const openCerfa16702 = ref(false)
 const openElectricalDiagram = ref(false)
@@ -50,6 +51,11 @@ const signEnedisMandate = () => {
 // Affichage conditionnel de la section "Documents administratifs"
 const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.is_staff && auth.user?.useraccess?.administrative_procedures) || !auth.user?.is_staff))
 
+onMounted(() => {
+    if (route.query.action === 'sign-enedis-mandate' && props.item?.enedis_mandate) {
+        signEnedisMandate()
+    }
+})
 </script>
 <template>
     <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form-id="item?.id" @submit="emit('submit')" />

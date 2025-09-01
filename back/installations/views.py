@@ -28,6 +28,139 @@ class FormViewSet(viewsets.ModelViewSet):
 	serializer_class = FormSerializer
 	permission_classes = [permissions.IsAuthenticated]
 
+	# ----------------------
+	# Helpers internes
+	# ----------------------
+
+	def _get_client_email(self, form: Form):
+		try:
+			return form.client.email if getattr(form, 'client', None) else form.offer.email
+		except Exception:
+			return None
+
+	def _get_client_name(self, form: Form) -> str:
+		first = getattr(form, 'client_first_name', '')
+		last = getattr(form, 'client_last_name', '')
+		return f"{first} {last}".strip()
+
+	def _send_mail_safe(self, *, template: str, context: dict, subject: str, to: str, attachments=None):
+		try:
+			if to:
+				send_mail(
+					template=template,
+					context=context,
+					subject=subject,
+					to=to,
+					attachments=attachments,
+				)
+		except Exception:
+			# best-effort: ne pas bloquer le flux en cas d'erreur d'email
+			pass
+
+	def _map_fields(self, instance, payload: dict, field_list: list[str]):
+		for field in field_list:
+			if field in payload:
+				setattr(instance, field, payload.get(field))
+
+	def _update_file_fields(self, instance, files_dict, file_fields: list[str]):
+		for f in file_fields:
+			if f in files_dict:
+				setattr(instance, f, files_dict[f])
+
+	def _build_signature_from_request(self, request, *, signer_name: str, file_key: str, data_key: str, filename_base: str):
+		signer_name = (signer_name or '').strip()
+		file = request.FILES.get(file_key)
+		data_url = request.data.get(data_key)
+		if not signer_name or not (file or data_url):
+			return None
+		sig = Signature(
+			signer_name=signer_name,
+			ip_address=get_client_ip(request),
+			user_agent=request.META.get('HTTP_USER_AGENT', ''),
+		)
+		if file:
+			sig.signature_image = file
+		else:
+			try:
+				cf, ext = decode_data_url_image(str(data_url))
+				if cf:
+					sig.signature_image.save(f"{filename_base}.{ext or 'png'}", cf, save=False)
+			except Exception:
+				pass
+		sig.save()
+		return sig
+
+	def _replace_signature(self, target, field_name: str, sig: Signature):
+		# field_name: 'client_signature' | 'installer_signature'
+		try:
+			if getattr(target, f"{field_name}_id", None):
+				old = getattr(target, field_name)
+				if old and getattr(old, 'signature_image', None):
+					try:
+						old.signature_image.delete(save=False)
+					except Exception:
+						pass
+		except Exception:
+			pass
+		setattr(target, field_name, sig)
+
+	def _both_signed(self, obj) -> bool:
+		return bool(getattr(obj, 'client_signature_id', None) and getattr(obj, 'installer_signature_id', None))
+
+	def _queue_pdf_generation(self, form: Form, doc: str):
+		# doc in ('technical_visit', 'representation_mandate', 'enedis_mandate', 'installation_completed')
+		mapping = {
+			'technical_visit': {
+				'related': 'technical_visit',
+				'renderer': 'render_technical_visit_pdf',
+				'filename': 'technical_visit_{fid}.pdf',
+				'fileattr': 'report_pdf',
+			},
+			'representation_mandate': {
+				'related': 'representation_mandate',
+				'renderer': 'render_representation_mandate_pdf',
+				'filename': 'representation_mandate_{fid}.pdf',
+				'fileattr': 'mandate_pdf',
+			},
+			'enedis_mandate': {
+				'related': 'enedis_mandate',
+				'renderer': 'render_enedis_mandate_pdf',
+				'filename': 'enedis_mandate_{fid}.pdf',
+				'fileattr': 'pdf',
+			},
+			'installation_completed': {
+				'related': 'installation_completed',
+				'renderer': 'render_installation_completed_pdf',
+				'filename': 'installation_completed_{fid}.pdf',
+				'fileattr': 'report_pdf',
+			},
+		}
+		if doc not in mapping:
+			return
+		cfg = mapping[doc]
+
+		def _gen_pdf_after_commit(fid: str, related: str, renderer_name: str, filename_tpl: str, fileattr: str):
+			try:
+				from .models import Form as _Form
+				from . import pdf as _pdf
+				f = _Form.objects.select_related(related).get(pk=fid)
+				renderer = getattr(_pdf, renderer_name, None)
+				if not renderer:
+					return
+				pdf_bytes = renderer(str(fid))
+				if pdf_bytes and getattr(f, related, None):
+					filename = filename_tpl.format(fid=fid)
+					try:
+						target_obj = getattr(f, related)
+						filefield = getattr(target_obj, fileattr)
+						filefield.save(filename, ContentFile(pdf_bytes), save=True)
+					except Exception:
+						pass
+			except Exception:
+				pass
+
+		transaction.on_commit(lambda fid=str(form.id), related=cfg['related'], renderer=cfg['renderer'], fname=cfg['filename'], fattr=cfg['fileattr']: _gen_pdf_after_commit(fid, related, renderer, fname, fattr))
+
 	def get_queryset(self):
 		qs = Form.objects.select_related('offer', 'created_by', 'client')
 		if getattr(self, 'action', None) == 'retrieve':
@@ -116,7 +249,7 @@ class FormViewSet(viewsets.ModelViewSet):
 			}
 			attachments = [pdf_attachment] if pdf_attachment else None
 			subject = "Votre devis est approuvé – Début des étapes d'installation"
-			send_mail(
+			self._send_mail_safe(
 				template='emails/installation/installation_started.html',
 				context=ctx,
 				subject=subject,
@@ -150,54 +283,32 @@ class FormViewSet(viewsets.ModelViewSet):
 			'current_type', 'existing_grid_connection', 'meter_position', 'panels_to_board_distance_m', 'additional_equipment_needed',
 			'additional_equipment_details'
 		]
-		for field in field_list:
-			if field in payload:
-				setattr(tv, field, payload.get(field))
+		self._map_fields(tv, payload, field_list)
 		# Fichier photo éventuel
 		photo = request.FILES.get('meter_location_photo')
 		if photo:
 			tv.meter_location_photo = photo
 		# Éventuelle signature installateur à la création
 		if is_create:
-			ins_name = (payload.get('installer_signer_name') or '').strip()
-			file = request.FILES.get('installer_signature_file')
-			data_url = payload.get('installer_signature_data')
-			if ins_name and (file or data_url):
-				sig = Signature(
-					signer_name=ins_name,
-					ip_address=get_client_ip(request),
-					user_agent=request.META.get('HTTP_USER_AGENT', ''),
-				)
-				if file:
-					sig.signature_image = file
-				else:
-					cf, ext = decode_data_url_image(str(data_url))
-					if cf:
-						sig.signature_image.save(f"installer-signature-technical_visit-{tv.id}.{ext or 'png'}", cf, save=False)
-				sig.save()
+			sig = self._build_signature_from_request(
+				request, signer_name=payload.get('installer_signer_name'), file_key='installer_signature_file',
+				data_key='installer_signature_data', filename_base=f"installer-signature-technical_visit-{tv.id}",
+			)
+			if sig:
 				tv.installer_signature = sig
 		# Validation et sauvegarde
 		tv.full_clean()
 		tv.save()
 		# Email d'information au client (best-effort, non bloquant)
-		try:
-			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
-			if client_email:
-				ctx = {
-					'form': form,
-					'technical_visit': tv,
-					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_signature': f"/home/installations/{form.id}",
-				}
-				subject = "Visite technique effectuée – Signature requise"
-				send_mail(
-					template='emails/installation/technical_visit_signature_pending.html',
-					context=ctx,
-					subject=subject,
-					to=client_email,
-				)
-		except Exception:
-			pass
+		client_email = self._get_client_email(form)
+		ctx = { 'form': form, 'technical_visit': tv, 'client_name': self._get_client_name(form),
+			'link_signature': f"/home/installations/{form.id}?action=sign-technical-visit",
+		}
+		subject = "Visite technique effectuée – Signature requise"
+		self._send_mail_safe(
+			template='emails/installation/technical_visit_signature_pending.html',
+			context=ctx, subject=subject, to=client_email,
+		)
 
 		serializer = TechnicalVisitSerializer(tv, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
@@ -205,15 +316,6 @@ class FormViewSet(viewsets.ModelViewSet):
 	@action(detail=True, methods=['post'], url_path='sign')
 	@transaction.atomic
 	def sign_document(self, request, pk=None):
-		"""Action générique de signature pour différents documents liés à la fiche d'installation.
-
-		Body attendu:
-		- document: 'technical_visit' | 'representation_mandate' | ... (à étendre)
-		- role: 'client' | 'installer' (optionnel; sinon déduit du rôle utilisateur)
-		- signer_name: str
-		- signature_file: fichier image (optionnel)
-		- signature_data: data URL image (optionnel)
-		"""
 		form = self.get_object()
 		doc = (request.data.get('document') or '').strip().lower()
 		if doc not in ('technical_visit', 'representation_mandate', 'enedis_mandate', 'installation_completed'):
@@ -241,206 +343,50 @@ class FormViewSet(viewsets.ModelViewSet):
 		if not signer_name:
 			return Response({ 'signer_name': 'Ce champ est requis.' }, status=status.HTTP_400_BAD_REQUEST)
 
-		sig = Signature(
-			signer_name=signer_name,
-			ip_address=get_client_ip(request),
-			user_agent=request.META.get('HTTP_USER_AGENT', ''),
+		sig = self._build_signature_from_request(
+			request, signer_name=signer_name, file_key='signature_file',
+			data_key='signature_data', filename_base=f"{role}-signature-{doc}-{form.id}",
 		)
-		file = request.FILES.get('signature_file')
-		if file:
-			sig.signature_image = file
-		else:
-			data_url = request.data.get('signature_data')
-			cf, ext = decode_data_url_image(data_url)
-			if cf:
-				sig.signature_image.save(f"{role}-signature-{doc}-{form.id}.{ext or 'png'}", cf, save=False)
-		sig.save()
 
 		# Affectation selon le type
 		if doc == 'technical_visit':
 			tv: TechnicalVisit = target
-			if role == 'client':
-				if tv.client_signature_id:
-					try:
-						old = tv.client_signature
-						if old and old.signature_image:
-							old.signature_image.delete(save=False)
-					except Exception:
-						pass
-				tv.client_signature = sig
-			else:
-				if tv.installer_signature_id:
-					try:
-						old = tv.installer_signature
-						if old and old.signature_image:
-							old.signature_image.delete(save=False)
-					except Exception:
-						pass
-				tv.installer_signature = sig
+			field = 'client_signature' if role == 'client' else 'installer_signature'
+			self._replace_signature(tv, field, sig)
 			tv.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
-
-			# Génération PDF si complet (après COMMIT pour éviter un état non visible par la page print)
-			try:
-				if tv.client_signature_id and tv.installer_signature_id:
-					def _gen_tv_pdf_after_commit(form_id: str):
-						try:
-							from .models import Form as _Form
-							from .pdf import render_technical_visit_pdf
-							f = _Form.objects.select_related('technical_visit').get(pk=form_id)
-							pdf_bytes = render_technical_visit_pdf(str(form_id))
-							if pdf_bytes and getattr(f, 'technical_visit', None):
-								filename = f"technical_visit_{form_id}.pdf"
-								try:
-									f.technical_visit.report_pdf.save(filename, ContentFile(pdf_bytes), save=True)  # type: ignore
-								except Exception:
-									pass
-						except Exception:
-							pass
-					transaction.on_commit(lambda fid=str(form.id): _gen_tv_pdf_after_commit(fid))
-			except Exception:
-				pass
-
+			# Génération PDF si complet (après COMMIT)
+			if self._both_signed(tv):
+				self._queue_pdf_generation(form, 'technical_visit')
 			serializer = TechnicalVisitSerializer(tv, context=self.get_serializer_context())
 			return Response(serializer.data, status=status.HTTP_200_OK)
 
 		elif doc == 'representation_mandate':
 			rm: RepresentationMandate = target
-			if role == 'client':
-				if rm.client_signature_id:
-					try:
-						old = rm.client_signature
-						if old and old.signature_image:
-							old.signature_image.delete(save=False)
-					except Exception:
-						pass
-				rm.client_signature = sig
-			else:
-				if rm.installer_signature_id:
-					try:
-						old = rm.installer_signature
-						if old and old.signature_image:
-							old.signature_image.delete(save=False)
-					except Exception:
-						pass
-				rm.installer_signature = sig
-
+			field = 'client_signature' if role == 'client' else 'installer_signature'
+			self._replace_signature(rm, field, sig)
 			rm.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
-
-			# Génération PDF mandat si les deux signatures présentes (après COMMIT)
-			try:
-				if rm.client_signature_id and rm.installer_signature_id:
-					def _gen_rm_pdf_after_commit(form_id: str):
-						try:
-							from .models import Form as _Form
-							from .pdf import render_representation_mandate_pdf
-							f = _Form.objects.select_related('representation_mandate').get(pk=form_id)
-							pdf_bytes = render_representation_mandate_pdf(str(form_id))
-							if pdf_bytes and getattr(f, 'representation_mandate', None):
-								filename = f"representation_mandate_{form_id}.pdf"
-								try:
-									f.representation_mandate.mandate_pdf.save(filename, ContentFile(pdf_bytes), save=True)  # type: ignore
-								except Exception:
-									pass
-						except Exception:
-							pass
-					transaction.on_commit(lambda fid=str(form.id): _gen_rm_pdf_after_commit(fid))
-			except Exception:
-				pass
-
+			if self._both_signed(rm):
+				self._queue_pdf_generation(form, 'representation_mandate')
 			serializer = RepresentationMandateSerializer(rm, context=self.get_serializer_context())
 			return Response(serializer.data, status=status.HTTP_200_OK)
 
 		elif doc == 'enedis_mandate':
 			em: EnedisMandate = target
-			if role == 'client':
-				if em.client_signature_id:
-					try:
-						old = em.client_signature
-						if old and old.signature_image:
-							old.signature_image.delete(save=False)
-					except Exception:
-						pass
-				em.client_signature = sig
-			else:
-				if em.installer_signature_id:
-					try:
-						old = em.installer_signature
-						if old and old.signature_image:
-							old.signature_image.delete(save=False)
-					except Exception:
-						pass
-				em.installer_signature = sig
-
+			field = 'client_signature' if role == 'client' else 'installer_signature'
+			self._replace_signature(em, field, sig)
 			em.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
-
-			# Génération PDF mandat si les deux signatures présentes (après COMMIT)
-			try:
-				if em.client_signature_id and em.installer_signature_id:
-					def _gen_em_pdf_after_commit(form_id: str):
-						try:
-							from .models import Form as _Form
-							from .pdf import render_enedis_mandate_pdf
-							f = _Form.objects.select_related('enedis_mandate').get(pk=form_id)
-							pdf_bytes = render_enedis_mandate_pdf(str(form_id))
-							if pdf_bytes and getattr(f, 'enedis_mandate', None):
-								filename = f"enedis_mandate_{form_id}.pdf"
-								try:
-									f.enedis_mandate.pdf.save(filename, ContentFile(pdf_bytes), save=True)  # type: ignore
-								except Exception:
-									pass
-						except Exception:
-							pass
-					transaction.on_commit(lambda fid=str(form.id): _gen_em_pdf_after_commit(fid))
-			except Exception:
-				pass
-
+			if self._both_signed(em):
+				self._queue_pdf_generation(form, 'enedis_mandate')
 			serializer = EnedisMandateSerializer(em, context=self.get_serializer_context())
 			return Response(serializer.data, status=status.HTTP_200_OK)
 		
 		elif doc == 'installation_completed':
 			ic: InstallationCompleted = target
-			if role == 'client':
-				if ic.client_signature_id:
-					try:
-						old = ic.client_signature
-						if old and old.signature_image:
-							old.signature_image.delete(save=False)
-					except Exception:
-						pass
-				ic.client_signature = sig
-			else:
-				if ic.installer_signature_id:
-					try:
-						old = ic.installer_signature
-						if old and old.signature_image:
-							old.signature_image.delete(save=False)
-					except Exception:
-						pass
-				ic.installer_signature = sig
-
+			field = 'client_signature' if role == 'client' else 'installer_signature'
+			self._replace_signature(ic, field, sig)
 			ic.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
-
-			# Génération PDF mandat si les deux signatures présentes (après COMMIT)
-			try:
-				if ic.client_signature_id and ic.installer_signature_id:
-					def _gen_ic_pdf_after_commit(form_id: str):
-						try:
-							from .models import Form as _Form
-							from .pdf import render_installation_completed_pdf
-							f = _Form.objects.select_related('installation_completed').get(pk=form_id)
-							pdf_bytes = render_installation_completed_pdf(str(form_id))
-							if pdf_bytes and getattr(f, 'installation_completed', None):
-								filename = f"installation_completed_{form_id}.pdf"
-								try:
-									f.installation_completed.report_pdf.save(filename, ContentFile(pdf_bytes), save=True)  # type: ignore
-								except Exception:
-									pass
-						except Exception:
-							pass
-					transaction.on_commit(lambda fid=str(form.id): _gen_ic_pdf_after_commit(fid))
-			except Exception:
-				pass
-
+			if self._both_signed(ic):
+				self._queue_pdf_generation(form, 'installation_completed')
 			serializer = InstallationCompletedSerializer(ic, context=self.get_serializer_context())
 			return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -461,27 +407,14 @@ class FormViewSet(viewsets.ModelViewSet):
 		field_list = ['client_civility', 'client_birth_date', 'client_birth_place', 'client_address', 'company_name', 
 			'company_rcs_city', 'company_siret', 'company_head_office_address', 'represented_by', 'representative_role'
 		]
-		for field in field_list:
-			if field in payload:
-				setattr(rm, field, payload.get(field))
+		self._map_fields(rm, payload, field_list)
 		# Éventuelle signature installateur à la création
 		if is_create:
-			ins_name = (payload.get('installer_signer_name') or '').strip()
-			file = request.FILES.get('installer_signature_file')
-			data_url = payload.get('installer_signature_data')
-			if ins_name and (file or data_url):
-				sig = Signature(
-					signer_name=ins_name,
-					ip_address=get_client_ip(request),
-					user_agent=request.META.get('HTTP_USER_AGENT', ''),
-				)
-				if file:
-					sig.signature_image = file
-				else:
-					cf, ext = decode_data_url_image(str(data_url))
-					if cf:
-						sig.signature_image.save(f"installer-signature-representation_mandate-{rm.id}.{ext or 'png'}", cf, save=False)
-				sig.save()
+			sig = self._build_signature_from_request(
+				request, signer_name=payload.get('installer_signer_name'), file_key='installer_signature_file',
+				data_key='installer_signature_data', filename_base=f"installer-signature-representation_mandate-{rm.id}",
+			)
+			if sig:
 				rm.installer_signature = sig
 		# Validation et sauvegarde
 		rm.full_clean()
@@ -489,24 +422,16 @@ class FormViewSet(viewsets.ModelViewSet):
 		form.status = 'representation_mandate'
 		form.save()
 		# Email d'information au client (best-effort, non bloquant)
-		try:
-			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
-			if client_email:
-				ctx = {
-					'form': form,
-					'representation_mandate': rm,
-					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_signature': f"/home/installations/{form.id}",
-				}
-				subject = "Mandat de représentation créé – Signature requise"
-				send_mail(
-					template='emails/installation/representation_mandate_signature_pending.html',
-					context=ctx,
-					subject=subject,
-					to=client_email,
-				)
-		except Exception:
-			pass
+		client_email = self._get_client_email(form)
+		ctx = {
+			'form': form, 'representation_mandate': rm, 'client_name': self._get_client_name(form),
+			'link_signature': f"/home/installations/{form.id}?action=sign-representation-mandate",
+		}
+		subject = "Mandat de représentation créé – Signature requise"
+		self._send_mail_safe(
+			template='emails/installation/representation_mandate_signature_pending.html',
+			context=ctx, subject=subject, to=client_email,
+		)
 
 		serializer = RepresentationMandateSerializer(rm, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
@@ -528,51 +453,29 @@ class FormViewSet(viewsets.ModelViewSet):
 			'contractor_company_name', 'contractor_company_siret', 'contractor_represented_by_name', 'contractor_represented_by_role', 'mandate_type',
 			'authorize_signature', 'authorize_payment', 'authorize_l342', 'authorize_network_access', 'geographic_area', 'connection_nature'
 		]
-		for field in field_list:
-			if field in payload:
-				setattr(em, field, payload.get(field))
+		self._map_fields(em, payload, field_list)
 		# Éventuelle signature installateur à la création
 		if is_create:
-			ins_name = (payload.get('installer_signer_name') or '').strip()
-			file = request.FILES.get('installer_signature_file')
-			data_url = payload.get('installer_signature_data')
-			if ins_name and (file or data_url):
-				sig = Signature(
-					signer_name=ins_name,
-					ip_address=get_client_ip(request),
-					user_agent=request.META.get('HTTP_USER_AGENT', ''),
-				)
-				if file:
-					sig.signature_image = file
-				else:
-					cf, ext = decode_data_url_image(str(data_url))
-					if cf:
-						# {role}-signature-{doc}-{target.id}
-						sig.signature_image.save(f"installer-signature-enedis_mandate-{em.id}.{ext or 'png'}", cf, save=False)
-				sig.save()
+			sig = self._build_signature_from_request(
+				request, signer_name=payload.get('installer_signer_name'), file_key='installer_signature_file',
+				data_key='installer_signature_data', filename_base=f"installer-signature-enedis_mandate-{em.id}",
+			)
+			if sig:
 				em.installer_signature = sig
 		# Validation et sauvegarde
 		em.full_clean()
 		em.save()
 		# Email d'information au client (best-effort, non bloquant)
-		try:
-			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
-			if client_email:
-				ctx = {
-					'form': form,
-					'enedis_mandate': em,
-					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_signature': f"/home/installations/{form.id}",
-				}
-				subject = "Mandat Enedis créé – Signature requise"
-				send_mail(
-					template='emails/installation/enedis_mandate_signature_pending.html',
-					context=ctx,
-					subject=subject,
-					to=client_email,
-				)
-		except Exception:
-			pass
+		client_email = self._get_client_email(form)
+		ctx = {
+			'form': form, 'enedis_mandate': em, 'client_name': self._get_client_name(form),
+			'link_signature': f"/home/installations/{form.id}?action=sign-enedis-mandate",
+		}
+		subject = "Mandat Enedis créé – Signature requise"
+		self._send_mail_safe(
+			template='emails/installation/enedis_mandate_signature_pending.html',
+			context=ctx, subject=subject, to=client_email,
+		)
 
 		serializer = EnedisMandateSerializer(em, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
@@ -594,23 +497,16 @@ class FormViewSet(viewsets.ModelViewSet):
 		form.save()
 
 		# Email d'information au client (best-effort, non bloquant)
-		try:
-			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
-			if client_email:
-				ctx = {
-					'form': form,
-					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_installation': f"/home/installations/{form.id}",
-				}
-				subject = "Démarches administratives validées"
-				send_mail(
-					template='emails/installation/administrative_validated.html',
-					context=ctx,
-					subject=subject,
-					to=client_email,
-				)
-		except Exception:
-			pass
+		client_email = self._get_client_email(form)
+		ctx = {
+			'form': form, 'client_name': self._get_client_name(form),
+			'link_installation': f"/home/installations/{form.id}",
+		}
+		subject = "Démarches administratives validées"
+		self._send_mail_safe(
+			template='emails/installation/administrative_validated.html',
+			context=ctx, subject=subject, to=client_email,
+		)
 
 		serializer = AdministrativeValidationSerializer(av, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
@@ -630,31 +526,15 @@ class FormViewSet(viewsets.ModelViewSet):
 		# Mapping simple des champs
 		field_list = ['modules_installed', 'inverters_installed', 'dc_ac_box_installed', 'battery_installed']
 		file_list = ['photo_modules', 'photo_inverter']
-		for field in field_list:
-			if field in payload:
-				setattr(ic, field, payload.get(field))
-		for file in file_list:
-			if file in request.FILES:
-				setattr(ic, file, request.FILES[file])
+		self._map_fields(ic, payload, field_list)
+		self._update_file_fields(ic, request.FILES, file_list)
 		# Éventuelle signature installateur à la création
 		if is_create:
-			ins_name = (payload.get('installer_signer_name') or '').strip()
-			file = request.FILES.get('installer_signature_file')
-			data_url = payload.get('installer_signature_data')
-			if ins_name and (file or data_url):
-				sig = Signature(
-					signer_name=ins_name,
-					ip_address=get_client_ip(request),
-					user_agent=request.META.get('HTTP_USER_AGENT', ''),
-				)
-				if file:
-					sig.signature_image = file
-				else:
-					cf, ext = decode_data_url_image(str(data_url))
-					if cf:
-						# {role}-signature-{doc}-{target.id}
-						sig.signature_image.save(f"installer-signature-installation_completed-{ic.id}.{ext or 'png'}", cf, save=False)
-				sig.save()
+			sig = self._build_signature_from_request(
+				request, signer_name=payload.get('installer_signer_name'), file_key='installer_signature_file',
+				data_key='installer_signature_data', filename_base=f"installer-signature-installation_completed-{ic.id}",
+			)
+			if sig:
 				ic.installer_signature = sig
 		# Validation et sauvegarde
 		ic.full_clean()
@@ -662,24 +542,16 @@ class FormViewSet(viewsets.ModelViewSet):
 		form.status = 'installation_completed'
 		form.save()
 		# Email d'information au client (best-effort, non bloquant)
-		try:
-			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
-			if client_email:
-				ctx = {
-					'form': form,
-					'installation_completed': ic,
-					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_signature': f"/home/installations/{form.id}",
-				}
-				subject = "Installation terminée – Signature requise"
-				send_mail(
-					template='emails/installation/installation_completed_signature_pending.html',
-					context=ctx,
-					subject=subject,
-					to=client_email,
-				)
-		except Exception:
-			pass
+		client_email = self._get_client_email(form)
+		ctx = {
+			'form': form, 'installation_completed': ic, 'client_name': self._get_client_name(form),
+			'link_signature': f"/home/installations/{form.id}?action=sign-installation-completed",
+		}
+		subject = "Installation terminée – Signature requise"
+		self._send_mail_safe(
+			template='emails/installation/installation_completed_signature_pending.html',
+			context=ctx, subject=subject, to=client_email,
+		)
 
 		serializer = InstallationCompletedSerializer(ic, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
@@ -708,23 +580,16 @@ class FormViewSet(viewsets.ModelViewSet):
 
 		# Email d'information au client (best-effort, non bloquant)
 		if cv.passed:
-			try:
-				client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
-				if client_email:
-					ctx = {
-						'form': form,
-						'client_name': f"{form.client_first_name} {form.client_last_name}",
-						'link_installation': f"/home/installations/{form.id}",
-					}
-					subject = "Conformité CONSUEL enregistrée"
-					send_mail(
-						template='emails/installation/consuel_visit.html',
-						context=ctx,
-						subject=subject,
-						to=client_email,
-					)
-			except Exception:
-				pass
+			client_email = self._get_client_email(form)
+			ctx = {
+				'form': form, 'client_name': self._get_client_name(form),
+				'link_installation': f"/home/installations/{form.id}",
+			}
+			subject = "Conformité CONSUEL enregistrée"
+			self._send_mail_safe(
+				template='emails/installation/consuel_visit.html',
+				context=ctx, subject=subject, to=client_email,
+			)
 
 		serializer = ConsuelVisitSerializer(cv, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
@@ -746,23 +611,16 @@ class FormViewSet(viewsets.ModelViewSet):
 		form.save()
 
 		# Email d'information au client (best-effort, non bloquant)
-		try:
-			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
-			if client_email:
-				ctx = {
-					'form': form,
-					'client_name': f"{form.client_first_name} {form.client_last_name}",
-					'link_installation': f"/home/installations/{form.id}",
-				}
-				subject = "Raccordement ENEDIS validé"
-				send_mail(
-					template='emails/installation/enedis_connection_validated.html',
-					context=ctx,
-					subject=subject,
-					to=client_email,
-				)
-		except Exception:
-			pass
+		client_email = self._get_client_email(form)
+		ctx = {
+			'form': form, 'client_name': self._get_client_name(form),
+			'link_installation': f"/home/installations/{form.id}",
+		}
+		subject = "Raccordement ENEDIS validé"
+		self._send_mail_safe(
+			template='emails/installation/enedis_connection_validated.html',
+			context=ctx, subject=subject, to=client_email,
+		)
 
 		serializer = EnedisConnectionSerializer(ec, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
@@ -788,23 +646,16 @@ class FormViewSet(viewsets.ModelViewSet):
 
 		# Email d'information au client (best-effort, non bloquant)
 		if cm.handover_receipt_given:
-			try:
-				client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
-				if client_email:
-					ctx = {
-						'form': form,
-						'client_name': f"{form.client_first_name} {form.client_last_name}",
-						'link_installation': f"/home/installations/{form.id}",
-					}
-					subject = "Raccordement ENEDIS validé"
-					send_mail(
-						template='emails/installation/commissioning.html',
-						context=ctx,
-						subject=subject,
-						to=client_email,
-					)
-			except Exception:
-				pass
+			client_email = self._get_client_email(form)
+			ctx = {
+				'form': form, 'client_name': self._get_client_name(form),
+				'link_installation': f"/home/installations/{form.id}",
+			}
+			subject = "Raccordement ENEDIS validé"
+			self._send_mail_safe(
+				template='emails/installation/commissioning.html',
+				context=ctx, subject=subject, to=client_email,
+			)
 
 		serializer = CommissioningSerializer(cm, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
