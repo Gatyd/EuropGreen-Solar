@@ -86,7 +86,7 @@ const steps = computed(() => {
                 : "En attente d'informations.")
 
     const cvValid = cv?.passed === true
-    const cvDesc = "Suivi du résultat de la visite de conformité CONSUEL."
+    const cvDesc = !cv?.passed ? `Raison du refus : ${cv?.refusal_reason}` : "Suivi du résultat de la visite de conformité CONSUEL."
 
     const ecValid = !!ec?.validated_at
     const ecDesc = "Suivi de l'état du raccordement au réseau ENEDIS."
@@ -156,7 +156,8 @@ const steps = computed(() => {
             title: 'Visite CONSUEL',
             description: cv ? cvDesc : "Visite CONSUEL non encore planifiée.",
             date: cv ? fmtDateTime(cv.updated_at) : '',
-            ui: colorUI(cvValid ? 'green' : (cv ? 'amber' : 'gray'))
+            ui: colorUI(cvValid ? 'green' : (cv ? 'amber' : 'gray')),
+            slot: 'consuel-visit'
         },
         {
             icon: icons.ec,
@@ -314,6 +315,30 @@ const steps = computed(() => {
                                         size="xs" color="neutral" icon="i-heroicons-clipboard-document-check"
                                         target="_blank" label="Voir le rapport"
                                         :to="item.installation_completed.report_pdf" />
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Slots personnalisés pour la validation des documents administratifs -->
+                        <template #consuel-visit-title="{ item: s }">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between md:gap-4">
+                                <span class="font-medium">{{ s.title }}</span>
+                                <div class="flex items-center py-2 md:py-0 gap-2">
+                                    <InstallationConsuelVisitPopover :form-id="item?.id" @submit="fetchOne" v-if="((item?.installation_completed && !item?.consuel_visit) ||
+                                        (item?.installation_completed && item?.consuel_visit &&
+                                            !item?.consuel_visit.passed)) && auth.user?.is_staff" />
+                                </div>
+                            </div>
+                        </template>
+                        <template #consuel-visit-description="{ item: s }">
+                            <div class="flex flex-col md:flex-row gap-4 md:items-center">
+                                <span class="text-sm text-gray-600">{{ s.description }}</span>
+                                <div class="flex items-center gap-3 md:ml-auto">
+                                    <UBadge v-if="item?.consuel_visit && item?.consuel_visit?.passed" variant="subtle"
+                                        color="success" icon="i-heroicons-check-circle" label="Conforme" />
+                                    <UBadge v-else-if="item?.consuel_visit && !item?.consuel_visit?.passed"
+                                        variant="subtle" color="warning" icon="i-heroicons-x-circle"
+                                        label="Non conforme" class="md:mt-1" />
                                 </div>
                             </div>
                         </template>

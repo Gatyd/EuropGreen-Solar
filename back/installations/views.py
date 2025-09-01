@@ -3,11 +3,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import (
     Form, TechnicalVisit, Signature, RepresentationMandate, AdministrativeValidation,
-	InstallationCompleted
+	InstallationCompleted, ConsuelVisit
 )
 from .serializers import (
 	FormSerializer, FormDetailSerializer, TechnicalVisitSerializer, RepresentationMandateSerializer,
-	AdministrativeValidationSerializer, InstallationCompletedSerializer
+	AdministrativeValidationSerializer, InstallationCompletedSerializer, ConsuelVisitSerializer
 )
 from django.db import transaction
 from django.core.files.base import ContentFile
@@ -682,4 +682,49 @@ class FormViewSet(viewsets.ModelViewSet):
 			pass
 
 		serializer = InstallationCompletedSerializer(ic, context=self.get_serializer_context())
+		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
+
+	@action(detail=True, methods=['post'], url_path='consuel-visit')
+	@transaction.atomic
+	def create_or_update_consuel_visit(self, request, pk=None):
+		form = self.get_object()
+		payload = request.data
+		is_create = not hasattr(form, 'consuel_visit') or form.consuel_visit is None
+
+		if is_create:
+			cv = ConsuelVisit(form=form, created_by=request.user)
+		else:
+			cv = form.consuel_visit  # type: ignore
+
+		field_list = ['passed', 'refusal_reason']
+		for field in field_list:
+			if field in payload:
+				setattr(cv, field, payload.get(field))
+
+		cv.full_clean()
+		cv.save()
+		form.status = 'consuel_visit'
+		form.save()
+
+		# Email d'information au client (best-effort, non bloquant)
+		if cv.passed:
+			try:
+				client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
+				if client_email:
+					ctx = {
+						'form': form,
+						'client_name': f"{form.client_first_name} {form.client_last_name}",
+						'link_installation': f"/home/installations/{form.id}",
+					}
+					subject = "Conformité CONSUEL enregistrée"
+					send_mail(
+						template='emails/installation/consuel_visit.html',
+						context=ctx,
+						subject=subject,
+						to=client_email,
+					)
+			except Exception:
+				pass
+
+		serializer = ConsuelVisitSerializer(cv, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
