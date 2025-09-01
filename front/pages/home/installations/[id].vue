@@ -172,7 +172,8 @@ const steps = computed(() => {
             title: 'Mise en service',
             description: cm ? cmDesc : "Mise en service non encore effectuée.",
             date: cm ? fmtDateTime(cm.updated_at) : '',
-            ui: colorUI(cmValid ? 'green' : (cm ? 'amber' : 'gray'))
+            ui: colorUI(cmValid ? 'green' : (cm ? 'amber' : 'gray')),
+            slot: 'commissioning'
         },
     ]
 
@@ -353,6 +354,19 @@ const steps = computed(() => {
                                         v-if="((item?.consuel_visit && !item?.enedis_connection) ||
                                             (item?.consuel_visit && item?.enedis_connection &&
                                                 !item?.enedis_connection.is_validated)) && auth.user?.is_staff" />
+                                </div>
+                            </div>
+                        </template>
+                        
+                        <!-- Slots personnalisés pour la validation du raccordement ENEDIS -->
+                        <template #commissioning-title="{ item: s }">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between md:gap-4">
+                                <span class="font-medium">{{ s.title }}</span>
+                                <div class="flex items-center py-2 md:py-0 gap-2">
+                                    <InstallationCommissioningPopover :form-id="item?.id" @submit="fetchOne"
+                                        v-if="((item?.enedis_connection && !item?.commissioning) ||
+                                            (item?.enedis_connection && item?.commissioning &&
+                                                !item?.commissioning.handover_receipt_given)) && auth.user?.is_staff" />
                                 </div>
                             </div>
                         </template>

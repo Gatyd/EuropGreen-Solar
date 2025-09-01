@@ -3,11 +3,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import (
     Form, TechnicalVisit, Signature, RepresentationMandate, AdministrativeValidation,
-	InstallationCompleted, ConsuelVisit, EnedisConnection
+	InstallationCompleted, ConsuelVisit, EnedisConnection, Commissioning
 )
 from .serializers import (
 	FormSerializer, FormDetailSerializer, TechnicalVisitSerializer, RepresentationMandateSerializer,
-	AdministrativeValidationSerializer, InstallationCompletedSerializer, ConsuelVisitSerializer, EnedisConnectionSerializer
+	AdministrativeValidationSerializer, InstallationCompletedSerializer, ConsuelVisitSerializer, EnedisConnectionSerializer, CommissioningSerializer
 )
 from django.db import transaction
 from django.core.files.base import ContentFile
@@ -765,5 +765,47 @@ class FormViewSet(viewsets.ModelViewSet):
 			pass
 
 		serializer = EnedisConnectionSerializer(ec, context=self.get_serializer_context())
+		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
+
+	@action(detail=True, methods=['post'], url_path='commissioning')
+	@transaction.atomic
+	def create_or_update_commissioning(self, request, pk=None):
+		form = self.get_object()
+		payload = request.data
+		is_create = not hasattr(form, 'commissioning') or form.commissioning is None
+
+		if is_create:
+			cm = Commissioning(form=form, created_by=request.user)
+		else:
+			cm = form.commissioning  # type: ignore
+
+		if 'handover_receipt_given' in payload:
+			cm.handover_receipt_given = payload['handover_receipt_given']
+
+		cm.save()
+		form.status = 'commissioning'
+		form.save()
+
+		# Email d'information au client (best-effort, non bloquant)
+		if cm.handover_receipt_given:
+			try:
+				client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
+				if client_email:
+					ctx = {
+						'form': form,
+						'client_name': f"{form.client_first_name} {form.client_last_name}",
+						'link_installation': f"/home/installations/{form.id}",
+					}
+					subject = "Raccordement ENEDIS validé"
+					send_mail(
+						template='emails/installation/commissioning.html',
+						context=ctx,
+						subject=subject,
+						to=client_email,
+					)
+			except Exception:
+				pass
+
+		serializer = CommissioningSerializer(cm, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
 	
