@@ -43,6 +43,7 @@ const draft = computed(() => {
 		company_denomination: cf.company_denomination || '',
 		company_reason: cf.company_reason || '',
 		company_siret: cf.company_siret || '',
+		company_type: cf.company_type || '',
 		address_street: cf.address_street || '',
 		address_number: cf.address_number || '',
 		address_lieu_dit: cf.address_lieu_dit || '',

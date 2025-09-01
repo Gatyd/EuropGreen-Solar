@@ -56,7 +56,7 @@ const draft = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen py-6">
+  <div class="min-h-screen">
     <div v-if="pending" class="text-center text-gray-500">Chargement…</div>
     <div v-else-if="error" class="text-center text-red-600">{{ error }}</div>
     <Preview v-else-if="quote && offer" :draft="draft" :offer="offer" :quote="quote" class="mx-auto" />
