@@ -138,7 +138,8 @@ const steps = computed(() => {
             title: 'Validation des démarches administratives',
             description: av ? avDesc : "En attente de lancement des démarches administratives.",
             date: av ? fmtDateTime(av.validated_at) : '',
-            ui: colorUI(avValid ? 'green' : (av ? 'amber' : 'gray'))
+            ui: colorUI(avValid ? 'green' : (av ? 'amber' : 'gray')),
+            slot: 'administrative-validation'
         },
         {
             icon: icons.ic,
@@ -233,9 +234,6 @@ const steps = computed(() => {
                                 </div>
                             </div>
                         </template>
-                        <template #technical-visit-date="{ item: s }">
-                            <span>{{ s.date }}</span>
-                        </template>
 
                         <!-- Slots personnalisés pour le mandat de représentation -->
                         <template #representation-mandate-title="{ item: s }">
@@ -269,8 +267,17 @@ const steps = computed(() => {
                                 </div>
                             </div>
                         </template>
-                        <template #representation-mandate-date="{ item: s }">
-                            <span>{{ s.date }}</span>
+
+                        <!-- Slots personnalisés pour la validation des documents administratifs -->
+                        <template #administrative-validation-title="{ item: s }">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between md:gap-4">
+                                <span class="font-medium">{{ s.title }}</span>
+                                <div class="flex items-center py-2 md:py-0 gap-2">
+                                    <InstallationAdministrativeValidationPopover :form-id="item?.id" @submit="fetchOne"
+                                        v-if="((item?.representation_mandate && !item?.administrative_validation) ||
+                                            (item?.administrative_validation && !item?.administrative_validation.is_validated)) && auth.user?.is_staff" />
+                                </div>
+                            </div>
                         </template>
                     </UTimeline>
                 </template>
