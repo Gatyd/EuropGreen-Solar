@@ -278,7 +278,8 @@ const steps = computed(() => {
                                 <div class="flex items-center py-2 md:py-0 gap-2">
                                     <InstallationAdministrativeValidationPopover :form-id="item?.id" @submit="fetchOne"
                                         v-if="((item?.representation_mandate && !item?.administrative_validation) ||
-                                            (item?.administrative_validation && !item?.administrative_validation.is_validated)) && auth.user?.is_staff" />
+                                            (item?.representation_mandate && item?.administrative_validation &&
+                                                !item?.administrative_validation.is_validated)) && auth.user?.is_staff" />
                                 </div>
                             </div>
                         </template>
@@ -288,7 +289,8 @@ const steps = computed(() => {
                             <div class="flex items-center justify-between gap-4">
                                 <span class="font-medium">{{ s.title }}</span>
                                 <div class="flex items-center gap-2">
-                                    <UButton v-if="item?.administrative_validation && !item.installation_completed && auth.user?.is_staff"
+                                    <UButton
+                                        v-if="item?.administrative_validation && !item.installation_completed && auth.user?.is_staff"
                                         icon="i-heroicons-clipboard-document-list" color="primary" size="xs"
                                         label="Effectuer l'installation"
                                         @click="completedAction = 'full'; openCompleted = true" />
@@ -304,12 +306,14 @@ const steps = computed(() => {
                             <div class="flex flex-col md:flex-row gap-4 md:items-center">
                                 <span class="text-sm text-gray-600">{{ s.description }}</span>
                                 <div class="flex items-center gap-3 md:ml-auto">
-                                    <UButton v-if="item?.installation_completed && !item?.installation_completed?.report_pdf"
+                                    <UButton
+                                        v-if="item?.installation_completed && !item?.installation_completed?.report_pdf"
                                         variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye" label="Aperçu"
                                         @click="completedAction = 'preview'; openCompleted = true" />
-                                    <UButton v-else-if="item?.installation_completed?.report_pdf" variant="ghost" size="xs"
-                                        color="neutral" icon="i-heroicons-clipboard-document-check" target="_blank"
-                                        label="Voir le rapport" :to="item.installation_completed.report_pdf" />
+                                    <UButton v-else-if="item?.installation_completed?.report_pdf" variant="ghost"
+                                        size="xs" color="neutral" icon="i-heroicons-clipboard-document-check"
+                                        target="_blank" label="Voir le rapport"
+                                        :to="item.installation_completed.report_pdf" />
                                 </div>
                             </div>
                         </template>

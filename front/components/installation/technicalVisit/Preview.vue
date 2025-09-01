@@ -128,7 +128,7 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
                         <td class="p-2 text-gray-600">Photo localisation du compteur</td>
                         <td class="p-2">
                             <template v-if="props.draft.meter_location_photo_url">
-                                <img :src="props.draft.meter_location_photo_url" alt="Photo localisation compteur" class="max-h-40 rounded border" />
+                                <img :src="props.draft.meter_location_photo_url" alt="Photo localisation compteur" class="max-h-40 rounded" />
                             </template>
                             <template v-else-if="props.draft.meter_location_photo">
                                 <span class="text-gray-500">Sera affichée après la soumission</span>

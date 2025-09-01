@@ -38,7 +38,6 @@ const draft = reactive({
 watch(
     () => props.installationCompleted,
     (ic: any) => {
-        console.log('Hydrating draft with installationCompleted:', ic)
         if (!ic) return
         draft.modules_installed = ic.modules_installed
         draft.inverters_installed = ic.inverters_installed

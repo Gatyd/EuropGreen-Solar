@@ -29,7 +29,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <div class="inline-block w-full xl:min-h-[1122.66px] xl:mx-auto bg-white text-xs px-6 py-4">
+    <div class="inline-block w-full xl:min-h-[1122.66px] xl:mx-auto bg-white text-xs px-6 py-6">
         <!-- En-tête -->
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -78,11 +78,11 @@ const props = defineProps<{
                 <table class="w-full text-sm border-collapse">
                     <tbody>
                         <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Modules solaires</td>
+                            <td class="p-2 text-lg text-gray-600">Modules solaires</td>
                             <td class="p-2">
                                 <template v-if="props.draft.photo_modules_url">
                                     <img :src="props.draft.photo_modules_url" alt="Photo modules solaires"
-                                        class="max-h-60 rounded" />
+                                        class="max-h-56 rounded" />
                                 </template>
                                 <template v-else-if="props.draft.photo_modules">
                                     <span class="text-gray-500">Sera affichée après la soumission</span>
@@ -93,11 +93,11 @@ const props = defineProps<{
                             </td>
                         </tr>
                         <tr class="odd:bg-zinc-50">
-                            <td class="p-2 text-gray-600">Onduleurs / micro-onduleurs</td>
+                            <td class="p-2 text-lg text-gray-600">Onduleurs / micro-onduleurs</td>
                             <td class="p-2">
                                 <template v-if="props.draft.photo_inverter_url">
                                     <img :src="props.draft.photo_inverter_url" alt="Photo onduleurs"
-                                        class="max-h-60 rounded" />
+                                        class="max-h-56 rounded" />
                                 </template>
                                 <template v-else-if="props.draft.photo_inverter">
                                     <span class="text-gray-500">Sera affichée après la soumission</span>

@@ -70,7 +70,7 @@ class InstallationCompletedSerializer(serializers.ModelSerializer):
 		fields = [
 			'id', 'modules_installed', 'inverters_installed', 'dc_ac_box_installed', 'battery_installed',
 			'photo_modules', 'photo_inverter',
-			'client_signature', 'installer_signature',
+			'client_signature', 'installer_signature', 'report_pdf',
 			'created_at', 'updated_at'
 		]
 

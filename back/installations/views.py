@@ -216,7 +216,7 @@ class FormViewSet(viewsets.ModelViewSet):
 		"""
 		form = self.get_object()
 		doc = (request.data.get('document') or '').strip().lower()
-		if doc not in ('technical_visit', 'representation_mandate', 'enedis_mandate'):
+		if doc not in ('technical_visit', 'representation_mandate', 'enedis_mandate', 'installation_completed'):
 			return Response({ 'document': 'Type de document non supporté.' }, status=status.HTTP_400_BAD_REQUEST)
 
 		# Récupérer l'instance cible
@@ -227,6 +227,8 @@ class FormViewSet(viewsets.ModelViewSet):
 			target = getattr(form, 'representation_mandate', None)
 		elif doc == 'enedis_mandate':
 			target = getattr(form, 'enedis_mandate', None)
+		elif doc == 'installation_completed':
+			target = getattr(form, 'installation_completed', None)
 
 		if target is None:
 			return Response({ 'detail': "Aucun objet n'est associé à cette fiche pour ce document." }, status=status.HTTP_400_BAD_REQUEST)
@@ -251,7 +253,7 @@ class FormViewSet(viewsets.ModelViewSet):
 			data_url = request.data.get('signature_data')
 			cf, ext = decode_data_url_image(data_url)
 			if cf:
-				sig.signature_image.save(f"{role}-signature-{doc}-{target.id}.{ext or 'png'}", cf, save=False)
+				sig.signature_image.save(f"{role}-signature-{doc}-{form.id}.{ext or 'png'}", cf, save=False)
 		sig.save()
 
 		# Affectation selon le type
@@ -393,6 +395,53 @@ class FormViewSet(viewsets.ModelViewSet):
 				pass
 
 			serializer = EnedisMandateSerializer(em, context=self.get_serializer_context())
+			return Response(serializer.data, status=status.HTTP_200_OK)
+		
+		elif doc == 'installation_completed':
+			ic: InstallationCompleted = target
+			if role == 'client':
+				if ic.client_signature_id:
+					try:
+						old = ic.client_signature
+						if old and old.signature_image:
+							old.signature_image.delete(save=False)
+					except Exception:
+						pass
+				ic.client_signature = sig
+			else:
+				if ic.installer_signature_id:
+					try:
+						old = ic.installer_signature
+						if old and old.signature_image:
+							old.signature_image.delete(save=False)
+					except Exception:
+						pass
+				ic.installer_signature = sig
+
+			ic.save(update_fields=['client_signature', 'installer_signature', 'updated_at'])
+
+			# Génération PDF mandat si les deux signatures présentes (après COMMIT)
+			try:
+				if ic.client_signature_id and ic.installer_signature_id:
+					def _gen_ic_pdf_after_commit(form_id: str):
+						try:
+							from .models import Form as _Form
+							from .pdf import render_installation_completed_pdf
+							f = _Form.objects.select_related('installation_completed').get(pk=form_id)
+							pdf_bytes = render_installation_completed_pdf(str(form_id))
+							if pdf_bytes and getattr(f, 'installation_completed', None):
+								filename = f"installation_completed_{form_id}.pdf"
+								try:
+									f.installation_completed.report_pdf.save(filename, ContentFile(pdf_bytes), save=True)  # type: ignore
+								except Exception:
+									pass
+						except Exception:
+							pass
+					transaction.on_commit(lambda fid=str(form.id): _gen_ic_pdf_after_commit(fid))
+			except Exception:
+				pass
+
+			serializer = InstallationCompletedSerializer(ic, context=self.get_serializer_context())
 			return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -541,6 +590,8 @@ class FormViewSet(viewsets.ModelViewSet):
 
 		av.is_validated = True
 		av.save()
+		form.status = 'administrative_validation'
+		form.save()
 
 		# Email d'information au client (best-effort, non bloquant)
 		try:
@@ -608,6 +659,8 @@ class FormViewSet(viewsets.ModelViewSet):
 		# Validation et sauvegarde
 		ic.full_clean()
 		ic.save()
+		form.status = 'installation_completed'
+		form.save()
 		# Email d'information au client (best-effort, non bloquant)
 		try:
 			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email

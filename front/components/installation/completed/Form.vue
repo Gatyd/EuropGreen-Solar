@@ -2,8 +2,6 @@
 import { useAuthStore } from '~/store/auth'
 import SignatureField from '~/components/common/SignatureField.vue'
 
-type YesNoUnknown = 'yes' | 'no' | 'unknown'
-
 type TechnicalVisitDraft = {
     modules_installed: boolean
     inverters_installed: boolean
@@ -29,9 +27,6 @@ const auth = useAuthStore()
 const validate = (s: TechnicalVisitDraft) => {
     const errors: { name: string; message: string }[] = []
 
-    if (!s.photo_inverter) errors.push({ name: 'photo_inverter', message: 'Photo de l\'onduleur requise.' })
-    if (!s.photo_modules) errors.push({ name: 'photo_modules', message: 'Photo des modules solaires requise.' })
-
     // Signature
     if (props.action === 'signature') {
         // En mode signature: ne valide que le champ du signataire courant, et uniquement le nom
@@ -41,7 +36,8 @@ const validate = (s: TechnicalVisitDraft) => {
             if (!s.client_signature.signer_name.trim()) errors.push({ name: 'client_signature.signer_name', message: 'Nom du signataire requis.' })
         }
     } else {
-        // En mode complet, signatures non obligatoires
+        if (!s.photo_inverter) errors.push({ name: 'photo_inverter', message: 'Photo de l\'onduleur requise.' })
+        if (!s.photo_modules) errors.push({ name: 'photo_modules', message: 'Photo des modules solaires requise.' })
     }
 
     return errors
@@ -50,7 +46,6 @@ const validate = (s: TechnicalVisitDraft) => {
 async function onSubmit() {
     const toast = useToast()
     loading.value = true
-
     try {
         if (props.action === 'signature') {
             // Soumission d'une signature uniquement
@@ -65,7 +60,7 @@ async function onSubmit() {
             const res = await $fetch(`/api/installations/forms/${props.formId}/sign/`, {
                 method: 'POST',
                 credentials: 'include',
-                body: (() => { formData.append('document', 'technical_visit'); return formData })(),
+                body: (() => { formData.append('document', 'installation_completed'); return formData })(),
             })
             if (res) {
                 toast.add({ title: 'Signature enregistrée', color: 'success', icon: 'i-heroicons-check-circle' })
@@ -110,7 +105,7 @@ async function onSubmit() {
 </script>
 
 <template>
-    <UForm :state="state" :validate="validate" class="space-y-3" @submit.prevent="onSubmit">
+    <UForm :state="state" :validate="validate" class="space-y-3" @submit="onSubmit">
         <div v-if="action === 'full'" class="space-y-3">
 
             <!-- Informations sur la toiture -->
