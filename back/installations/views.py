@@ -3,11 +3,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import (
     Form, TechnicalVisit, Signature, RepresentationMandate, AdministrativeValidation,
-	InstallationCompleted, ConsuelVisit
+	InstallationCompleted, ConsuelVisit, EnedisConnection
 )
 from .serializers import (
 	FormSerializer, FormDetailSerializer, TechnicalVisitSerializer, RepresentationMandateSerializer,
-	AdministrativeValidationSerializer, InstallationCompletedSerializer, ConsuelVisitSerializer
+	AdministrativeValidationSerializer, InstallationCompletedSerializer, ConsuelVisitSerializer, EnedisConnectionSerializer
 )
 from django.db import transaction
 from django.core.files.base import ContentFile
@@ -728,3 +728,42 @@ class FormViewSet(viewsets.ModelViewSet):
 
 		serializer = ConsuelVisitSerializer(cv, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
+
+	@action(detail=True, methods=['post'], url_path='enedis-connection')
+	@transaction.atomic
+	def create_or_update_enedis_connection(self, request, pk=None):
+		form = self.get_object()
+		is_create = not hasattr(form, 'enedis_connection') or form.enedis_connection is None
+
+		if is_create:
+			ec = EnedisConnection(form=form, created_by=request.user)
+		else:
+			ec = form.enedis_connection  # type: ignore
+
+		ec.is_validated = True
+		ec.save()
+		form.status = 'enedis_connection'
+		form.save()
+
+		# Email d'information au client (best-effort, non bloquant)
+		try:
+			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
+			if client_email:
+				ctx = {
+					'form': form,
+					'client_name': f"{form.client_first_name} {form.client_last_name}",
+					'link_installation': f"/home/installations/{form.id}",
+				}
+				subject = "Raccordement ENEDIS validé"
+				send_mail(
+					template='emails/installation/enedis_connection_validated.html',
+					context=ctx,
+					subject=subject,
+					to=client_email,
+				)
+		except Exception:
+			pass
+
+		serializer = EnedisConnectionSerializer(ec, context=self.get_serializer_context())
+		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
+	

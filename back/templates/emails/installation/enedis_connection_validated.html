@@ -1,0 +1,47 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Raccordement ENEDIS validé{% endblock %}
+
+{% block content %}
+<div>
+  <!-- En-tête -->
+  <div style="text-align: center; margin-bottom: 28px;">
+    <h2 style="color: #111827; margin: 0 0 12px 0; font-size: 26px; font-weight: 800;">
+      Raccordement ENEDIS validé
+    </h2>
+    <p style="color: #4b5563; margin: 0; font-size: 15px; line-height: 1.7;">
+      Bonjour {{ client_name }}, votre raccordement ENEDIS a été validé. Nous vous remercions de votre patience.
+    </p>
+  </div>
+
+  <!-- Actions -->
+  <div style="text-align: center; margin-bottom: 24px;">
+    <a href="{{ frontend_url }}{{ link_installation }}" target="_blank"
+       style="display: inline-block; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; box-shadow: 0 6px 14px rgba(29, 78, 216, .25); margin: 0 8px 12px 8px;">
+      Suivre mon installation
+    </a>
+    <p style="color: #6b7280; font-size: 13px; margin: 8px 0 0 0;">Vous serez redirigé(e) vers l'espace de suivi d'installation.</p>
+  </div>
+
+  <!-- Séparateur -->
+  <div style="text-align: center; margin: 24px 0;">
+    <div style="width: 100%; height: 1px; background: linear-gradient(to right, transparent, #e5e7eb, transparent);"></div>
+  </div>
+
+  <!-- Rappel -->
+  <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px;">
+    <p style="color: #1e40af; margin: 0; font-size: 13px; text-align: center;">
+      Cet email est généré automatiquement. En cas de question, contactez votre interlocuteur habituel.
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_content %}
+<div style="margin-bottom: 12px;">
+  <p style="color: #111827; font-weight: 700; font-size: 14px; margin: 0;">Europ'Green Solar</p>
+  <p style="color: #6b7280; font-size: 12px; margin: 4px 0 0 0;">18 rue de Berlin, 68000 Colmar GES, France</p>
+  <p style="color: #9ca3af; font-size: 11px; margin: 4px 0 0 0;">SIREN: 932 121 536 • TVA: FR23932121536</p>
+  <p style="color: #9ca3af; font-size: 11px; margin: 8px 0 0 0;">Message automatique — merci de ne pas répondre</p>
+  </div>
+{% endblock %}

@@ -164,7 +164,8 @@ const steps = computed(() => {
             title: 'Raccordement ENEDIS',
             description: ec ? ecDesc : "Raccordement ENEDIS non encore validé.",
             date: ec ? fmtDateTime(ec.validated_at) : '',
-            ui: colorUI(ecValid ? 'green' : (ec ? 'amber' : 'gray'))
+            ui: colorUI(ecValid ? 'green' : (ec ? 'amber' : 'gray')),
+            slot: 'enedis-connection'
         },
         {
             icon: icons.cm,
@@ -319,7 +320,7 @@ const steps = computed(() => {
                             </div>
                         </template>
 
-                        <!-- Slots personnalisés pour la validation des documents administratifs -->
+                        <!-- Slots personnalisés pour la conformité CONSUEL -->
                         <template #consuel-visit-title="{ item: s }">
                             <div class="flex flex-col md:flex-row md:items-center justify-between md:gap-4">
                                 <span class="font-medium">{{ s.title }}</span>
@@ -339,6 +340,19 @@ const steps = computed(() => {
                                     <UBadge v-else-if="item?.consuel_visit && !item?.consuel_visit?.passed"
                                         variant="subtle" color="warning" icon="i-heroicons-x-circle"
                                         label="Non conforme" class="md:mt-1" />
+                                </div>
+                            </div>
+                        </template>
+                        
+                        <!-- Slots personnalisés pour la validation du raccordement ENEDIS -->
+                        <template #enedis-connection-title="{ item: s }">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between md:gap-4">
+                                <span class="font-medium">{{ s.title }}</span>
+                                <div class="flex items-center py-2 md:py-0 gap-2">
+                                    <InstallationEnedisConnectionPopover :form-id="item?.id" @submit="fetchOne"
+                                        v-if="((item?.consuel_visit && !item?.enedis_connection) ||
+                                            (item?.consuel_visit && item?.enedis_connection &&
+                                                !item?.enedis_connection.is_validated)) && auth.user?.is_staff" />
                                 </div>
                             </div>
                         </template>
