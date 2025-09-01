@@ -1,24 +1,25 @@
 {% extends "emails/base.html" %}
 
-{% block title %}Démarches administratives validées{% endblock %}
+{% block title %}Signature requise – installation effectuée{% endblock %}
 
 {% block content %}
 <div>
   <!-- En-tête -->
   <div style="text-align: center; margin-bottom: 28px;">
     <h2 style="color: #111827; margin: 0 0 12px 0; font-size: 26px; font-weight: 800;">
-      Démarches administratives validées
+      Installation effectuée – Votre signature est requise
     </h2>
     <p style="color: #4b5563; margin: 0; font-size: 15px; line-height: 1.7;">
-      Bonjour {{ client_name }}, vos démarches administratives ont été validées. Nous vous remercions de votre patience.
+      Bonjour {{ client_name }}, nous avons effectué votre installation.
+      Pour finaliser cette étape, merci d'ajouter votre signature.
     </p>
   </div>
 
   <!-- Actions -->
   <div style="text-align: center; margin-bottom: 24px;">
-    <a href="{{ frontend_url }}{{ link_installation }}" target="_blank"
+    <a href="{{ frontend_url }}{{ link_signature }}" target="_blank"
        style="display: inline-block; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; box-shadow: 0 6px 14px rgba(29, 78, 216, .25); margin: 0 8px 12px 8px;">
-      Suivre mon installation
+      Signer le rapport
     </a>
     <p style="color: #6b7280; font-size: 13px; margin: 8px 0 0 0;">Vous serez redirigé(e) vers l'espace de suivi d'installation.</p>
   </div>

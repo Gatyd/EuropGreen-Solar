@@ -1,10 +1,13 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import Form, TechnicalVisit, Signature, RepresentationMandate, AdministrativeValidation
+from .models import (
+    Form, TechnicalVisit, Signature, RepresentationMandate, AdministrativeValidation,
+	InstallationCompleted
+)
 from .serializers import (
 	FormSerializer, FormDetailSerializer, TechnicalVisitSerializer, RepresentationMandateSerializer,
-	AdministrativeValidationSerializer
+	AdministrativeValidationSerializer, InstallationCompletedSerializer
 )
 from django.db import transaction
 from django.core.files.base import ContentFile
@@ -561,3 +564,69 @@ class FormViewSet(viewsets.ModelViewSet):
 		serializer = AdministrativeValidationSerializer(av, context=self.get_serializer_context())
 		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)
 	
+	@action(detail=True, methods=['post'], url_path='installation-completed')
+	@transaction.atomic
+	def create_or_update_installation(self, request, pk=None):
+		form = self.get_object()
+		payload = request.data
+		is_create = not hasattr(form, 'installation_completed') or form.installation_completed is None
+
+		if is_create:
+			ic = InstallationCompleted(form=form, created_by=request.user)
+		else:
+			ic = form.installation_completed  # type: ignore
+
+		# Mapping simple des champs
+		field_list = ['modules_installed', 'inverters_installed', 'dc_ac_box_installed', 'battery_installed']
+		file_list = ['photo_modules', 'photo_inverter']
+		for field in field_list:
+			if field in payload:
+				setattr(ic, field, payload.get(field))
+		for file in file_list:
+			if file in request.FILES:
+				setattr(ic, file, request.FILES[file])
+		# Éventuelle signature installateur à la création
+		if is_create:
+			ins_name = (payload.get('installer_signer_name') or '').strip()
+			file = request.FILES.get('installer_signature_file')
+			data_url = payload.get('installer_signature_data')
+			if ins_name and (file or data_url):
+				sig = Signature(
+					signer_name=ins_name,
+					ip_address=get_client_ip(request),
+					user_agent=request.META.get('HTTP_USER_AGENT', ''),
+				)
+				if file:
+					sig.signature_image = file
+				else:
+					cf, ext = decode_data_url_image(str(data_url))
+					if cf:
+						# {role}-signature-{doc}-{target.id}
+						sig.signature_image.save(f"installer-signature-installation_completed-{ic.id}.{ext or 'png'}", cf, save=False)
+				sig.save()
+				ic.installer_signature = sig
+		# Validation et sauvegarde
+		ic.full_clean()
+		ic.save()
+		# Email d'information au client (best-effort, non bloquant)
+		try:
+			client_email = getattr(form, 'client', None).email if getattr(form, 'client', None) else form.offer.email
+			if client_email:
+				ctx = {
+					'form': form,
+					'installation_completed': ic,
+					'client_name': f"{form.client_first_name} {form.client_last_name}",
+					'link_signature': f"/home/installations/{form.id}",
+				}
+				subject = "Installation terminée – Signature requise"
+				send_mail(
+					template='emails/installation/installation_completed_signature_pending.html',
+					context=ctx,
+					subject=subject,
+					to=client_email,
+				)
+		except Exception:
+			pass
+
+		serializer = InstallationCompletedSerializer(ic, context=self.get_serializer_context())
+		return Response(serializer.data, status=status.HTTP_201_CREATED if is_create else status.HTTP_200_OK)

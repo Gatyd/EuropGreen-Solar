@@ -268,6 +268,9 @@ class InstallationCompleted(models.Model):
     photo_modules = models.ImageField(upload_to="installations/completed/modules/", null=True, blank=True)
     photo_inverter = models.ImageField(upload_to="installations/completed/inverter/", null=True, blank=True)
 
+    # PDF rapport
+    report_pdf = models.FileField(upload_to="installations/completed/reports/", null=True, blank=True)
+
     # Signatures
     client_signature = models.OneToOneField(
         Signature, on_delete=models.SET_NULL, null=True, blank=True, related_name="installation_completed_client"

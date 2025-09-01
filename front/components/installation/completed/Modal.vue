@@ -5,7 +5,7 @@ const props = defineProps<{
     formId?: string
     action?: 'full' | 'signature' | 'preview'
     // Visite technique existante pour pré-remplir le brouillon
-    installation_completed?: any
+    installationCompleted?: any
 }>()
 const emit = defineEmits<{
     (e: 'submit'): void
@@ -36,16 +36,17 @@ const draft = reactive({
 
 // Hydrate le brouillon si une visite technique est fournie
 watch(
-    () => props.installation_completed,
+    () => props.installationCompleted,
     (ic: any) => {
+        console.log('Hydrating draft with installationCompleted:', ic)
         if (!ic) return
         draft.modules_installed = ic.modules_installed
         draft.inverters_installed = ic.inverters_installed
         draft.dc_ac_box_installed = ic.dc_ac_box_installed
         draft.battery_installed = ic.battery_installed
         // Photos
-        draft.photo_inverter_url = ic.photo_inverter_url || null
-        draft.photo_modules_url = ic.photo_modules_url || null
+        draft.photo_inverter_url = ic.photo_inverter || null
+        draft.photo_modules_url = ic.photo_modules || null
 
         // Métadonnées
         draft.generated_at = ic.updated_at || ic.created_at || new Date().toISOString()

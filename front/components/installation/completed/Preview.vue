@@ -26,8 +26,6 @@ const props = defineProps<{
     }
 }>()
 
-const yn = (v: boolean) => (v ? 'Oui' : 'Non')
-const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'Inconnu')
 </script>
 
 <template>
@@ -84,7 +82,7 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
                             <td class="p-2">
                                 <template v-if="props.draft.photo_modules_url">
                                     <img :src="props.draft.photo_modules_url" alt="Photo modules solaires"
-                                        class="max-h-40 rounded border" />
+                                        class="max-h-60 rounded" />
                                 </template>
                                 <template v-else-if="props.draft.photo_modules">
                                     <span class="text-gray-500">Sera affichée après la soumission</span>
@@ -99,7 +97,7 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
                             <td class="p-2">
                                 <template v-if="props.draft.photo_inverter_url">
                                     <img :src="props.draft.photo_inverter_url" alt="Photo onduleurs"
-                                        class="max-h-40 rounded border" />
+                                        class="max-h-60 rounded" />
                                 </template>
                                 <template v-else-if="props.draft.photo_inverter">
                                     <span class="text-gray-500">Sera affichée après la soumission</span>
