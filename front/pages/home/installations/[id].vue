@@ -18,6 +18,8 @@ const openTechnicalVisit = ref(false)
 const technicalVisitAction = ref<'full' | 'signature' | 'preview'>('full')
 const openMandate = ref(false)
 const mandateAction = ref<'full' | 'signature' | 'preview'>('full')
+const openCompleted = ref(false)
+const completedAction = ref<'full' | 'signature' | 'preview'>('full')
 
 const fetchOne = async () => {
     loading.value = true
@@ -146,7 +148,8 @@ const steps = computed(() => {
             title: 'Installation effectuée',
             description: ic ? icDesc : "Installation non encore réalisée.",
             date: ic ? fmtDateTime(ic.updated_at) : '',
-            ui: colorUI(icValid ? 'green' : (ic ? 'amber' : 'gray'))
+            ui: colorUI(icValid ? 'green' : (ic ? 'amber' : 'gray')),
+            slot: 'installation-completed'
         },
         {
             icon: icons.cv,
@@ -279,6 +282,37 @@ const steps = computed(() => {
                                 </div>
                             </div>
                         </template>
+
+                        <!-- Slots personnalisés pour l'installation effectuée -->
+                        <template #installation-completed-title="{ item: s }">
+                            <div class="flex items-center justify-between gap-4">
+                                <span class="font-medium">{{ s.title }}</span>
+                                <div class="flex items-center gap-2">
+                                    <UButton v-if="item?.administrative_validation && !item.installation_completed && auth.user?.is_staff"
+                                        icon="i-heroicons-clipboard-document-list" color="primary" size="xs"
+                                        label="Effectuer l'installation"
+                                        @click="completedAction = 'full'; openCompleted = true" />
+                                    <UButton
+                                        v-else-if="item?.installation_completed && (auth.user?.is_staff ? !item?.installation_completed?.installer_signature : !item?.installation_completed?.client_signature)"
+                                        icon="i-heroicons-pencil-square" color="secondary" size="xs"
+                                        :label="auth.user?.is_staff ? 'Signer le rapport (installateur)' : 'Signer le rapport (client)'"
+                                        @click="completedAction = 'signature'; openCompleted = true" />
+                                </div>
+                            </div>
+                        </template>
+                        <template #installation-completed-description="{ item: s }">
+                            <div class="flex flex-col md:flex-row gap-4 md:items-center">
+                                <span class="text-sm text-gray-600">{{ s.description }}</span>
+                                <div class="flex items-center gap-3 md:ml-auto">
+                                    <UButton v-if="item?.installation_completed && !item?.installation_completed?.report_pdf"
+                                        variant="ghost" size="xs" color="neutral" icon="i-heroicons-eye" label="Aperçu"
+                                        @click="completedAction = 'preview'; openCompleted = true" />
+                                    <UButton v-else-if="item?.installation_completed?.report_pdf" variant="ghost" size="xs"
+                                        color="neutral" icon="i-heroicons-clipboard-document-check" target="_blank"
+                                        label="Voir le rapport" :to="item.installation_completed.report_pdf" />
+                                </div>
+                            </div>
+                        </template>
                     </UTimeline>
                 </template>
             </div>
@@ -286,6 +320,8 @@ const steps = computed(() => {
                 :action="technicalVisitAction" :technical-visit="item?.technical_visit" />
             <InstallationRepresentationMandateModal v-model="openMandate" :form-id="item?.id" @submit="fetchOne"
                 :action="mandateAction" :form="item" :mandate="item?.representation_mandate" />
+            <InstallationCompletedModal v-model="openCompleted" :form-id="item?.id" @submit="fetchOne"
+                :action="completedAction" :installation-completed="item?.installation_completed" />
         </div>
     </div>
 </template>

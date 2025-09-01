@@ -85,6 +85,7 @@ export interface InstallationCompleted {
   battery_installed: boolean
   photo_modules?: string | null
   photo_inverter?: string | null
+  report_pdf?: string | null
   client_signature?: Signature | null
   installer_signature?: Signature | null
   created_at: string
