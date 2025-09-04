@@ -1,0 +1,92 @@
+from pdfrw import PdfReader, PdfWriter, PdfDict, PdfName
+
+def extract_pdf_fields(pdf_path):
+    """
+    Récupère tous les champs d'un PDF (AcroForms)
+    et retourne un dict avec le nom du champ et sa valeur.
+    """
+    pdf = PdfReader(pdf_path)
+    fields = {}
+
+    for page in pdf.pages:
+        annotations = page.Annots
+        if annotations:
+            for annotation in annotations:
+                if annotation.T:
+                    key = annotation.T[1:-1]  # retire les parenthèses
+                    value = annotation.V[1:-1] if annotation.V else ""
+                    fields[key] = value
+    return fields
+
+# Mapping ORM -> PDF (comme on avait défini)
+CERFA_FIELD_MAPPING = {
+    "last_name": "D1N_nom",
+    "first_name": "D1P_prenom",
+    "birth_date": "D1A_naissance",
+    "birth_place": "D1C_commune",
+    "birth_department": "D1D_dept",
+    "birth_country": "D1E_pays",
+
+    "company_denomination": "D2D_denomination",
+    "company_reason": "D2R_raison",
+    "company_siret": "D2S_siret",
+    "company_type": "D2J_type",
+
+    "address_number": "D3N_numero",
+    "address_street": "D3V_voie",
+    "address_lieu_dit": "D3W_lieudit",
+    "address_locality": "D3L_localite",
+    "address_postal_code": "D3C_code",
+    "address_bp": "D3B_boite",
+    "address_cedex": "D3X_cedex",
+    "phone": "D3T_telephone",
+    "phone_country_code": "D3K_indicatif",
+
+    "email": "D5GE1_email",
+    "email_consent": "D5A_acceptation",
+
+    "land_number": "T2Q_numero",
+    "land_street": "T2V_voie",
+    "land_lieu_dit": "T2W_lieudit",
+    "land_locality": "T2L_localite",
+    "land_postal_code": "T2C_code",
+    "cadastral_prefix": "T2F_prefixe",
+    "cadastral_section": "T2S_section",
+    "cadastral_number": "T2N_numero",
+    "cadastral_surface_m2": "T2T_superficie",
+
+    "project_new_construction": "C2ZA1_nouvelle",
+    "project_existing_works": "C2ZB1_existante",
+    "project_description": "C2ZD1_description",
+    "electrical_power_text": "C2ZE1_puissance",
+    "peak_power_text": "C2ZP1_crete",
+    "energy_destination": "C2ZR1_destination",
+    "agrivoltaic_project": "C2ZI1_agrivoltaique",
+
+    "protection_monument_abords": "X1A_ABF",
+    "protection_site_classe_or_instance": "X1C_classe",
+    "protection_site_patrimonial": "X2H_historique",
+
+    "engagement_city": "E1L_lieu",
+    "engagement_date": "E1D_date",
+    # Signature -> nom du signataire
+    "signer_name": "E1S_signature",
+}
+
+
+def fill_pdf(input_pdf_path, output_pdf_path, data: dict):
+    """
+    Remplit un PDF avec les données fournies dans un dict {pdf_field: value}
+    """
+    pdf = PdfReader(input_pdf_path)
+    for page in pdf.pages:
+        annotations = page.Annots
+        if annotations:
+            for annotation in annotations:
+                if annotation.T:
+                    key = annotation.T[1:-1]  # retirer parenthèses
+                    if key in data:
+                        annotation.V = str(data[key])
+                        annotation.AP = None  # force le rendu du texte
+                        annotation.update(PdfDict(AS=PdfName("Yes")))
+    PdfWriter().write(output_pdf_path, pdf)
