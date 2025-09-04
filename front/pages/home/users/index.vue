@@ -108,8 +108,8 @@ const columns: TableColumn<User>[] = [{
     cell: ({ row }) => {
         return h(UBadge,
             {
-                color: !row.original.accept_invitation ? 'warning' : row.original.is_active ? 'success' : 'error',
-                label: !row.original.accept_invitation ? 'En attente' : row.original.is_active ? 'Actif' : 'Inactif',
+                color: (!row.original.accept_invitation && row.original.is_active) ? 'warning' : row.original.is_active ? 'success' : 'error',
+                label: (!row.original.accept_invitation && row.original.is_active) ? 'En attente' : row.original.is_active ? 'Actif' : 'Inactif',
                 variant: 'subtle'
             }
         )

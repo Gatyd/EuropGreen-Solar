@@ -19,7 +19,6 @@
                     <div class="space-y-3">
                         <p class="text-sm text-gray-700 dark:text-gray-300">
                             Vous êtes sur le point de <strong>désactiver temporairement</strong> ou <strong>définitivement</strong> ce compte.
-                            Cette action est <strong>irréversible</strong>.
                         </p>
 
                         <!-- Risques de la suppression -->
