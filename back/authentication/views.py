@@ -35,10 +35,8 @@ class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        print("Tentative de rafraîchissement du token...")
         refresh_token = get_refresh_token_from_cookie(request)
         if not refresh_token:
-            print("Refresh token non fourni.")
             raise AuthenticationFailed('Refresh token non fourni.')
 
         try:
