@@ -158,11 +158,16 @@ async function onSubmit() {
                 installer_signer_name: s.installer_signature.signer_name || undefined,
                 installer_signature_data: s.installer_signature.dataUrl || undefined,
             }
-            await $fetch(`/api/installations/forms/${props.formId}/technical-visit/`, {
+            const res = await $fetch(`/api/installations/forms/${props.formId}/technical-visit/`, {
                 method: 'POST',
                 credentials: 'include',
                 body: payload,
             })
+            if (res) {
+                toast.add({ title: 'Visite technique enregistrée', color: 'success', icon: 'i-heroicons-check-circle' })
+                emit('submit')
+                loading.value = false
+            }
         } else {
             // FormData si fichier présent
             const fd = new FormData()
