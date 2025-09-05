@@ -41,10 +41,13 @@ const fullName = computed(() => {
 		<!-- En-tête -->
 		<div class="flex justify-between items-center mb-6">
 			<div>
-				<Logo size="sm" />
+				<Logo size="md" />
 			</div>
 			<div class="text-right">
 				<p class="text-2xl text-black font-semibold mb-1">MANDAT DE REPRÉSENTATION</p>
+                <p>18 rue de Berlin, 68000 Colmar GES, France</p>
+                <p class="mb-1">N° SIREN: 932 121 536 <span class="mx-2">|</span> N° TVA: FR23932121536</p>
+                <p >Dirigeant: (+33) 09 70 70 26 56<span class="mx-2">|</span> (+33) 07 61 30 37 95</p>
 			</div>
 		</div>
 

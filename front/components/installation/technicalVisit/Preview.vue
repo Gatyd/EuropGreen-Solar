@@ -45,13 +45,16 @@ const ynu = (v: YesNoUnknown) => (v === 'yes' ? 'Oui' : v === 'no' ? 'Non' : 'In
         <!-- En-tête -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <Logo size="sm" />
+                <Logo size="md" />
             </div>
             <div class="text-right">
                 <p class="text-2xl text-black font-normal mb-1">RAPPORT DE VISITE TECHNIQUE</p>
-                <p class="text-[11px] text-gray-500">Généré le {{
+                <!-- <p class="text-[11px] text-gray-500">Généré le {{
                     props.draft.generated_at ? new Date(props.draft.generated_at).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR')
-                }}</p>
+                }}</p> -->
+                <p>18 rue de Berlin, 68000 Colmar GES, France</p>
+                <p class="mb-1">N° SIREN: 932 121 536 <span class="mx-2">|</span> N° TVA: FR23932121536</p>
+                <p >Dirigeant: (+33) 09 70 70 26 56<span class="mx-2">|</span> (+33) 07 61 30 37 95</p>
             </div>
         </div>
 
