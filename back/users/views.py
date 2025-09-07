@@ -47,7 +47,7 @@ class AdminUserViewSet(mixins.ListModelMixin,
     
     def get_queryset(self):
         """Filtre les utilisateurs selon les besoins"""
-        queryset = User.objects.select_related('useraccess').filter(is_staff=True)
+        queryset = User.objects.select_related('useraccess')
 
         # Filtrage par statut actif/inactif
         is_active = self.request.query_params.get('is_active', None)
@@ -55,10 +55,10 @@ class AdminUserViewSet(mixins.ListModelMixin,
             queryset = queryset.filter(is_active=is_active.lower() == 'true')
             
         # Filtrage par rôle
-        role = self.request.query_params.get('role', None)
-        if role is not None:
-            queryset = queryset.filter(role=role)
-            
+        is_staff = self.request.query_params.get('is_staff', None)
+        if is_staff is not None:
+            queryset = queryset.filter(is_staff=is_staff.lower() == 'true')
+
         return queryset
     
     @extend_schema(

@@ -34,7 +34,7 @@ const attributLabels: { [key: string]: string } = {
 async function fetchUsers() {
     loading.value = true
     const result = await apiRequest<User[]>(
-        () => $fetch(`/api/users/`, {
+        () => $fetch(`/api/users/?is_staff=true`, {
             credentials: "include"
         }),
         toast
