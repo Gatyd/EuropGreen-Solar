@@ -66,7 +66,7 @@ onMounted(() => {
         :form-id="item?.id" :form="item" @submit="emit('submit')" />
     <UCard class="mt-6">
         <template v-if="!loading">
-            <div class="flex items-start justify-between gap-6">
+            <div class="flex flex-col md:flex-row items-start justify-between gap-6">
                 <!-- Infos installation (gauche) -->
                 <div class="flex flex-col gap-1">
                     <div class="font-semibold">{{ item?.client_last_name }} {{ item?.client_first_name }}</div>
@@ -79,30 +79,45 @@ onMounted(() => {
                 <div v-if="showAdminDocs" class="w-full sm:w-auto">
                     <div class="flex flex-col">
                         <div class="text-sm font-semibold mb-2">Documents administratifs</div>
-                        <div class="flex flex-col md:flex-row gap-2">
-                            <UButton v-if="props.item?.quote?.pdf" color="primary" variant="subtle"
-                                :icon="'i-heroicons-document-check'" :to="props.item.quote.pdf" target="_blank"
-                                label="Devis" />
-                            <UButton v-if="auth.user?.is_staff"
-                                :color="props.item?.cerfa16702?.pdf ? 'primary' : 'neutral'" variant="subtle"
-                                :icon="props.item?.cerfa16702?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
-                                :to="props.item?.cerfa16702?.pdf || undefined" target="_blank" label="CERFA 16702"
-                                @click="manageCerfa16702" />
-                            <UButton v-if="auth.user?.is_staff"
+                        <div class="flex flex-col md:flex-row gap-y-4 md:gap-y-2 gap-x-4">
+                            <div class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
+                                <UButton v-if="props.item?.quote?.pdf" color="primary" variant="subtle"
+                                    :icon="'i-heroicons-document-check'" :to="props.item.quote.pdf" target="_blank"
+                                    label="Devis" block />
+                                <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="Facture"
+                                    block />
+                            </div>
+                            <div class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
+                                <UButton v-if="auth.user?.is_staff" block
+                                    :color="props.item?.cerfa16702?.pdf ? 'primary' : 'neutral'" variant="subtle"
+                                    :icon="props.item?.cerfa16702?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
+                                    :to="props.item?.cerfa16702?.pdf || undefined" target="_blank" label="CERFA 16702"
+                                    @click="manageCerfa16702" />
+                                <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="Pièces jointes"
+                                    block />
+                            </div>
+                            <div class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
+                                <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="CONSUEL PDF"
+                                    block />
+                                <UButton block
+                                    v-if="(auth.user?.is_staff && !props.item?.enedis_mandate) || props.item?.enedis_mandate?.pdf"
+                                    :color="props.item?.enedis_mandate?.pdf ? 'primary' : 'neutral'" variant="subtle"
+                                    :icon="props.item?.enedis_mandate?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
+                                    :to="props.item?.enedis_mandate?.pdf || undefined" target="_blank"
+                                    label="Mandat Enedis" @click="manageEnedisMandate" />
+                                <UButton v-if="item?.enedis_mandate && !item?.enedis_mandate?.pdf" color="secondary"
+                                    block
+                                    :icon="`i-heroicons-${(auth.user?.is_staff && !item?.enedis_mandate?.installer_signature) || (!auth.user?.is_staff && !item?.enedis_mandate?.client_signature) ? 'pencil-square' : 'eye'}`"
+                                    :label="(auth.user?.is_staff && !item?.enedis_mandate?.installer_signature) || (!auth.user?.is_staff && !item?.enedis_mandate?.client_signature) ? 'Signer ENEDIS' : 'Aperçu ENEDIS'"
+                                    variant="subtle" @click="signEnedisMandate" />
+                            </div>
+                            <UButton v-if="auth.user?.is_staff" block
                                 :color="props.item?.electrical_diagram?.file ? 'primary' : 'neutral'" variant="subtle"
                                 label="Schéma électrique"
                                 :icon="props.item?.electrical_diagram?.file ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                 :to="props.item?.electrical_diagram?.file || undefined" target="_blank"
                                 @click="manageElectricalDiagram" />
-                            <UButton v-if="(auth.user?.is_staff && !props.item?.enedis_mandate) || props.item?.enedis_mandate?.pdf"
-                                :color="props.item?.enedis_mandate?.pdf ? 'primary' : 'neutral'" variant="subtle"
-                                :icon="props.item?.enedis_mandate?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
-                                :to="props.item?.enedis_mandate?.pdf || undefined" target="_blank" label="Mandat Enedis"
-                                @click="manageEnedisMandate" />
-                            <UButton v-if="item?.enedis_mandate && !item?.enedis_mandate?.pdf" color="secondary"
-                                :icon="`i-heroicons-${(auth.user?.is_staff && !item?.enedis_mandate?.installer_signature) || (!auth.user?.is_staff && !item?.enedis_mandate?.client_signature) ? 'pencil-square' : 'eye'}`"
-                                :label="(auth.user?.is_staff && !item?.enedis_mandate?.installer_signature) || (!auth.user?.is_staff && !item?.enedis_mandate?.client_signature) ? 'Signer ENEDIS' : 'Aperçu ENEDIS'"
-                                variant="subtle" @click="signEnedisMandate" />
+
                         </div>
                     </div>
                 </div>
