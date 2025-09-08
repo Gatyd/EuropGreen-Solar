@@ -15,8 +15,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.conf import settings
-from EuropGreenSolar.utils.pdf import extract_pdf_fields, fill_pdf, CERFA_FIELD_MAPPING
+from EuropGreenSolar.utils.pdf import extract_pdf_fields, fill_pdf, fill_pdf_bytes, CERFA_FIELD_MAPPING
 from datetime import datetime
+from django.http import HttpResponse
+import json
 
 def format_date(value):
     """Transforme YYYY-MM-DD -> DDMMYYYY"""
@@ -33,6 +35,46 @@ def split_email(email):
     user, domain = email.split("@", 1)
     return user, domain
 
+
+def build_pdf_data_from_payload(payload: dict) -> dict:
+    """Construit le dict de champs PDF à partir d'un payload JSON/QueryDict.
+    - Formate les dates *YYYY-MM-DD* -> *DDMMYYYY*
+    - Split l'email en 2 champs si présent
+    - Convertit booléens en "1"/"0" si nécessaire
+    - Tolère les valeurs manquantes (chaine vide)
+    """
+    data: dict[str, str] = {}
+    # payload peut être un QueryDict; le caster en dict simple pour .get
+    def _get(key, default=""):
+        try:
+            return payload.get(key, default)
+        except Exception:
+            return payload[key] if key in payload else default
+
+    for field, pdf_field in CERFA_FIELD_MAPPING.items():
+        value = _get(field, "")
+        # dates
+        if "date" in field and value:
+            value = format_date(value)
+        # booléens envoyés parfois comme True/False ou "1"/"0"
+        if isinstance(value, bool):
+            value = "1" if value else "0"
+        # email: split en 2 champs et continue
+        if field == "email":
+            user, domain = split_email(value)
+            data["D5GE1_email"] = user
+            data["D5GE2_email"] = domain
+            continue
+        # signature: le preview ne persiste pas; si signer_name absent, on peut le déduire du nom+prénom
+        if field == "signer_name":
+            if not value:
+                fn = _get("first_name", "").strip()
+                ln = _get("last_name", "").strip()
+                if fn or ln:
+                    value = f"{fn} {ln}".strip()
+        data[pdf_field] = "" if value is None else str(value)
+    return data
+
 @api_view(["GET"])
 @permission_classes([AllowAny])  # publique pour ton test
 def get_cerfa_fields(request):
@@ -46,6 +88,28 @@ def get_cerfa_fields(request):
     except Exception as e:
         return Response({"status": "error", "message": str(e)}, status=500)
     
+@api_view(["POST"])
+@permission_classes([AllowAny])  # TODO: sécuriser (HasAdministrativeAccess)
+def preview_cerfa_pdf(request):
+    """
+    Génère un PDF CERFA 16702 en mémoire depuis un payload JSON (aperçu).
+    Ne persiste rien; renvoie application/pdf.
+    """
+    try:
+        payload = request.data
+        if request.content_type and "application/json" in request.content_type:
+            # request.data est déjà un dict
+            pass
+        # Construire data
+        data = build_pdf_data_from_payload(payload)
+        input_pdf = os.path.join(settings.BASE_DIR, "static/pdf/cerfa_16702.pdf")
+        pdf_bytes = fill_pdf_bytes(input_pdf, data)
+        resp = HttpResponse(pdf_bytes, content_type="application/pdf")
+        resp["Content-Disposition"] = "inline; filename=cerfa16702_preview.pdf"
+        return resp
+    except Exception as e:
+        return Response({"status": "error", "message": str(e)}, status=500)
+
 @api_view(["POST"])
 @permission_classes([AllowAny])  # à sécuriser plus tard !
 def generate_cerfa_pdf(request):
@@ -61,28 +125,12 @@ def generate_cerfa_pdf(request):
     except Cerfa16702.DoesNotExist:
         return Response({"status": "error", "message": "Cerfa introuvable"}, status=404)
 
-    # Construire le dict pour remplir le PDF
-    data = {}
-    for field, pdf_field in CERFA_FIELD_MAPPING.items():
-        value = getattr(cerfa, field, "")
-        if value is None:
-            value = ""
-        # Cas 1 : dates
-        if "date" in field:
-            value = format_date(value)
-
-        # Cas 2 : email (split en deux champs)
-        if field == "email":
-            user, domain = split_email(value)
-            data["D5GE1_email"] = user
-            data["D5GE2_email"] = domain
-            continue  # on ne mappe pas directement "email"
-
-        # Cas 3 : signature (forcer affichage du nom)
-        if field == "signer_name":
-            if not value and hasattr(cerfa, "declarant_signature") and cerfa.declarant_signature:
-                value = cerfa.declarant_signature.signer_name
-        data[pdf_field] = str(value)
+    # Construire le dict pour remplir le PDF (réutilise la logique payload)
+    cerfa_payload = {f: getattr(cerfa, f, "") for f in CERFA_FIELD_MAPPING.keys()}
+    # injecter signer_name depuis la signature s'il existe
+    if getattr(cerfa, "declarant_signature", None):
+        cerfa_payload["signer_name"] = cerfa.declarant_signature.signer_name
+    data = build_pdf_data_from_payload(cerfa_payload)
 
     # Générer le PDF
     input_pdf = os.path.join(settings.BASE_DIR, "static/pdf/cerfa_16702.pdf")
@@ -147,55 +195,49 @@ class Cerfa16702ViewSet(GenericViewSet):
         if 'dpc11' in request.FILES:
             cerfa.dpc11 = request.FILES['dpc11']
 
-        # Gérer la signature du déclarant
-        declarant_signer_name = request.data.get('declarant_signer_name', '').strip()
-        if declarant_signer_name:
+        # Gérer la signature du déclarant (nom uniquement, dérivé si absent)
+        signer_name = (request.data.get('declarant_signer_name') or '').strip()
+        if not signer_name:
+            fn = (request.data.get('first_name') or '').strip()
+            ln = (request.data.get('last_name') or '').strip()
+            signer_name = f"{fn} {ln}".strip()
+        if signer_name:
             # Supprimer l'ancienne signature si elle existe
             if cerfa.declarant_signature_id:
                 try:
                     old_sig = cerfa.declarant_signature
-                    if old_sig and old_sig.signature_image:
+                    if old_sig and getattr(old_sig, 'signature_image', None):
                         old_sig.signature_image.delete(save=False)
                     old_sig.delete()
                 except Exception:
                     pass
-
-            # Créer la nouvelle signature
             sig = Signature(
-                signer_name=declarant_signer_name,
+                signer_name=signer_name,
                 ip_address=get_client_ip(request),
                 user_agent=request.META.get('HTTP_USER_AGENT', ''),
             )
-            
-            # Gérer le fichier de signature ou la data URL
-            signature_file = request.FILES.get('declarant_signature_file')
-            if signature_file:
-                sig.signature_image = signature_file
-            else:
-                signature_data = request.data.get('declarant_signature_data')
-                if signature_data and signature_data.startswith('data:image/'):
-                    cf, ext = decode_data_url_image(signature_data)
-                    if cf:
-                        sig.signature_image.save(f"declarant-signature-cerfa16702-{cerfa.id}.{ext or 'png'}", cf, save=False)
-            
             sig.save()
             cerfa.declarant_signature = sig
 
         cerfa.save()
 
-        # Génération PDF après COMMIT
+        # Génération PDF après COMMIT (basée sur le PDF statique rempli)
         try:
             def _gen_cerfa_pdf_after_commit(form_id: str):
                 try:
-                    from .pdf import render_cerfa16702_pdf
                     f = Form.objects.select_related('cerfa16702').get(pk=form_id)
-                    pdf_bytes = render_cerfa16702_pdf(str(form_id))
-                    if pdf_bytes and getattr(f, 'cerfa16702', None):
+                    c = getattr(f, 'cerfa16702', None)
+                    if not c:
+                        return
+                    cerfa_payload = {fld: getattr(c, fld, "") for fld in CERFA_FIELD_MAPPING.keys()}
+                    if getattr(c, 'declarant_signature', None):
+                        cerfa_payload['signer_name'] = c.declarant_signature.signer_name
+                    data_local = build_pdf_data_from_payload(cerfa_payload)
+                    input_pdf = os.path.join(settings.BASE_DIR, "static/pdf/cerfa_16702.pdf")
+                    pdf_bytes = fill_pdf_bytes(input_pdf, data_local)
+                    if pdf_bytes:
                         filename = f"cerfa16702_{form_id}.pdf"
-                        try:
-                            f.cerfa16702.pdf.save(filename, ContentFile(pdf_bytes), save=True)
-                        except Exception:
-                            pass
+                        f.cerfa16702.pdf.save(filename, ContentFile(pdf_bytes), save=True)
                 except Exception:
                     pass
             

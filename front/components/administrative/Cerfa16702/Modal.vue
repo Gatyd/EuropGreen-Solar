@@ -81,27 +81,6 @@ const draft = reactive({
     declarant_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
     declarant_signature_image_url: null as string | null,
     declarant_signature_signed_at: null as string | null,
-
-    // Pièces jointes
-    dpc1: null,
-    dpc1_url: null as string | null,
-    dpc2: null,
-    dpc2_url: null as string | null,
-    dpc3: null,
-    dpc3_url: null as string | null,
-    dpc4: null,
-    dpc4_url: null as string | null,
-    dpc5: null,
-    dpc5_url: null as string | null,
-    dpc6: null,
-    dpc6_url: null as string | null,
-    dpc7: null,
-    dpc7_url: null as string | null,
-    dpc8: null,
-    dpc8_url: null as string | null,
-    dpc11: null,
-    dpc11_url: null as string | null,
-    dpc11_notice_materiaux: '',
 })
 
 // Hydrate le brouillon depuis le CERFA 16702 existant + la fiche
@@ -175,26 +154,6 @@ watch(
             draft.declarant_signature_image_url = ds.signature_image || (typeof ds.signature_data === 'string' && ds.signature_data.startsWith('data:image/') ? ds.signature_data : null)
             draft.declarant_signature_signed_at = ds.signed_at || null
         }
-
-        draft.dpc1 = null
-        draft.dpc1_url = cf.dcp1 || null
-        draft.dpc2 = null
-        draft.dpc2_url = cf.dcp2 || null
-        draft.dpc3 = null
-        draft.dpc3_url = cf.dcp3 || null
-        draft.dpc4 = null
-        draft.dpc4_url = cf.dcp4 || null
-        draft.dpc5 = null
-        draft.dpc5_url = cf.dcp5 || null
-        draft.dpc6 = null
-        draft.dpc6_url = cf.dcp6 || null
-        draft.dpc7 = null
-        draft.dpc7_url = cf.dcp7 || null
-        draft.dpc8 = null
-        draft.dpc8_url = cf.dcp8 || null
-        draft.dpc11 = null
-        draft.dpc11_url = cf.dcp11 || null
-        draft.dpc11_notice_materiaux = cf.dpc11_notice_materiaux || ''
     },
     { immediate: true }
 )
@@ -211,7 +170,7 @@ const onSubmit = () => {
             <div class="flex flex-col xl:flex-row gap-4">
                 <AdministrativeCerfa16702Form class="xl:basis-1/2" :draft="draft" :form="props.form"
                     :cerfa16702="props.cerfa16702" :form-id="props.formId" @submit="onSubmit" />
-                <AdministrativeCerfa16702Preview class="xl:basis-1/2 shadow-md rounded-lg" mode="edit" :draft="draft" :form="form" />
+                <AdministrativeCerfa16702Preview class="xl:basis-1/2 sticky top-0 shadow-md rounded-lg" mode="edit" :draft="draft" :form="form" />
             </div>
         </template>
     </UModal>

@@ -1,4 +1,5 @@
 from pdfrw import PdfReader, PdfWriter, PdfDict, PdfName
+from io import BytesIO
 
 def extract_pdf_fields(pdf_path):
     """
@@ -98,3 +99,23 @@ def fill_pdf(input_pdf_path, output_pdf_path, data: dict):
                         annotation.AP = None  # force le rendu du texte
                         annotation.update(PdfDict(AS=PdfName("Yes")))
     PdfWriter().write(output_pdf_path, pdf)
+
+
+def fill_pdf_bytes(input_pdf_path: str, data: dict) -> bytes:
+    """
+    Remplit un PDF et retourne les octets du PDF généré en mémoire (sans écrire sur disque).
+    """
+    pdf = PdfReader(input_pdf_path)
+    for page in pdf.pages:
+        annotations = page.Annots
+        if annotations:
+            for annotation in annotations:
+                if annotation.T:
+                    key = annotation.T[1:-1]
+                    if key in data:
+                        annotation.V = str(data[key])
+                        annotation.AP = None
+                        annotation.update(PdfDict(AS=PdfName("Yes")))
+    buf = BytesIO()
+    PdfWriter().write(buf, pdf)
+    return buf.getvalue()
