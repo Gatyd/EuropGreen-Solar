@@ -50,6 +50,12 @@ def build_pdf_data_from_payload(payload: dict) -> dict:
             return payload.get(key, default)
         except Exception:
             return payload[key] if key in payload else default
+    
+    def _truthy(v) -> bool:
+        if isinstance(v, bool):
+            return v
+        s = str(v).strip().lower()
+        return s in {"1", "true", "yes", "on", "oui", "vrai"}
 
     for field, pdf_field in CERFA_FIELD_MAPPING.items():
         value = _get(field, "")
@@ -65,6 +71,13 @@ def build_pdf_data_from_payload(payload: dict) -> dict:
             data["D5GE1_email"] = user
             data["D5GE2_email"] = domain
             continue
+        if field == 'agrivoltaic_project':
+            is_yes = _truthy(value)
+            # Oui => C2ZI0 = 1, Non => C2ZI1 = 1
+            data["C2ZI0_agrivoltaique"] = "1" if is_yes else "0"
+            data["C2ZI1_agrivoltaique"] = "0" if is_yes else "1"
+            # Ne pas écrire data[pdf_field] ensuite (évite d'écraser)
+            continue
         # signature: le preview ne persiste pas; si signer_name absent, on peut le déduire du nom+prénom
         if field == "signer_name":
             if not value:
@@ -73,6 +86,17 @@ def build_pdf_data_from_payload(payload: dict) -> dict:
                 if fn or ln:
                     value = f"{fn} {ln}".strip()
         data[pdf_field] = "" if value is None else str(value)
+    data["P5PA1"] = "1"
+    data["P5PB1"] = "1"
+    data["P3GE1"] = "1"
+    data["P3GD1"] = "1"
+    data["P5PC1"] = "1"
+    data["P3GF1"] = "1"
+    data["P3GG1"] = "1"
+    data["P3GH1"] = "1"
+    data["P4LC1"] = "1"
+    data["P4CD1"] = "1"
+
     return data
 
 @api_view(["GET"])
@@ -97,9 +121,6 @@ def preview_cerfa_pdf(request):
     """
     try:
         payload = request.data
-        if request.content_type and "application/json" in request.content_type:
-            # request.data est déjà un dict
-            pass
         # Construire data
         data = build_pdf_data_from_payload(payload)
         input_pdf = os.path.join(settings.BASE_DIR, "static/pdf/cerfa_16702.pdf")

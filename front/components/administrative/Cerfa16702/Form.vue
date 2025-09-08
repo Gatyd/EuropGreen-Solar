@@ -128,7 +128,7 @@ async function onSubmit() {
         if (!payload.declarant_signer_name && (s.first_name || s.last_name)) {
             payload.declarant_signer_name = `${s.first_name || ''} ${s.last_name || ''}`.trim()
         }
-    const res = await $fetch(`/api/administrative/cerfa16702/form/${props.formId}/`, {
+        const res = await $fetch(`/api/administrative/cerfa16702/form/${props.formId}/`, {
             method: 'POST',
             credentials: 'include',
             body: payload,
@@ -437,7 +437,7 @@ const agrivoltaicYN = computed<string>({
         </div>
 
         <!-- Signature -->
-    <!-- Section signature supprimée: le backend construit signer_name à partir du nom/prénom -->
+        <!-- Section signature supprimée: le backend construit signer_name à partir du nom/prénom -->
 
         <div class="flex justify-end pt-2">
             <UButton :loading="loading" icon="i-heroicons-check-circle" type="submit" label="Enregistrer" />

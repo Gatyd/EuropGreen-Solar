@@ -167,10 +167,18 @@ const onSubmit = () => {
 <template>
     <UModal v-model:open="model" title="CERFA 16702" fullscreen>
         <template #body>
-            <div class="flex flex-col xl:flex-row gap-4">
-                <AdministrativeCerfa16702Form class="xl:basis-1/2" :draft="draft" :form="props.form"
-                    :cerfa16702="props.cerfa16702" :form-id="props.formId" @submit="onSubmit" />
-                <AdministrativeCerfa16702Preview class="xl:basis-1/2 sticky top-0 shadow-md rounded-lg" mode="edit" :draft="draft" :form="form" />
+            <!-- Conteneur plein écran interne avec hauteur fixée et overflow géré localement -->
+            <div class="flex flex-col xl:flex-row gap-4 h-full overflow-hidden">
+                <!-- Colonne formulaire: scroll vertical indépendant -->
+                <div class="xl:basis-1/2 min-h-0 overflow-auto">
+                    <AdministrativeCerfa16702Form class="w-full" :draft="draft" :form="props.form"
+                        :cerfa16702="props.cerfa16702" :form-id="props.formId" @submit="onSubmit" />
+                </div>
+
+                <!-- Colonne aperçu: scroll vertical indépendant -->
+                <div class="xl:basis-1/2 min-h-0 overflow-auto">
+                    <AdministrativeCerfa16702Preview mode="edit" :draft="draft" :form="form" />
+                </div>
             </div>
         </template>
     </UModal>
