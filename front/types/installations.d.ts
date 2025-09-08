@@ -196,6 +196,16 @@ export interface Cerfa16702 {
   cadastral_number?: string
   cadastral_surface_m2?: number | null
 
+  cadastral_prefix_p2?: string
+  cadastral_section_p2?: string
+  cadastral_number_p2?: string
+  cadastral_surface_m2_p2?: number | null
+
+  cadastral_prefix_p3?: string
+  cadastral_section_p3?: string
+  cadastral_number_p3?: string
+  cadastral_surface_m2_p3?: number | null
+
   // Projet
   project_new_construction?: boolean
   project_existing_works?: boolean

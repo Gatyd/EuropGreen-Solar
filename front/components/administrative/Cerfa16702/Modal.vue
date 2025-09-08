@@ -50,6 +50,14 @@ const draft = reactive({
     cadastral_section: '',
     cadastral_number: '',
     cadastral_surface_m2: null,
+    cadastral_prefix_p2: '',
+    cadastral_section_p2: '',
+    cadastral_number_p2: '',
+    cadastral_surface_m2_p2: null,
+    cadastral_prefix_p3: '',
+    cadastral_section_p3: '',
+    cadastral_number_p3: '',
+    cadastral_surface_m2_p3: null,
 
     // Projet
     project_new_construction: false,
@@ -136,6 +144,14 @@ watch(
         draft.cadastral_section = cf.cadastral_section || ''
         draft.cadastral_number = cf.cadastral_number || ''
         draft.cadastral_surface_m2 = cf.cadastral_surface_m2 || null
+        draft.cadastral_prefix_p2 = cf.cadastral_prefix_p2 || ''
+        draft.cadastral_section_p2 = cf.cadastral_section_p2 || ''
+        draft.cadastral_number_p2 = cf.cadastral_number_p2 || ''
+        draft.cadastral_surface_m2_p2 = cf.cadastral_surface_m2_p2 || null
+        draft.cadastral_prefix_p3 = cf.cadastral_prefix_p3 || ''
+        draft.cadastral_section_p3 = cf.cadastral_section_p3 || ''
+        draft.cadastral_number_p3 = cf.cadastral_number_p3 || ''
+        draft.cadastral_surface_m2_p3 = cf.cadastral_surface_m2_p3 || null
 
         draft.project_new_construction = cf.project_new_construction || false
         draft.project_existing_works = cf.project_existing_works || false

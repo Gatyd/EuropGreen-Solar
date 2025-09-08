@@ -34,6 +34,14 @@ type cerfa16702Draft = {
     cadastral_section: string,
     cadastral_number: string,
     cadastral_surface_m2: number | null,
+    cadastral_prefix_p2: string,
+    cadastral_section_p2: string,
+    cadastral_number_p2: string,
+    cadastral_surface_m2_p2: number | null,
+    cadastral_prefix_p3: string,
+    cadastral_section_p3: string,
+    cadastral_number_p3: string,
+    cadastral_surface_m2_p3: number | null,
     project_new_construction: boolean,
     project_existing_works: boolean,
     project_description: string,
@@ -372,20 +380,54 @@ const agrivoltaicYN = computed<string>({
                         </UFormField>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <UFormField name="cadastral_prefix" label="Préfixe cadastral">
-                            <UInput v-model="state.cadastral_prefix" class="w-full" />
-                        </UFormField>
-                        <UFormField name="cadastral_section" label="Section cadastrale">
-                            <UInput v-model="state.cadastral_section" class="w-full" />
-                        </UFormField>
-                        <UFormField name="cadastral_number" label="Numéro cadastral">
-                            <UInput v-model="state.cadastral_number" class="w-full" />
-                        </UFormField>
-                        <UFormField name="cadastral_surface_m2" label="Surface (m²)">
-                            <UInput v-model.number="state.cadastral_surface_m2" type="number" min="0" step="0.01"
-                                class="w-full" />
-                        </UFormField>
+                    <p class="font-semibold">Références cadastrales</p>
+
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <UFormField name="cadastral_prefix" label="Préfixe cadastral">
+                                <UInput v-model="state.cadastral_prefix" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_section" label="Section cadastrale">
+                                <UInput v-model="state.cadastral_section" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_number" label="Numéro cadastral">
+                                <UInput v-model="state.cadastral_number" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_surface_m2" label="Surface (m²)">
+                                <UInput v-model.number="state.cadastral_surface_m2" type="number" min="0" step="0.01"
+                                    class="w-full" />
+                            </UFormField>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <UFormField name="cadastral_prefix_p2" label="Préfixe cadastral">
+                                <UInput v-model="state.cadastral_prefix_p2" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_section_p2" label="Section cadastrale">
+                                <UInput v-model="state.cadastral_section_p2" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_number_p2" label="Numéro cadastral">
+                                <UInput v-model="state.cadastral_number_p2" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_surface_m2_p2" label="Surface (m²)">
+                                <UInput v-model.number="state.cadastral_surface_m2_p2" type="number" min="0" step="0.01"
+                                    class="w-full" />
+                            </UFormField>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <UFormField name="cadastral_prefix_p3" label="Préfixe cadastral">
+                                <UInput v-model="state.cadastral_prefix_p3" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_section_p3" label="Section cadastrale">
+                                <UInput v-model="state.cadastral_section_p3" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_number_p3" label="Numéro cadastral">
+                                <UInput v-model="state.cadastral_number_p3" class="w-full" />
+                            </UFormField>
+                            <UFormField name="cadastral_surface_m2_p3" label="Surface (m²)">
+                                <UInput v-model.number="state.cadastral_surface_m2_p3" type="number" min="0" step="0.01"
+                                    class="w-full" />
+                            </UFormField>
+                        </div>
                     </div>
                 </div>
             </UCard>
@@ -500,15 +542,18 @@ const agrivoltaicYN = computed<string>({
                             <UFileUpload v-model="state.dpc5" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc6" label="DPC6 - Photographie du terrain nu et de son environnement" required>
+                        <UFormField name="dpc6" label="DPC6 - Photographie du terrain nu et de son environnement"
+                            required>
                             <UFileUpload v-model="state.dpc6" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc7" label="DPC7 - Photographie du terrain nu et de son environnement" required>
+                        <UFormField name="dpc7" label="DPC7 - Photographie du terrain nu et de son environnement"
+                            required>
                             <UFileUpload v-model="state.dpc7" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>
-                        <UFormField name="dpc8" label="DPC8 - Photographie du terrain nu et de son environnement" required>
+                        <UFormField name="dpc8" label="DPC8 - Photographie du terrain nu et de son environnement"
+                            required>
                             <UFileUpload v-model="state.dpc8" icon="i-lucide-image" label="Importer une image"
                                 description="PNG, JPG ou JPEG" accept="image/*" />
                         </UFormField>

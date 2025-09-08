@@ -59,6 +59,16 @@ class Cerfa16702(models.Model):
     cadastral_number = models.CharField(max_length=20, blank=True)
     cadastral_surface_m2 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
+    cadastral_prefix_p2 = models.CharField(max_length=10, blank=True)
+    cadastral_section_p2 = models.CharField(max_length=10, blank=True)
+    cadastral_number_p2 = models.CharField(max_length=20, blank=True)
+    cadastral_surface_m2_p2 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    cadastral_prefix_p3 = models.CharField(max_length=10, blank=True)
+    cadastral_section_p3 = models.CharField(max_length=10, blank=True)
+    cadastral_number_p3 = models.CharField(max_length=20, blank=True)
+    cadastral_surface_m2_p3 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
     # 4.1 Le projet
     project_new_construction = models.BooleanField(default=False)
     project_existing_works = models.BooleanField(default=False)
