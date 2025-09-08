@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from django.db import transaction
 from django.core.files.base import ContentFile
-from EuropGreenSolar.utils.helpers import get_client_ip, decode_data_url_image
+from EuropGreenSolar.utils.helpers import get_client_ip
 from authentication.permissions import HasAdministrativeAccess
 from .models import Cerfa16702, ElectricalDiagram
 from installations.models import AdministrativeValidation
@@ -15,10 +15,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.conf import settings
-from EuropGreenSolar.utils.pdf import extract_pdf_fields, fill_pdf, fill_pdf_bytes, CERFA_FIELD_MAPPING
+from EuropGreenSolar.utils.pdf import extract_pdf_fields, fill_pdf, fill_pdf_bytes
 from datetime import datetime
 from django.http import HttpResponse
-import json
+from .pdf import CERFA_FIELD_MAPPING
 
 def format_date(value):
     """Transforme YYYY-MM-DD -> DDMMYYYY"""
