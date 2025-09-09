@@ -6,8 +6,6 @@ from django.http import HttpRequest
 
 # Mapping ORM -> PDF (comme on avait défini)
 CERFA_FIELD_MAPPING = {
-    "last_name": "D1N_nom",
-    "first_name": "D1P_prenom",
     "birth_date": "D1A_naissance",
     "birth_place": "D1C_commune",
     "birth_department": "D1D_dept",

@@ -12,10 +12,9 @@ from .serializers import Cerfa16702Serializer, ElectricalDiagramSerializer
 from installations.models import Form, Signature
 import os
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.conf import settings
-from EuropGreenSolar.utils.pdf import extract_pdf_fields, fill_pdf, fill_pdf_bytes
+from EuropGreenSolar.utils.pdf import fill_pdf_bytes
 from datetime import datetime
 from django.http import HttpResponse
 from .pdf import CERFA_FIELD_MAPPING
@@ -87,6 +86,10 @@ def build_pdf_data_from_payload(payload: dict) -> dict:
                 if fn or ln:
                     value = f"{fn} {ln}".strip()
         data[pdf_field] = "" if value is None else str(value)
+    data["D1N_nom"] = _get("last_name", "") if _get("declarant_type", "") == "individual" else ""
+    data["D1P_prenom"] = _get("first_name", "") if _get("declarant_type", "") == "individual" else ""
+    data["D2N_nom"] = _get("last_name", "") if _get("declarant_type", "") == "company" else ""
+    data["D2P_prenom"] = _get("first_name", "") if _get("declarant_type", "") == "company" else ""
     data["P5PA1"] = "1"
     data["P5PB1"] = "1"
     data["P3GE1"] = "1"
@@ -100,21 +103,8 @@ def build_pdf_data_from_payload(payload: dict) -> dict:
 
     return data
 
-@api_view(["GET"])
-@permission_classes([AllowAny])  # publique pour ton test
-def get_cerfa_fields(request):
-    """
-    Retourne tous les champs du Cerfa officiel au format JSON
-    """
-    pdf_path = os.path.join(settings.BASE_DIR, "static/pdf/cerfa_16702.pdf")
-    try:
-        fields = extract_pdf_fields(pdf_path)
-        return Response({"status": "success", "fields": fields})
-    except Exception as e:
-        return Response({"status": "error", "message": str(e)}, status=500)
-    
 @api_view(["POST"])
-@permission_classes([AllowAny])  # TODO: sécuriser (HasAdministrativeAccess)
+@permission_classes([HasAdministrativeAccess])
 def preview_cerfa_pdf(request):
     """
     Génère un PDF CERFA 16702 en mémoire depuis un payload JSON (aperçu).
@@ -131,47 +121,7 @@ def preview_cerfa_pdf(request):
         return resp
     except Exception as e:
         return Response({"status": "error", "message": str(e)}, status=500)
-
-@api_view(["POST"])
-@permission_classes([AllowAny])  # à sécuriser plus tard !
-def generate_cerfa_pdf(request):
-    """
-    Remplit le PDF Cerfa16702 avec les données d'un enregistrement existant.
-    """
-    # cerfa_id = request.data.get("cerfa_id")
-    # if not cerfa_id:
-    #     return Response({"status": "error", "message": "cerfa_id manquant"}, status=400)
-
-    try:
-        cerfa = Cerfa16702.objects.get(form_id='6a9b1e52-05dd-402d-a31c-bba5a890cd67')
-    except Cerfa16702.DoesNotExist:
-        return Response({"status": "error", "message": "Cerfa introuvable"}, status=404)
-
-    # Construire le dict pour remplir le PDF (réutilise la logique payload)
-    cerfa_payload = {f: getattr(cerfa, f, "") for f in CERFA_FIELD_MAPPING.keys()}
-    # injecter signer_name depuis la signature s'il existe
-    if getattr(cerfa, "declarant_signature", None):
-        cerfa_payload["signer_name"] = cerfa.declarant_signature.signer_name
-    data = build_pdf_data_from_payload(cerfa_payload)
-
-    # Générer le PDF
-    input_pdf = os.path.join(settings.BASE_DIR, "static/pdf/cerfa_16702.pdf")
-    output_dir = os.path.join(settings.MEDIA_ROOT, "cerfa_pdfs")
-    os.makedirs(output_dir, exist_ok=True)
-    output_pdf = os.path.join(output_dir, f"cerfa_16702_{cerfa.id}.pdf")
-
-    fill_pdf(input_pdf, output_pdf, data)
-
-    # Construire l'URL publique
-    pdf_url = request.build_absolute_uri(
-        os.path.join(settings.MEDIA_URL, "cerfa_pdfs", f"cerfa_16702_{cerfa.id}.pdf")
-    )
-
-    return Response({
-        "status": "success",
-        "pdf_url": pdf_url
-    })
-
+    
 class Cerfa16702ViewSet(GenericViewSet):
     queryset = Cerfa16702.objects.all()
     serializer_class = Cerfa16702Serializer
