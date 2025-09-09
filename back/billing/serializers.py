@@ -67,6 +67,13 @@ class QuoteSignatureSerializer(serializers.ModelSerializer):
         return url
 
 
+class QuotePDFSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Quote
+        fields = ["id", 'number', "pdf"]
+        read_only_fields = ["id", 'number', "pdf"]
+
 class QuoteSerializer(serializers.ModelSerializer):
     lines = QuoteLineSerializer(many=True, required=False)
     pdf = serializers.SerializerMethodField()

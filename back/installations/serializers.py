@@ -11,7 +11,7 @@ from .models import (
 	Commissioning
 )
 from administrative.serializers import Cerfa16702Serializer, ElectricalDiagramSerializer, EnedisMandateSerializer
-from billing.serializers import QuoteSerializer
+from billing.serializers import QuotePDFSerializer
 
 class SignatureSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -122,7 +122,7 @@ class FormDetailSerializer(serializers.ModelSerializer):
 	enedis_mandate = EnedisMandateSerializer(read_only=True)
 
 	# Devis
-	quote = serializers.SerializerMethodField()
+	quotes = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Form
@@ -132,15 +132,15 @@ class FormDetailSerializer(serializers.ModelSerializer):
 			'created_by', 'client', 'created_at', 'updated_at',
 			'technical_visit', 'representation_mandate', 'administrative_validation',
 			'installation_completed', 'consuel_visit', 'enedis_connection', 'commissioning',
-			'cerfa16702', 'electrical_diagram', 'enedis_mandate', 'quote'
+			'cerfa16702', 'electrical_diagram', 'enedis_mandate', 'quotes'
 		]
 
-	def get_quote(self, obj):
+	def get_quotes(self, obj):
 		offer = getattr(obj, 'offer', None)
 		if not offer:
 			return None
 		if hasattr(offer, 'quotes'):
-			quote = offer.quotes.order_by('-version', '-created_at').first()
-		if quote:
-			return QuoteSerializer(quote, context=self.context).data
+			quotes = offer.quotes.order_by('-version', '-created_at')
+		if quotes:
+			return QuotePDFSerializer(quotes, many=True, context=self.context).data
 		return None

@@ -1,4 +1,4 @@
-import type { Quote } from './billing'
+import type { QuotePDF } from './billing'
 
 export type InstallationStatus =
   | 'technical_visit'
@@ -147,7 +147,7 @@ export interface InstallationForm {
   electrical_diagram?: ElectricalDiagram | null
   enedis_mandate?: EnedisMandate | null
   // Devis
-  quote?: Quote | null
+  quotes?: QuotePDF[] | null
 }
 
 // ————————————————

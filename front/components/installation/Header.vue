@@ -18,6 +18,14 @@ const openElectricalDiagram = ref(false)
 const openEnedisMandate = ref(false)
 const enedisMandateAction = ref<'full' | 'signature' | 'preview'>('full')
 
+// Historique des devis: tri et affichage
+const sortDirection = ref<'desc' | 'asc'>('desc') // backend renvoie du plus récent au plus ancien
+const sortedQuotes = computed(() => {
+    const quotes = props.item?.quotes ?? []
+    return sortDirection.value === 'desc' ? quotes : [...quotes].reverse()
+})
+const quoteGridCols = computed(() => Math.min(3, sortedQuotes.value.length || 1))
+
 const manageCerfa16702 = () => {
     if (!props.item?.cerfa16702?.pdf) {
         openCerfa16702.value = true
@@ -91,9 +99,48 @@ onMounted(() => {
                         <div class="flex flex-col md:flex-row gap-y-4 md:gap-y-2 gap-x-4">
                             <div
                                 class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
-                                <UButton v-if="props.item?.quote?.pdf" color="primary" variant="subtle"
-                                    :icon="'i-heroicons-document-check'" :to="props.item.quote.pdf" target="_blank"
-                                    label="Devis" block />
+                                <UButton v-if="item?.quotes?.length === 1 && item?.quotes[0]?.pdf" color="primary"
+                                    variant="subtle" :icon="'i-heroicons-document-check'" :to="item.quotes[0].pdf"
+                                    target="_blank" label="Devis" block />
+                                <UPopover v-else mode="hover">
+                                    <UButton color="primary" variant="subtle" :icon="'i-heroicons-document-check'"
+                                        label="Devis" block />
+
+                                    <template #content>
+                                        <div class="p-3">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-sm font-medium">Historique des devis</span>
+                                                <div class="flex items-center gap-1">
+                                                    <UTooltip text="Plus ancien en premier">
+                                                        <UButton size="xs" variant="ghost"
+                                                            :color="sortDirection === 'asc' ? 'primary' : 'neutral'"
+                                                            icon="i-heroicons-arrow-up"
+                                                            @click="sortDirection = 'asc'" />
+                                                    </UTooltip>
+                                                    <UTooltip text="Plus récent en premier">
+                                                        <UButton size="xs" variant="ghost"
+                                                            :color="sortDirection === 'desc' ? 'primary' : 'neutral'"
+                                                            icon="i-heroicons-arrow-down"
+                                                            @click="sortDirection = 'desc'" />
+                                                    </UTooltip>
+                                                </div>
+                                            </div>
+
+                                            <div v-if="sortedQuotes.length" class="grid gap-2"
+                                                :style="{ gridTemplateColumns: `repeat(${quoteGridCols}, minmax(0, 1fr))` }">
+                                                <a v-for="q in sortedQuotes" :key="q.id" :href="q.pdf || undefined"
+                                                    target="_blank"
+                                                    class="group flex flex-col items-center justify-center rounded-md border border-default hover:border-primary-500 hover:bg-primary-50/50 transition px-3 py-3 text-xs">
+                                                    <UIcon name="i-heroicons-document-text"
+                                                        class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-500" />
+                                                    <span class="truncate max-w-[8rem]">{{ q.number }}</span>
+                                                </a>
+                                            </div>
+                                            <div v-else class="text-xs text-gray-500 px-1 py-2">Aucun devis disponible
+                                            </div>
+                                        </div>
+                                    </template>
+                                </UPopover>
                                 <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="Facture"
                                     block />
                             </div>

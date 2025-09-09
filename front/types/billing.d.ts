@@ -40,6 +40,12 @@ export interface QuoteSignature {
     signature_data?: string; // base64 or JSON
 }
 
+export interface QuotePDF {
+    id: string;
+    number: string;
+    pdf?: string | null; // URL du PDF
+}
+
 export interface Quote {
     id: string;
     number: string;
