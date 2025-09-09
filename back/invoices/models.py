@@ -30,7 +30,7 @@ class Invoice(models.Model):
     notes = models.TextField(blank=True)
     currency = models.CharField(max_length=3, default="EUR")
 
-    issue_date = models.DateField(default=timezone.now)
+    issue_date = models.DateField(default=timezone.localdate)
     due_date = models.DateField(null=True, blank=True)
 
     # Totaux (HT)
@@ -168,7 +168,7 @@ class Payment(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="payments")
     installment = models.ForeignKey(Installment, on_delete=models.SET_NULL, null=True, blank=True, related_name="payments")
 
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     method = models.CharField(max_length=50, blank=True)  # virement, CB, chèque, espèces, autre
     reference = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)

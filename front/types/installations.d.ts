@@ -1,4 +1,4 @@
-import type { QuotePDF } from './billing'
+import type { Invoice, QuotePDF } from './billing'
 
 export type InstallationStatus =
   | 'technical_visit'
@@ -142,6 +142,7 @@ export interface InstallationForm {
   consuel_visit?: ConsuelVisit | null
   enedis_connection?: EnedisConnection | null
   commissioning?: Commissioning | null
+  invoice?: Invoice | null
   // Documents administratifs
   cerfa16702?: Cerfa16702 | null
   electrical_diagram?: ElectricalDiagram | null

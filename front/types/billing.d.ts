@@ -70,3 +70,28 @@ export interface Quote {
     lines: QuoteLine[];
     signature?: QuoteSignature | null;
 }
+
+export type InvoiceStatus = "draft" | "issued" | "partially_paid" | "paid" | "cancelled";
+
+export interface Invoice {
+    id: string;
+    number: string;
+    installation: string; // UUID
+    quote?: string | null; // UUID
+    title?: string;
+    notes?: string;
+    currency: string; // e.g. EUR
+    issue_date: string; // date
+    due_date?: string | null; // date
+    subtotal: string; // Decimal as string
+    discount_amount: string; // Decimal as string
+    tax_rate: string; // Decimal as string (%)
+    total: string; // Decimal as string
+    pdf?: string | null; // URL du PDF
+    status: InvoiceStatus;
+    created_by?: string | null;
+    updated_by?: string | null;
+    created_at: string;
+    updated_at: string;
+    lines: QuoteLine[];
+}

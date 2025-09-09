@@ -12,6 +12,7 @@ const emit = defineEmits<{
 
 const route = useRoute()
 const auth = useAuthStore()
+const invoiceLoading = ref(false)
 const openCerfa16702 = ref(false)
 const openCerfa16702Attachments = ref(false)
 const openElectricalDiagram = ref(false)
@@ -48,6 +49,30 @@ const manageEnedisMandate = () => {
     if (!props.item?.enedis_mandate?.pdf) {
         openEnedisMandate.value = true
         enedisMandateAction.value = 'full'
+    }
+}
+
+const manageInvoice = async () => {
+    const toast = useToast()
+    if (!props.item?.invoice) {
+        invoiceLoading.value = true
+        const res = await apiRequest(
+            () => $fetch('/api/invoices/', {
+                method: 'POST',
+                credentials: 'include',
+                body: {
+                    installation: props.item?.id,
+                },
+            }), toast
+        )
+        if (res) {
+            emit('submit')
+            toast.add({
+                title: 'Facture créée avec succès',
+                color: 'success'
+            })
+        }
+        invoiceLoading.value = false
     }
 }
 
@@ -141,8 +166,9 @@ onMounted(() => {
                                         </div>
                                     </template>
                                 </UPopover>
-                                <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="Facture"
-                                    block />
+                                <UButton :color="item?.invoice ? 'primary' : 'neutral'" variant="subtle"
+                                    :icon="item?.invoice ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
+                                    label="Facture" block :loading="invoiceLoading" @click="manageInvoice" />
                             </div>
                             <div
                                 class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
