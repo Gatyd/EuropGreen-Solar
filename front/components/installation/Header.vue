@@ -13,6 +13,7 @@ const emit = defineEmits<{
 const route = useRoute()
 const auth = useAuthStore()
 const openCerfa16702 = ref(false)
+const openCerfa16702Attachments = ref(false)
 const openElectricalDiagram = ref(false)
 const openEnedisMandate = ref(false)
 const enedisMandateAction = ref<'full' | 'signature' | 'preview'>('full')
@@ -20,6 +21,12 @@ const enedisMandateAction = ref<'full' | 'signature' | 'preview'>('full')
 const manageCerfa16702 = () => {
     if (!props.item?.cerfa16702?.pdf) {
         openCerfa16702.value = true
+    }
+}
+
+const manageCerfa16702Attachments = () => {
+    if (!props.item?.cerfa16702?.attachements_pdf) {
+        openCerfa16702Attachments.value = true
     }
 }
 
@@ -59,6 +66,8 @@ onMounted(() => {
 </script>
 <template>
     <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form-id="item?.id" @submit="emit('submit')" />
+    <AdministrativeCerfa16702AttachmentsModal v-model="openCerfa16702Attachments" :cerfa16702="item?.cerfa16702"
+        :form-id="item?.id" @submit="emit('submit')" />
     <AdministrativeElectricalDiagramModal v-model="openElectricalDiagram" :form-id="item?.id"
         @submit="emit('submit')" />
     <AdministrativeEnedisMandateModal v-model="openEnedisMandate" :action="enedisMandateAction"
@@ -80,23 +89,30 @@ onMounted(() => {
                     <div class="flex flex-col">
                         <div class="text-sm font-semibold mb-2">Documents administratifs</div>
                         <div class="flex flex-col md:flex-row gap-y-4 md:gap-y-2 gap-x-4">
-                            <div class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
+                            <div
+                                class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
                                 <UButton v-if="props.item?.quote?.pdf" color="primary" variant="subtle"
                                     :icon="'i-heroicons-document-check'" :to="props.item.quote.pdf" target="_blank"
                                     label="Devis" block />
                                 <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="Facture"
                                     block />
                             </div>
-                            <div class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
+                            <div
+                                class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
                                 <UButton v-if="auth.user?.is_staff" block
                                     :color="props.item?.cerfa16702?.pdf ? 'primary' : 'neutral'" variant="subtle"
                                     :icon="props.item?.cerfa16702?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                     :to="props.item?.cerfa16702?.pdf || undefined" target="_blank" label="CERFA 16702"
                                     @click="manageCerfa16702" />
-                                <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="Pièces jointes"
-                                    block />
+                                <UButton v-if="auth.user?.is_staff" block :disabled="!props.item?.cerfa16702"
+                                    :color="props.item?.cerfa16702?.attachements_pdf ? 'primary' : 'neutral'"
+                                    variant="subtle"
+                                    :icon="props.item?.cerfa16702?.attachements_pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
+                                    :to="props.item?.cerfa16702?.attachements_pdf || undefined" target="_blank"
+                                    label="Pièces jointes" @click="manageCerfa16702Attachments" />
                             </div>
-                            <div class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
+                            <div
+                                class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
                                 <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="CONSUEL PDF"
                                     block />
                                 <UButton block

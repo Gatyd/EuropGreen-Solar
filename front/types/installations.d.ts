@@ -241,6 +241,7 @@ export interface Cerfa16702 {
 
   // PDF généré
   pdf?: string | null
+  attachements_pdf?: string | null
 
   created_at?: string
   updated_at?: string
