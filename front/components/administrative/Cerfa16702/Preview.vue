@@ -102,7 +102,7 @@ function timeSince(d?: Date | null) {
 async function fetchPreview(immediate = false) {
     if (debounceTimer && !immediate) clearTimeout(debounceTimer)
     if (!immediate) {
-        debounceTimer = setTimeout(() => fetchPreview(true), 1000)
+        debounceTimer = setTimeout(() => fetchPreview(true), 4000)
         return
     }
     if (abortController) abortController.abort()

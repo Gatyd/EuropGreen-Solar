@@ -56,6 +56,8 @@ CERFA_FIELD_MAPPING = {
     "peak_power_text": "C2ZP1_crete",
     "energy_destination": "C2ZR1_destination",
     "agrivoltaic_project": "C2ZI1_agrivoltaique",
+    "destination_primary_residence": "C2ZF1_principale",
+    "destination_secondary_residence": "C2ZF2_secondaire",
 
     "protection_monument_abords": "X1A_ABF",
     "protection_site_classe_or_instance": "X1C_classe",

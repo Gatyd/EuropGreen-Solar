@@ -108,10 +108,11 @@ class Cerfa16702(models.Model):
     dpc7 = models.FileField(upload_to="administrative/cerfa16702/dpc7/", null=True, blank=True)
     dpc8 = models.FileField(upload_to="administrative/cerfa16702/dpc8/", null=True, blank=True)
     dpc11 = models.FileField(upload_to="administrative/cerfa16702/dpc11/", null=True, blank=True)
-    dpc11_notice_materiaux = models.TextField(blank=True)
+    dpc11_notice_materiaux = models.TextField(blank=True, null=True)
 
     # PDF généré
     pdf = models.FileField(upload_to="administrative/cerfa16702/pdfs/", null=True, blank=True)
+    attachements_pdf = models.FileField(upload_to="administrative/cerfa16702/attachements_pdfs/", null=True, blank=True)
 
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="created_cerfa16702")
     created_at = models.DateTimeField(auto_now_add=True)

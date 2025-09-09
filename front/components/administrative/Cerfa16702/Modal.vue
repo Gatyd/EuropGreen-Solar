@@ -77,7 +77,7 @@ const draft = reactive({
 
     // Engagement du déclarant
     engagement_city: '',
-    engagement_date: '',
+    engagement_date: new Date().toISOString().slice(0, 10) as string,
     declarant_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
     declarant_signature_image_url: null as string | null,
     declarant_signature_signed_at: null as string | null,
@@ -147,7 +147,7 @@ watch(
         draft.protection_monument_abords = cf.protection_monument_abords || false
 
         draft.engagement_city = cf.engagement_city || ''
-        draft.engagement_date = cf.engagement_date || ''
+        draft.engagement_date = cf.engagement_date || new Date().toISOString().slice(0, 10) as string
         const ds = cf.declarant_signature
         if (ds) {
             draft.declarant_signature.signer_name = ds.signer_name || ''
