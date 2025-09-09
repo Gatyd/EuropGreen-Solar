@@ -11,6 +11,7 @@ from .models import (
 	Commissioning
 )
 from administrative.serializers import Cerfa16702Serializer, ElectricalDiagramSerializer, EnedisMandateSerializer
+from invoices.serializers import InvoiceSerializer
 from billing.serializers import QuotePDFSerializer
 
 class SignatureSerializer(serializers.ModelSerializer):
@@ -115,6 +116,7 @@ class FormDetailSerializer(serializers.ModelSerializer):
 	consuel_visit = ConsuelVisitSerializer(read_only=True)
 	enedis_connection = EnedisConnectionSerializer(read_only=True)
 	commissioning = CommissioningSerializer(read_only=True)
+	invoice = InvoiceSerializer(read_only=True)
 
 	# Documents administratifs
 	cerfa16702 = Cerfa16702Serializer(read_only=True)
@@ -132,7 +134,7 @@ class FormDetailSerializer(serializers.ModelSerializer):
 			'created_by', 'client', 'created_at', 'updated_at',
 			'technical_visit', 'representation_mandate', 'administrative_validation',
 			'installation_completed', 'consuel_visit', 'enedis_connection', 'commissioning',
-			'cerfa16702', 'electrical_diagram', 'enedis_mandate', 'quotes'
+			'cerfa16702', 'electrical_diagram', 'enedis_mandate', 'quotes', 'invoice'
 		]
 
 	def get_quotes(self, obj):

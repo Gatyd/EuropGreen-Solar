@@ -33,8 +33,7 @@ class InvoiceViewSet(mixins.CreateModelMixin,
 
         installation = get_object_or_404(InstallationForm, pk=installation_id)
 
-        # Si une facture existe déjà, retourner la plus récente
-        existing = Invoice.objects.filter(installation=installation).order_by("-created_at").first()
+        existing = Invoice.objects.filter(installation=installation).first()
         if existing:
             serializer = self.get_serializer(existing)
             return Response(serializer.data, status=status.HTTP_200_OK)

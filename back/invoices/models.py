@@ -17,13 +17,13 @@ class Invoice(models.Model):
     number = models.CharField(max_length=32, unique=True, blank=True)
 
     # Lier la facture à la fiche d'installation (pas à l'offre)
-    installation = models.ForeignKey(
-        "installations.Form", on_delete=models.CASCADE, related_name="invoices"
+    installation = models.OneToOneField(
+        "installations.Form", on_delete=models.CASCADE, related_name="invoice"
     )
 
     # Optionnel: référence au devis accepté qui l'a générée
-    quote = models.ForeignKey(
-        "billing.Quote", on_delete=models.SET_NULL, null=True, blank=True, related_name="generated_invoices"
+    quote = models.OneToOneField(
+        "billing.Quote", on_delete=models.SET_NULL, null=True, blank=True, related_name="generated_invoice"
     )
 
     title = models.CharField(max_length=255, blank=True)
@@ -42,7 +42,7 @@ class Invoice(models.Model):
     # PDF généré de la facture
     pdf = models.FileField(upload_to="invoices/pdfs/", null=True, blank=True)
 
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ISSUED)
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_invoices"
