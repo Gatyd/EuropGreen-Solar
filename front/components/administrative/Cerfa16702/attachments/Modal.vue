@@ -76,7 +76,7 @@ const onSubmit = () => {
             <div class="flex flex-col xl:flex-row gap-4 h-[85vh] min-h-0 overflow-hidden">
                 <div class="xl:basis-1/2 min-h-0 overflow-auto">
                     <AdministrativeCerfa16702AttachmentsForm :draft="draft" :form="props.form"
-                        :cerfa16702="props.cerfa16702" :form-id="props.formId" @submit="onSubmit" />
+                        :cerfa16702="props.cerfa16702" :cerfa-id="props.cerfa16702?.id" @submit="onSubmit" />
                 </div>
                 <div class="xl:basis-1/2 min-h-0 overflow-auto">
                     <AdministrativeCerfa16702AttachmentsPreview class="shadow-md rounded-lg" mode="edit"

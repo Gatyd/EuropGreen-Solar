@@ -19,6 +19,7 @@ from EuropGreenSolar.utils.pdf import extract_pdf_fields, fill_pdf, fill_pdf_byt
 from datetime import datetime
 from django.http import HttpResponse
 from .pdf import CERFA_FIELD_MAPPING
+from .pdf import render_cerfa16702_attachments_pdf
 
 def format_date(value):
     """Transforme YYYY-MM-DD -> DDMMYYYY"""
@@ -263,6 +264,39 @@ class Cerfa16702ViewSet(GenericViewSet):
                     pass
             
             transaction.on_commit(lambda fid=str(form.id): _gen_cerfa_pdf_after_commit(fid))
+        except Exception:
+            pass
+
+        serializer = Cerfa16702Serializer(cerfa, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='attachments')
+    def update_attachments(self, request, pk=None):
+        """Met à jour les pièces jointes DPC1..DPC8, DPC11 d'un CERFA par son id, puis génère le PDF des pièces jointes."""
+        try:
+            cerfa = Cerfa16702.objects.get(pk=pk)
+        except Cerfa16702.DoesNotExist:
+            return Response({'detail': 'CERFA introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Mise à jour des fichiers
+        for i in range(1, 9):
+            field_name = f'dpc{i}'
+            if field_name in request.FILES:
+                setattr(cerfa, field_name, request.FILES[field_name])
+        if 'dpc11' in request.FILES:
+            cerfa.dpc11 = request.FILES['dpc11']
+        if 'dpc11_notice_materiaux' in request.data:
+            cerfa.dpc11_notice_materiaux = request.data.get('dpc11_notice_materiaux') or ''
+
+        cerfa.save()
+
+        # Générer le PDF des pièces jointes via la page print front
+        try:
+            form_id = str(cerfa.form_id)
+            pdf_bytes = render_cerfa16702_attachments_pdf(form_id, request=request)
+            if pdf_bytes:
+                filename = f"cerfa16702_attachments_{cerfa.id}.pdf"
+                cerfa.attachements_pdf.save(filename, ContentFile(pdf_bytes), save=True)
         except Exception:
             pass
 

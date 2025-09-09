@@ -42,14 +42,14 @@ const ynu = (v: boolean) => (v ? 'Oui' : 'Non')
 
 // Liste ordonnée des pièces jointes avec titres exacts
 const dpcLabels = [
-    { key: 'dpc1',  name: "DPC1 - PLAN DE SITUATION" },
-    { key: 'dpc2',  name: "DPC2 - PLAN DE MASSE" },
-    { key: 'dpc3',  name: "DPC3 - PLAN EN COUPE" },
-    { key: 'dpc4',  name: "DPC4 - PLAN DES FACADES ET DES TOITURES" },
-    { key: 'dpc5',  name: "DPC5 - REPRESENTATION DE L'ASPECT EXTERIEUR" },
-    { key: 'dpc6',  name: "DPC6 - DOCUMENT GRAPHIQUE" },
-    { key: 'dpc7',  name: "DPC7 - PHOTOGRAPHIE DE SITUATION DU TERRAIN DANS L'ENVIRONNEMENT PROCHE" },
-    { key: 'dpc8',  name: "DPC8 - PHOTOGRAPHIE DE SITUATION DU TERRAIN DANS LE PAYSAGE LOINTAIN" },
+    { key: 'dpc1', name: "DPC1 - PLAN DE SITUATION" },
+    { key: 'dpc2', name: "DPC2 - PLAN DE MASSE" },
+    { key: 'dpc3', name: "DPC3 - PLAN EN COUPE" },
+    { key: 'dpc4', name: "DPC4 - PLAN DES FACADES ET DES TOITURES" },
+    { key: 'dpc5', name: "DPC5 - REPRESENTATION DE L'ASPECT EXTERIEUR" },
+    { key: 'dpc6', name: "DPC6 - DOCUMENT GRAPHIQUE" },
+    { key: 'dpc7', name: "DPC7 - PHOTOGRAPHIE DE SITUATION DU TERRAIN DANS L'ENVIRONNEMENT PROCHE" },
+    { key: 'dpc8', name: "DPC8 - PHOTOGRAPHIE DE SITUATION DU TERRAIN DANS LE PAYSAGE LOINTAIN" },
     { key: 'dpc11', name: "DPC11 - NOTICE DES MATERIAUX UTILISES" },
 ]
 
@@ -78,7 +78,7 @@ const getAttachmentFile = (key: string): File | null => {
 const objectUrlCache = new Map<string, string>()
 onBeforeUnmount(() => {
     for (const url of objectUrlCache.values()) {
-        try { URL.revokeObjectURL(url) } catch {}
+        try { URL.revokeObjectURL(url) } catch { }
     }
     objectUrlCache.clear()
 })
@@ -135,11 +135,18 @@ const projectAddress = computed(() => {
             <div class="text-lg font-bold text-zinc-800 tracking-tight uppercase mb-3">
                 {{ label.name }}
             </div>
+            <template v-if="label.key === 'dpc11' && props.draft.dpc11_notice_materiaux">
+                <div class="prose max-w-none text-gray-500 whitespace-pre-line px-6">
+                    <p>{{ props.draft.dpc11_notice_materiaux }}</p>
+                </div>
+            </template>
 
             <!-- Contenu image pleine page -->
-            <div class="rounded-md bg-white flex items-center justify-center min-h-[220mm] max-h-[240mm] overflow-hidden">
+            <div
+                class="rounded-md bg-white flex items-center justify-center min-h-[220mm] max-h-[240mm] overflow-hidden">
                 <template v-if="getAttachmentSrc(label.key)">
-                    <img :src="getAttachmentSrc(label.key)" :alt="label.name" class="max-w-full max-h-[235mm] h-auto w-auto" />
+                    <img :src="getAttachmentSrc(label.key)" :alt="label.name"
+                        class="max-w-full max-h-[235mm] h-auto w-auto" />
                 </template>
                 <template v-else>
                     <div class="text-gray-500 text-sm">Aucun document fourni</div>

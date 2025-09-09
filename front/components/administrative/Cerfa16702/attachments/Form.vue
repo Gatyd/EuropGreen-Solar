@@ -14,7 +14,7 @@ type cerfa16702Draft = {
     dpc11_notice_materiaux: string
 }
 
-const props = defineProps<{ draft: cerfa16702Draft, formId?: string }>()
+const props = defineProps<{ draft: cerfa16702Draft, cerfaId?: string }>()
 const emit = defineEmits<{
     (e: 'submit'): void
 }>()
@@ -61,7 +61,7 @@ async function onSubmit() {
         if (s.dpc8) fd.append('dpc8', s.dpc8)
         if (s.dpc11) fd.append('dpc11', s.dpc11)
 
-        const res = await $fetch(`/api/administrative/cerfa16702/form/${props.formId}/`, {
+        const res = await $fetch(`/api/administrative/cerfa16702/${props.cerfaId}/attachments/`, {
             method: 'POST',
             credentials: 'include',
             body: fd,
@@ -82,19 +82,19 @@ async function onSubmit() {
 </script>
 
 <template>
-    <UForm :state="state" :validate="validate" class="space-y-3" @submit.prevent="onSubmit">
+    <UForm :state="state" :validate="validate" class="space-y-3 px-3" @submit.prevent="onSubmit">
 
         <div class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <UFormField name="dpc1" label="DPC1 - Plan de masse des constructions à édifier" required>
+                <UFormField name="dpc1" label="DPC1 - Plan de situation du terrain" required>
                     <UFileUpload v-model="state.dpc1" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
-                <UFormField name="dpc2" label="DPC2 - Plan en coupe du terrain et des constructions" required>
+                <UFormField name="dpc2" label="DPC2 - Plan de masse coté dans les 3 dimensions" required>
                     <UFileUpload v-model="state.dpc2" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
-                <UFormField name="dpc3" label="DPC3 - Notice descriptive" required>
+                <UFormField name="dpc3" label="DPC3 - Plan en coupe précisant l'implantation de la constrauction par rapport au profil du terrain" required>
                     <UFileUpload v-model="state.dpc3" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
@@ -102,26 +102,26 @@ async function onSubmit() {
                     <UFileUpload v-model="state.dpc4" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
-                <UFormField name="dpc5" label="DPC5 - Document graphique du terrain" required>
+                <UFormField name="dpc5" label="DPC5 - Représentation de l'aspect extérieur de la construction" required>
                     <UFileUpload v-model="state.dpc5" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
-                <UFormField name="dpc6" label="DPC6 - Photographie du terrain nu et de son environnement" required>
+                <UFormField name="dpc6" label="DPC6 - Document graphique permettant d'apprécier l'insertion du projet dans son environnement" required>
                     <UFileUpload v-model="state.dpc6" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
-                <UFormField name="dpc7" label="DPC7 - Photographie du terrain nu et de son environnement" required>
+                <UFormField name="dpc7" label="DPC7 - Photographie permettant de situer le terrain dans l'environnement proche" required>
                     <UFileUpload v-model="state.dpc7" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
-                <UFormField name="dpc8" label="DPC8 - Photographie du terrain nu et de son environnement" required>
+                <UFormField name="dpc8" label="DPC8 - Photographie permettant de situer le terrain dans le paysage lointain" required>
                     <UFileUpload v-model="state.dpc8" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <UFormField name="dpc11" label="DPC11 - Notice descriptive des matériaux" required>
+                <UFormField name="dpc11" label="DPC11 - Notice descriptive des matériaux utilisés" required>
                     <UFileUpload v-model="state.dpc11" icon="i-lucide-image" label="Importer une image"
                         description="PNG, JPG ou JPEG" accept="image/*" />
                 </UFormField>
