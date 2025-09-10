@@ -13,7 +13,7 @@ class InstallmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Installment
         fields = "__all__"
-        read_only_fields = ("id", "created_at", "updated_at", "is_paid")
+    read_only_fields = ("id", "created_at", "updated_at", "is_paid")
 
 
 class PaymentSerializer(serializers.ModelSerializer):
