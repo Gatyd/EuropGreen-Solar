@@ -1,9 +1,15 @@
 from rest_framework import serializers
 from .models import Offer
-from billing.models import Quote
 from billing.serializers import QuoteSerializer
 from request.models import ProspectRequest
 
+class OfferBaseSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Offer
+		fields = [
+			'id', 'last_name', 'first_name', 'email', 'phone', 'address', 'project_details'
+		]
+		read_only_fields = ['id']
 
 class OfferSerializer(serializers.ModelSerializer):
 	last_quote = serializers.SerializerMethodField()

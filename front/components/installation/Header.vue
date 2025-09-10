@@ -18,6 +18,7 @@ const openCerfa16702Attachments = ref(false)
 const openElectricalDiagram = ref(false)
 const openEnedisMandate = ref(false)
 const enedisMandateAction = ref<'full' | 'signature' | 'preview'>('full')
+const openInvoice = ref(false)
 
 // Historique des devis: tri et affichage
 const sortDirection = ref<'desc' | 'asc'>('desc') // backend renvoie du plus récent au plus ancien
@@ -73,6 +74,8 @@ const manageInvoice = async () => {
             })
         }
         invoiceLoading.value = false
+    } else {
+        openInvoice.value = true
     }
 }
 
@@ -106,6 +109,7 @@ onMounted(() => {
     <AdministrativeEnedisMandateModal v-model="openEnedisMandate" :action="enedisMandateAction"
         :representation-mandate="item?.representation_mandate" :enedis-mandate="item?.enedis_mandate"
         :form-id="item?.id" :form="item" @submit="emit('submit')" />
+    <InvoiceModal v-if="item?.offer" v-model="openInvoice" :offer="item?.offer" />
     <UCard class="mt-6">
         <template v-if="!loading">
             <div class="flex flex-col md:flex-row items-start justify-between gap-6">

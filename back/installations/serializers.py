@@ -13,6 +13,7 @@ from .models import (
 from administrative.serializers import Cerfa16702Serializer, ElectricalDiagramSerializer, EnedisMandateSerializer
 from invoices.serializers import InvoiceSerializer
 from billing.serializers import QuotePDFSerializer
+from offers.serializers import OfferBaseSerializer
 
 class SignatureSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -117,6 +118,7 @@ class FormDetailSerializer(serializers.ModelSerializer):
 	enedis_connection = EnedisConnectionSerializer(read_only=True)
 	commissioning = CommissioningSerializer(read_only=True)
 	invoice = InvoiceSerializer(read_only=True)
+	offer = OfferBaseSerializer(read_only=True)
 
 	# Documents administratifs
 	cerfa16702 = Cerfa16702Serializer(read_only=True)

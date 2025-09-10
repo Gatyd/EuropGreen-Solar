@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import models
 from decimal import Decimal
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Invoice, InvoiceLine, Installment, Payment
 from .serializers import InvoiceSerializer, PaymentSerializer, InstallmentSerializer
@@ -13,7 +14,8 @@ class InvoiceViewSet(mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      viewsets.GenericViewSet):
-    queryset = Invoice.objects.all().select_related("installation", "quote").prefetch_related("lines", "installments", "payments")
+    # Réponses plus légères; les échéances/paiements seront récupérés via endpoints dédiés filtrés par facture
+    queryset = Invoice.objects.all().select_related("installation", "quote")
     serializer_class = InvoiceSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -86,6 +88,8 @@ class InstallmentViewSet(viewsets.ModelViewSet):
     queryset = Installment.objects.all().select_related("invoice")
     serializer_class = InstallmentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {"invoice": ["exact"]}
 
     def get_permissions(self):
         # list/retrieve/create => HasRequestsAccess; update/partial_update/destroy => IsAdmin
@@ -94,9 +98,11 @@ class InstallmentViewSet(viewsets.ModelViewSet):
         return [IsAdmin()]
 
 class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.all().select_related("invoice", "installment")
+    queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {"invoice": ["exact"]}
 
     def get_permissions(self):
         # list/retrieve/create => HasRequestsAccess; update/partial_update/destroy => IsAdmin

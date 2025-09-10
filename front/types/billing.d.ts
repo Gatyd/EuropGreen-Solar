@@ -94,4 +94,35 @@ export interface Invoice {
     created_at: string;
     updated_at: string;
     lines: QuoteLine[];
+    installments?: Installment[];
+    payments?: Payment[];
+}
+
+export type InstallmentType = "deposit" | "balance" | "milestone";
+
+export interface Installment {
+    id: string;
+    invoice: string; // UUID
+    type: InstallmentType;
+    label: string;
+    due_date?: string | null; // date
+    percentage?: string | null; // Decimal as string (%)
+    amount?: string | null; // Decimal as string (EUR)
+    is_paid: boolean;
+    position: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Payment {
+    id: string;
+    invoice: string; // UUID
+    installment?: string | null; // UUID
+    date: string; // date
+    method?: string; // virement, CB, cheque, etc
+    reference?: string;
+    amount: string; // Decimal as string
+    notes?: string;
+    created_by?: string | null;
+    created_at: string;
 }

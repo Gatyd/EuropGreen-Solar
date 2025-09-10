@@ -1,4 +1,5 @@
 import type { Invoice, QuotePDF } from './billing'
+import type { Offer } from './offers'
 
 export type InstallationStatus =
   | 'technical_visit'
@@ -114,7 +115,7 @@ export interface Commissioning {
 
 export interface InstallationForm {
   id: string
-  offer: string
+  offer: Offer
   client_first_name: string
   client_last_name: string
   client_address: string
