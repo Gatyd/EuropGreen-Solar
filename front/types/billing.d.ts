@@ -87,6 +87,8 @@ export interface Invoice {
     discount_amount: string; // Decimal as string
     tax_rate: string; // Decimal as string (%)
     total: string; // Decimal as string
+    amount_paid?: string; // Decimal as string
+    balance_due?: string; // Decimal as string
     pdf?: string | null; // URL du PDF
     status: InvoiceStatus;
     created_by?: string | null;

@@ -109,7 +109,7 @@ onMounted(() => {
     <AdministrativeEnedisMandateModal v-model="openEnedisMandate" :action="enedisMandateAction"
         :representation-mandate="item?.representation_mandate" :enedis-mandate="item?.enedis_mandate"
         :form-id="item?.id" :form="item" @submit="emit('submit')" />
-    <InvoiceModal v-if="item?.offer" v-model="openInvoice" :offer="item?.offer" />
+    <InvoiceModal v-if="item?.offer" v-model="openInvoice" :offer="item?.offer" :invoice="item.invoice" @submit="emit('submit')" />
     <UCard class="mt-6">
         <template v-if="!loading">
             <div class="flex flex-col md:flex-row items-start justify-between gap-6">
@@ -217,7 +217,7 @@ onMounted(() => {
             </div>
         </template>
         <template v-else>
-            <div class="flex items-start justify-between gap-6">
+            <div class="flex flex-col md:flex-row items-start justify-between gap-6">
                 <div class="space-y-2">
                     <USkeleton class="h-5 w-48" />
                     <USkeleton class="h-4 w-64" />

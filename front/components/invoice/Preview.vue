@@ -27,8 +27,8 @@ const totalTTC = computed(() => totalHT.value + tva.value)
 const installments = computed<Installment[]>(() => props.invoice?.installments ?? [])
 const unpaidInstallments = computed(() => installments.value.filter(i => !i.is_paid))
 const payments = computed<Payment[]>(() => props.invoice?.payments ?? [])
-const amountPaid = computed(() => payments.value.reduce((s, p) => s + parseFloat(p.amount), 0))
-const balanceDue = computed(() => (props.invoice ? parseFloat(props.invoice.total) : 0) - amountPaid.value)
+const amountPaid = computed(() => (props.invoice ? parseFloat(props.invoice.amount_paid || '0') : 0))
+const balanceDue = computed(() => (props.invoice ? parseFloat(props.invoice.balance_due || '0') : 0))
 </script>
 
 <template>
@@ -62,8 +62,8 @@ const balanceDue = computed(() => (props.invoice ? parseFloat(props.invoice.tota
                         today }}</span></p>
                 <p v-if="invoice?.due_date"><span class="text-gray-500">Échéance :</span> <span class="font-semibold">{{
                     invoice.due_date }}</span></p>
-                <p v-if="invoice?.status" class="mt-1"><span class="text-gray-500">Statut :</span> <span
-                        class="uppercase font-semibold">{{ invoice.status.replace('_', ' ') }}</span></p>
+                <!-- <p v-if="invoice?.status" class="mt-1"><span class="text-gray-500">Statut :</span> <span
+                        class="uppercase font-semibold">{{ invoice.status.replace('_', ' ') }}</span></p> -->
             </div>
         </div>
 
