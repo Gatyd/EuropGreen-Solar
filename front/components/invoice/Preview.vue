@@ -58,10 +58,10 @@ const balanceDue = computed(() => (props.invoice ? parseFloat(props.invoice.bala
             <div>
                 <p><span class="text-gray-500">Facture N° :</span> <span class="font-semibold">{{ invoice?.number || '—'
                         }}</span></p>
-                <p><span class="text-gray-500">Date :</span> <span class="font-semibold">{{ invoice?.issue_date ||
-                        today }}</span></p>
+                <p><span class="text-gray-500">Date :</span> <span class="font-semibold">{{ invoice?.issue_date ?
+                    new Date(invoice.issue_date).toLocaleDateString('fr-FR') : today }}</span></p>
                 <p v-if="invoice?.due_date"><span class="text-gray-500">Échéance :</span> <span class="font-semibold">{{
-                    invoice.due_date }}</span></p>
+                    new Date(invoice.due_date).toLocaleDateString('fr-FR') }}</span></p>
                 <!-- <p v-if="invoice?.status" class="mt-1"><span class="text-gray-500">Statut :</span> <span
                         class="uppercase font-semibold">{{ invoice.status.replace('_', ' ') }}</span></p> -->
             </div>
@@ -86,7 +86,7 @@ const balanceDue = computed(() => (props.invoice ? parseFloat(props.invoice.bala
                             <p class="font-semibold mb-1">{{ l.name }}</p>
                             <p class="whitespace-pre-line text-[11px] font-medium text-zinc-500">{{ l.description }}</p>
                         </td>
-                        <td class="p-2 text-right align-top">{{ l.quantity }}</td>
+                        <td class="p-2 text-right align-top">{{ formatPrice(l.quantity) }}</td>
                         <td class="p-2 text-right align-top">{{ formatPrice(parseFloat(l.unit_price), true) }}</td>
                         <td class="p-2 text-right align-top">{{ formatPrice(parseFloat(l.discount_rate), true) }}</td>
                         <td class="p-2 text-right align-top">{{ formatPrice(parseFloat(l.line_total), true) }}</td>
@@ -94,43 +94,48 @@ const balanceDue = computed(() => (props.invoice ? parseFloat(props.invoice.bala
                 </tbody>
             </table>
         </div>
+        <div class="flex justify-between">
+            <div>
+                <!-- Échéances de paiements (si non soldées) -->
+                <div v-if="unpaidInstallments.length" class="mb-4 text-[11px] leading-relaxed">
+                    <p class="font-semibold text-red-600 mb-1">Échéances de paiements :</p>
+                    <div v-for="i in unpaidInstallments" :key="i.id" class="pl-1">
+                        <span class="font-medium">{{ i.label || 'Échéance' }}</span>
+                        — <span>{{ i.amount ? formatPrice(parseFloat(i.amount), true) + ' €' : (i.percentage ?
+                            formatPrice(parseFloat(i.percentage), true) + ' %' : '—') }}</span>
+                        — <span>{{ i.due_date ? new Date(i.due_date).toLocaleDateString('fr-FR') : '—' }}</span>
+                    </div>
+                </div>
 
-        <!-- Totaux -->
-        <div class="mt-2 mb-6 flex justify-end">
-            <div class="w-72 text-sm">
-                <div class="flex justify-between border-t py-1"><span class="font-semibold">TOTAL H.T. :</span><span>{{
-                    formatPrice(totalHT, true) }} €</span></div>
-                <div class="flex justify-between py-1"><span class="font-semibold">TVA {{ invoice ?
-                    formatPrice(parseFloat(invoice.tax_rate)) : '—' }}% :</span><span>{{ formatPrice(tva, true) }}
-                        €</span></div>
-                <div class="flex justify-between border-t font-bold py-1"><span>TOTAL (EUR) :</span><span>{{
-                    formatPrice(totalTTC, true) }} €</span></div>
-                <div class="flex justify-between py-1"><span class="font-semibold">Payé :</span><span>{{
-                    formatPrice(amountPaid, true) }} €</span></div>
-                <div class="flex justify-between py-1"><span class="font-semibold">Reste à payer :</span><span>{{
-                    formatPrice(balanceDue, true) }} €</span></div>
+                <!-- Règlements encaissés -->
+                <div v-if="payments.length" class="mb-6 text-[11px] leading-relaxed">
+                    <p class="font-semibold text-gray-700 mb-1">Règlements encaissés :</p>
+                    <div v-for="p in payments" :key="p.id" class="pl-1">
+                        <span class="font-medium">{{ p.date ? new Date(p.date).toLocaleDateString('fr-FR') : '—' }}</span>
+                        — <span>{{ p.method || 'Méthode inconnue' }}</span>
+                        <!-- <span v-if="p.reference" class="text-gray-500"> (Ref: {{ p.reference }})</span> -->
+                        — <span class="font-semibold">{{ formatPrice(parseFloat(p.amount), true) }} €</span>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Échéances de paiements (si non soldées) -->
-        <div v-if="unpaidInstallments.length" class="mb-4 text-[11px] leading-relaxed">
-            <p class="font-semibold text-red-600 mb-1">Échéances de paiements :</p>
-            <div v-for="i in unpaidInstallments" :key="i.id" class="pl-1">
-                <span class="font-medium">{{ i.label || 'Échéance' }}</span>
-                — <span>{{ i.amount ? formatPrice(parseFloat(i.amount), true) + ' €' : (i.percentage ?
-                    formatPrice(parseFloat(i.percentage), true) + ' %' : '—') }}</span>
-                — <span>Échéance {{ i.due_date || '—' }}</span>
-            </div>
-        </div>
-
-        <!-- Règlements encaissés -->
-        <div v-if="payments.length" class="mb-6 text-[11px] leading-relaxed">
-            <p class="font-semibold text-gray-700 mb-1">Règlements encaissés :</p>
-            <div v-for="p in payments" :key="p.id" class="pl-1">
-                <span class="font-medium">{{ p.date }}</span>
-                — <span>{{ p.method || 'Méthode inconnue' }}</span>
-                <span v-if="p.reference" class="text-gray-500"> (Ref: {{ p.reference }})</span>
-                — <span class="font-semibold">{{ formatPrice(parseFloat(p.amount), true) }} €</span>
+            <!-- Totaux -->
+            <div class="mt-2 mb-6 flex justify-end">
+                <div class="w-72 text-sm">
+                    <div class="flex justify-between border-t py-1"><span class="font-semibold">TOTAL H.T.
+                            :</span><span>{{
+                                formatPrice(totalHT, true) }} €</span></div>
+                    <div class="flex justify-between py-1"><span class="font-semibold">TVA {{ invoice ?
+                        formatPrice(parseFloat(invoice.tax_rate)) : '—' }}% :</span><span>{{ formatPrice(tva, true)
+                            }}
+                            €</span></div>
+                    <div class="flex justify-between border-t font-bold py-1"><span>TOTAL (EUR) :</span><span>{{
+                        formatPrice(totalTTC, true) }} €</span></div>
+                    <div class="flex justify-between py-1"><span class="font-semibold">Payé :</span><span>{{
+                        formatPrice(amountPaid, true) }} €</span></div>
+                    <div class="flex justify-between py-1"><span class="font-semibold">Reste à payer :</span><span>{{
+                        formatPrice(balanceDue, true) }} €</span></div>
+                </div>
             </div>
         </div>
 

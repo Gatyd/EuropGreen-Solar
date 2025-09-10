@@ -33,6 +33,15 @@ const state = reactive<{ date: string; amount: number | null; method: string; re
     }
 )
 
+function resetForm() {
+    state.date = ''
+    state.amount = null
+    state.method = 'Espèces'
+    state.reference = ''
+    state.installment = null
+    state.notes = ''
+}
+
 function validate(state: any) {
     const errors: any[] = []
     if (!state.date) errors.push({ name: 'date', message: 'Date requise' })
@@ -52,6 +61,7 @@ async function onSubmit() {
     )
     if (res) {
         toast.add({ title: 'Paiement ajouté', color: 'success' })
+        resetForm()
         emit('created', res)
     }
     loading.value = false
