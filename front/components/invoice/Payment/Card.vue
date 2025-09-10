@@ -16,12 +16,11 @@ const auth = useAuthStore()
 <template>
     <div class="rounded-md border border-gray-200 bg-white shadow-sm p-3 text-sm flex flex-col gap-1">
         <div class="flex justify-between items-start gap-2">
-            <span class="font-medium">Paiement</span>
+            <span class="font-medium">{{ formatPrice(Number(payment.amount)) }} €</span>
             <UBadge color="primary" variant="subtle" size="sm">{{ payment.date }}</UBadge>
         </div>
         <div class="flex items-center justify-between">
             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
-                <span>{{ formatPrice(Number(payment.amount)) }}</span>
                 <span v-if="payment.method">{{ payment.method }}</span>
                 <span v-if="payment.reference">Ref: {{ payment.reference }}</span>
                 <span v-if="payment.installment">Lié échéance</span>

@@ -30,7 +30,7 @@ const typeLabel: Record<string, string> = {
         </div>
         <div class="flex items-center justify-between">
             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
-                <span v-if="installment.percentage">{{ installment.percentage }}%</span>
+                <span v-if="installment.percentage">{{ formatPrice(installment.percentage) }}%</span>
                 <span v-if="installment.amount">{{ formatPrice(Number(installment.amount)) }}</span>
                 <span v-if="installment.due_date">Échéance: {{ installment.due_date }}</span>
                 <span class="uppercase tracking-wide text-[10px] text-gray-400">{{ typeLabel[installment.type] ||
