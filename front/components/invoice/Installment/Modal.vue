@@ -35,6 +35,18 @@ function resetForm() {
     state.due_date = null
 }
 
+watch(() => props.installment, (inst) => {
+    if (inst) {
+        state.label = inst.label || ''
+        state.type = (['deposit', 'balance', 'milestone'].includes(inst.type) ? inst.type : 'milestone') as any
+        state.percentage = inst.percentage ? parseFloat(inst.percentage) : null
+        state.amount = inst.amount ? parseFloat(inst.amount) : null
+        state.due_date = inst.due_date || null
+    } else {
+        resetForm()
+    }
+}, { immediate: true })
+
 function validate(state: any) {
     const errors: any[] = []
     if (!['deposit', 'balance', 'milestone'].includes(state.type)) errors.push({ name: 'type', message: 'Type invalide' })
@@ -54,11 +66,14 @@ async function onSubmit() {
     if (state.amount !== null) body.amount = state.amount
     if (state.due_date) body.due_date = state.due_date
     const res = await apiRequest(
-        () => $fetch<Installment>('/api/installments/', { method: 'POST', body, credentials: 'include' }),
+        () => $fetch<Installment>(
+            `/api/installments/${props.installment ? `${props.installment.id}/` : ''}`,
+            { method: props.installment ? 'PATCH' : 'POST', body, credentials: 'include' }
+        ),
         toast
     )
     if (res) {
-        toast.add({ title: 'Échéance ajoutée', color: 'success' })
+        toast.add({ title: `Échéance ${props.installment ? 'modifiée' : 'ajoutée'}`, color: 'success' })
         emit('created', res)
         resetForm()
     }
@@ -95,8 +110,9 @@ async function onSubmit() {
                     </UFormField>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <UButton variant="ghost" type="button" @click="model = false">Annuler</UButton>
-                    <UButton type="submit" :loading="loading" color="primary">Enregistrer</UButton>
+                    <UButton variant="ghost" color="neutral" type="button" @click="model = false">Annuler</UButton>
+                    <UButton type="submit" :label="installment ? 'Modifier' : 'Enregistrer'"
+                        :color="installment ? 'secondary' : 'primary'" :loading="loading" />
                 </div>
             </UForm>
         </template>

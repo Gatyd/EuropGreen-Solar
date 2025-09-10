@@ -42,6 +42,19 @@ function resetForm() {
     state.notes = ''
 }
 
+watch(() => props.payment, (pay) => {
+    if (pay) {
+        state.date = pay.date
+        state.amount = parseFloat(pay.amount)
+        state.method = pay.method || 'Espèces'
+        state.reference = pay.reference || ''
+        state.installment = pay.installment || null
+        state.notes = pay.notes || ''
+    } else {
+        resetForm()
+    }
+}, { immediate: true })
+
 function validate(state: any) {
     const errors: any[] = []
     if (!state.date) errors.push({ name: 'date', message: 'Date requise' })
@@ -56,11 +69,14 @@ async function onSubmit() {
     const body: any = { invoice: props.invoiceId, date: state.date, amount: state.amount, method: state.method, reference: state.reference }
     if (state.installment) body.installment = state.installment
     const res = await apiRequest(
-        () => $fetch<Payment>('/api/payments/', { method: 'POST', body, credentials: 'include' }),
+        () => $fetch<Payment>(
+            `/api/payments/${props.payment ? `${props.payment.id}/` : ''}`,
+            { method: 'POST', body, credentials: 'include' }
+        ),
         toast
     )
     if (res) {
-        toast.add({ title: 'Paiement ajouté', color: 'success' })
+        toast.add({ title: `Paiement ${props.payment ? 'modifié' : 'ajouté'}`, color: 'success' })
         resetForm()
         emit('created', res)
     }
@@ -80,7 +96,8 @@ async function onSubmit() {
                         <UInput v-model.number="state.amount" class="w-full" type="number" step="0.01" min="0" />
                     </UFormField>
                     <UFormField class="col-span-12 sm:col-span-5" label="Echéance" name="installment">
-                        <USelect v-model="state.installment" :items="installmentItems" value-key="value" class="w-full" />
+                        <USelect v-model="state.installment" :items="installmentItems" value-key="value"
+                            class="w-full" />
                     </UFormField>
                     <div class="col-span-12 sm:col-span-6 grid grid-cols-6 gap-2">
                         <UFormField class="col-span-3 sm:col-span-6" label="Méthode de paiement" name="payment_method">
@@ -95,8 +112,9 @@ async function onSubmit() {
                     </UFormField>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
-                    <UButton variant="ghost" @click="model = false" type="button">Annuler</UButton>
-                    <UButton type="submit" :loading="loading" color="primary">Enregistrer</UButton>
+                    <UButton variant="ghost" color="neutral" @click="model = false" type="button">Annuler</UButton>
+                    <UButton type="submit" :label="payment ? 'Modifier' : 'Ajouter'" :loading="loading"
+                        :color="payment ? 'secondary' : 'primary'" />
                 </div>
             </UForm>
         </template>

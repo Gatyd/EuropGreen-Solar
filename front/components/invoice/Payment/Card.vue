@@ -5,6 +5,11 @@ import { useAuthStore } from '~/store/auth'
 
 const props = defineProps<{ payment: Payment }>()
 
+const emit = defineEmits<{
+    (e: 'update', item: Payment): void
+    (e: 'delete', item: Payment): void
+}>()
+
 const auth = useAuthStore()
 </script>
 
@@ -33,8 +38,9 @@ const auth = useAuthStore()
             </div>
             <div v-if="auth.user?.is_superuser" class="flex items-center gap-1 ml-1">
                 <UButton size="xs" variant="ghost" icon="i-heroicons-pencil-square" color="secondary"
-                    aria-label="Modifier" />
-                <UButton size="xs" variant="ghost" icon="i-heroicons-trash" color="error" aria-label="Supprimer" />
+                    aria-label="Modifier" @click="emit('update', payment)" />
+                <UButton size="xs" variant="ghost" icon="i-heroicons-trash" color="error" aria-label="Supprimer"
+                    @click="emit('delete', payment)" />
             </div>
         </div>
     </div>

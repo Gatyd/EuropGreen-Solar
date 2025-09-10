@@ -5,6 +5,11 @@ import { useAuthStore } from '~/store/auth'
 
 const props = defineProps<{ installment: Installment }>()
 
+const emit = defineEmits<{
+    (e: 'update', item: Installment): void
+    (e: 'delete', item: Installment): void
+}>()
+
 const auth = useAuthStore()
 
 const typeLabel: Record<string, string> = {
@@ -33,8 +38,9 @@ const typeLabel: Record<string, string> = {
             </div>
             <div v-if="auth.user?.is_superuser" class="flex items-center gap-1 ml-1">
                 <UButton size="xs" variant="ghost" icon="i-heroicons-pencil-square" color="secondary"
-                    aria-label="Modifier" />
-                <UButton size="xs" variant="ghost" icon="i-heroicons-trash" color="error" aria-label="Supprimer" />
+                    aria-label="Modifier" @click="emit('update', installment)" />
+                <UButton size="xs" variant="ghost" icon="i-heroicons-trash" color="error" aria-label="Supprimer"
+                    @click="emit('delete', installment)" />
             </div>
         </div>
     </div>

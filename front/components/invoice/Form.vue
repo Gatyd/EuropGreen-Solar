@@ -13,16 +13,18 @@ const loadingRefresh = ref(false)
 const toast = useToast()
 
 const installments = ref<Installment[]>([])
+const installment = ref<Installment | null>(null)
 const payments = ref<Payment[]>([])
+const payment = ref<Payment | null>(null)
 
 const remaining = computed(() => props.invoice ? parseFloat(props.invoice.balance_due || '0') : 0)
 
 function sortInstallments(list: Installment[]) {
-  return [...list].sort((a, b) => {
-    const da = a.due_date || ''
-    const db = b.due_date || ''
-    return da.localeCompare(db)
-  })
+    return [...list].sort((a, b) => {
+        const da = a.due_date || ''
+        const db = b.due_date || ''
+        return da.localeCompare(db)
+    })
 }
 
 watch(() => props.invoice, (inv) => {
@@ -45,6 +47,26 @@ async function refreshInvoice() {
     }
 }
 
+function createInstallment() {
+    openInstallmentModal.value = true
+    installment.value = null
+}
+
+function onUpdateInstallment(item: Installment) {
+    openInstallmentModal.value = true
+    installment.value = item
+}
+
+function createPayment() {
+    openPaymentModal.value = true
+    payment.value = null
+}
+
+function onUpdatePayment(item: Payment) {
+    openPaymentModal.value = true
+    payment.value = item
+}
+
 function onInstallmentCreated() {
     openInstallmentModal.value = false
     refreshInvoice()
@@ -58,18 +80,12 @@ function onPaymentCreated() {
 <template>
     <div class="flex flex-col gap-4 h-full min-h-[80vh]">
         <!-- Modal création / édition échéance -->
-        <InvoiceInstallmentModal
-            v-if="props.invoice"
-            v-model="openInstallmentModal"
-            :invoice-id="props.invoice.id"
-            :total="props.invoice.total"
-            :remaining="remaining"
-            :installments="installments"
-            @created="onInstallmentCreated"
-        />
+        <InvoiceInstallmentModal v-if="props.invoice" v-model="openInstallmentModal" :invoice-id="props.invoice.id"
+            :total="props.invoice.total" :remaining="remaining" :installments="installments"
+            :installment="installment" @created="onInstallmentCreated" />
         <!-- Modal création paiement -->
         <InvoicePaymentModal v-if="props.invoice" v-model="openPaymentModal" :invoice-id="props.invoice.id"
-            :installments="installments" :remaining="remaining" @created="onPaymentCreated" />
+            :installments="installments" :remaining="remaining" :payment="payment" @created="onPaymentCreated" />
 
         <!-- Échéances -->
         <UCard class="flex-1 min-h-0 flex flex-col">
@@ -81,14 +97,14 @@ function onPaymentCreated() {
                             <UButton size="xs" variant="ghost" icon="i-heroicons-arrow-path" :loading="loadingRefresh"
                                 @click="refreshInvoice" />
                         </UTooltip>
-                        <UButton size="xs" icon="i-heroicons-plus" @click="openInstallmentModal = true"
+                        <UButton size="xs" icon="i-heroicons-plus" @click="createInstallment"
                             :disabled="!props.invoice">Ajouter</UButton>
                     </div>
                 </div>
             </template>
             <div class="flex-1 min-h-0 overflow-auto space-y-2 p-3">
                 <div v-if="!installments.length" class="italic text-gray-500">Aucune échéance définie</div>
-                <InvoiceInstallmentCard v-for="i in installments" :key="i.id" :installment="i" />
+                <InvoiceInstallmentCard v-for="i in installments" :key="i.id" :installment="i" @update="onUpdateInstallment" />
             </div>
         </UCard>
 
@@ -102,14 +118,14 @@ function onPaymentCreated() {
                             <UButton size="xs" variant="ghost" icon="i-heroicons-arrow-path" :loading="loadingRefresh"
                                 @click="refreshInvoice" />
                         </UTooltip>
-                        <UButton size="xs" icon="i-heroicons-plus" @click="openPaymentModal = true"
+                        <UButton size="xs" icon="i-heroicons-plus" @click="createPayment"
                             :disabled="!props.invoice">Ajouter</UButton>
                     </div>
                 </div>
             </template>
             <div class="flex-1 min-h-0 overflow-auto space-y-2 p-3">
                 <div v-if="!payments.length" class="p-3 italic text-gray-500">Aucun paiement enregistré</div>
-                <InvoicePaymentCard v-for="p in payments" :key="p.id" :payment="p" />
+                <InvoicePaymentCard v-for="p in payments" :key="p.id" :payment="p" @update="onUpdatePayment" />
             </div>
         </UCard>
     </div>
