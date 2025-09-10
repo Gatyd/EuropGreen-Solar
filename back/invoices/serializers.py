@@ -27,8 +27,10 @@ class InvoiceSerializer(serializers.ModelSerializer):
     lines = InvoiceLineSerializer(many=True, read_only=True)
     installments = InstallmentSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
+    amount_paid = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    balance_due = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
 
     class Meta:
         model = Invoice
         fields = "__all__"
-        read_only_fields = ("id", "created_at", "updated_at", "status", "number")
+        read_only_fields = ("id", "created_at", "updated_at", "status", "number", "amount_paid", "balance_due")

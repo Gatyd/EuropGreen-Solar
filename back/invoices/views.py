@@ -85,11 +85,11 @@ class InvoiceViewSet(mixins.CreateModelMixin,
 
 
 class InstallmentViewSet(viewsets.ModelViewSet):
-    queryset = Installment.objects.all().select_related("invoice")
+    queryset = Installment.objects.all()
     serializer_class = InstallmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = {"invoice": ["exact"]}
+    filterset_fields = ["invoice"]
 
     def get_permissions(self):
         # list/retrieve/create => HasRequestsAccess; update/partial_update/destroy => IsAdmin
@@ -102,7 +102,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = {"invoice": ["exact"]}
+    filterset_fields = ["invoice"]
 
     def get_permissions(self):
         # list/retrieve/create => HasRequestsAccess; update/partial_update/destroy => IsAdmin
