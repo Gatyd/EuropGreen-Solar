@@ -171,9 +171,33 @@ onMounted(() => {
                                         </div>
                                     </template>
                                 </UPopover>
-                                <UButton :color="item?.invoice ? 'primary' : 'neutral'" variant="subtle"
+                                <UButton v-if="!item?.invoice?.pdf" :color="item?.invoice ? 'primary' : 'neutral'"
+                                    variant="subtle"
                                     :icon="item?.invoice ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
                                     label="Facture" block :loading="invoiceLoading" @click="manageInvoice" />
+                                <UPopover v-else mode="hover">
+                                    <UButton color="primary" variant="subtle" :icon="'i-heroicons-document-check'"
+                                        label="Facture" block />
+
+                                    <template #content>
+                                        <div class="p-3">
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <button type="button" @click="openInvoice = true"
+                                                    class="group flex flex-col items-center justify-center rounded-md border border-default hover:border-primary-500 hover:bg-primary-50/50 transition px-3 py-3 text-xs">
+                                                    <UIcon name="i-heroicons-eye"
+                                                        class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-500" />
+                                                    <span class="truncate max-w-[8rem]">Détails</span>
+                                                </button>
+                                                <a :href="item.invoice?.pdf || undefined" target="_blank"
+                                                    class="group flex flex-col items-center justify-center rounded-md border border-default hover:border-primary-500 hover:bg-primary-50/50 transition px-3 py-3 text-xs">
+                                                    <UIcon name="i-heroicons-document-text"
+                                                        class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-500" />
+                                                    <span class="truncate max-w-[8rem]">{{ item.invoice?.number }}</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </UPopover>
                             </div>
                             <div
                                 class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">

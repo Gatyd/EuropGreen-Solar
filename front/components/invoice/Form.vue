@@ -111,13 +111,15 @@ function onPaymentCreated() {
             <template #header>
                 <div class="flex items-center justify-between gap-2">
                     <div class="font-semibold">Échéances</div>
-                    <div class="flex items-center gap-2">
+                    <div v-if="invoice?.balance_due && parseFloat(invoice.balance_due) > 0"
+                        class="flex items-center gap-2">
                         <UTooltip text="Rafraîchir">
                             <UButton size="xs" variant="ghost" icon="i-heroicons-arrow-path" :loading="loadingRefresh"
                                 @click="refreshInvoice" />
                         </UTooltip>
                         <UButton size="xs" icon="i-heroicons-plus" @click="createInstallment"
-                            :disabled="!props.invoice">Ajouter</UButton>
+                            :disabled="!props.invoice">Ajouter
+                        </UButton>
                     </div>
                 </div>
             </template>
@@ -133,7 +135,8 @@ function onPaymentCreated() {
             <template #header>
                 <div class="flex items-center justify-between gap-2">
                     <div class="font-semibold">Paiements</div>
-                    <div class="flex items-center gap-2">
+                    <div v-if="invoice?.balance_due && parseFloat(invoice.balance_due) > 0"
+                        class="flex items-center gap-2">
                         <UTooltip text="Rafraîchir">
                             <UButton size="xs" variant="ghost" icon="i-heroicons-arrow-path" :loading="loadingRefresh"
                                 @click="refreshInvoice" />

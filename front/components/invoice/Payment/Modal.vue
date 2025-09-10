@@ -63,7 +63,8 @@ function validate(state: any) {
     const errors: any[] = []
     if (!state.date) errors.push({ name: 'date', message: 'Date requise' })
     if (state.amount === null || state.amount <= 0) errors.push({ name: 'amount', message: 'Montant > 0 requis' })
-    if (state.amount && state.amount > props.remaining) errors.push({ name: 'amount', message: 'Montant dépasse le solde restant' })
+    if (!props.payment && state.amount && state.amount > props.remaining) errors.push({ name: 'amount', message: 'Montant dépasse le solde restant' })
+    if (props.payment && state.amount && state.amount > (props.remaining + parseFloat(props.payment.amount))) errors.push({ name: 'amount', message: 'Montant dépasse le solde restant' })
     return errors
 }
 
@@ -96,7 +97,8 @@ async function onSubmit() {
                     <UFormField class="col-span-6 sm:col-span-4" label="Date" name="date" required>
                         <UInput v-model="state.date" class="w-full" type="date" />
                     </UFormField>
-                    <UFormField class="col-span-6 sm:col-span-3" label="Montant" name="amount" required>
+                    <UFormField class="col-span-6 sm:col-span-3" label="Montant" name="amount"
+                        :help="`Restant: ${remaining.toFixed(2)}`" required>
                         <UInput v-model.number="state.amount" class="w-full" type="number" step="0.01" min="0" />
                     </UFormField>
                     <UFormField class="col-span-12 sm:col-span-5" label="Echéance" name="installment">

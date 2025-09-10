@@ -37,7 +37,7 @@ const typeLabel: Record<string, string> = {
                     installment.type }}</span>
             </div>
             <div v-if="auth.user?.is_superuser" class="flex items-center gap-1 ml-1">
-                <UButton size="xs" variant="ghost" icon="i-heroicons-pencil-square" color="secondary"
+                <UButton v-if="!installment.is_paid" size="xs" variant="ghost" icon="i-heroicons-pencil-square" color="secondary"
                     aria-label="Modifier" @click="emit('update', installment)" />
                 <UButton size="xs" variant="ghost" icon="i-heroicons-trash" color="error" aria-label="Supprimer"
                     @click="emit('delete', installment)" />
