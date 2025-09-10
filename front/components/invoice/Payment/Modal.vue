@@ -10,10 +10,14 @@ const emit = defineEmits<{ (e: 'created', item: Payment): void }>()
 const loading = ref(false)
 const paymentMethods = ['Carte bancaire', 'Virement bancaire', 'Chèque', 'Espèces', 'Autre']
 
-const installmentItems = computed(() => (props.installments || []).map((i: any) => ({
-    label: i.label || i.name || `Echéance ${i.id}`,
-    value: i.id
-})))
+const installmentItems = computed<{ label: string; value: string | null }[]>(() => {
+    return (props.installments || [])
+        .filter((i: any) => !i.is_paid)
+        .map((i: any) => ({
+            label: i.label,
+            value: i.id
+        }))
+})
 
 const state = reactive<{ date: string; amount: number | null; method: string; reference: string; installment: string | null; notes: string }>(
     props.payment ? {

@@ -54,7 +54,8 @@ function validate(state: any) {
     if (state.percentage !== null && (state.percentage <= 0 || state.percentage > 100)) errors.push({ name: 'percentage', message: 'Pourcentage 1-100' })
     if (state.amount !== null && state.amount <= 0) errors.push({ name: 'amount', message: 'Montant > 0 requis' })
     if (state.percentage === null && state.amount === null) errors.push({ name: 'amount', message: 'Indiquez le montant' })
-    if (state.amount && state.amount > props.remaining) errors.push({ name: 'amount', message: 'Dépasse le restant dû' })
+    if (!props.installment && state.amount && state.amount > props.remaining) errors.push({ name: 'amount', message: 'Dépasse le restant dû' })
+    if (props.installment && state.amount && state.amount > (props.remaining + parseFloat(props.installment.amount))) errors.push({ name: 'amount', message: 'Dépasse le restant dû' })
     return errors
 }
 

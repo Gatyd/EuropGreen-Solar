@@ -109,7 +109,7 @@ export interface Installment {
     label: string;
     due_date?: string | null; // date
     percentage?: string | null; // Decimal as string (%)
-    amount?: string | null; // Decimal as string (EUR)
+    amount: string; // Decimal as string (EUR)
     is_paid: boolean;
     position: number;
     created_at: string;
