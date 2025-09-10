@@ -8,6 +8,7 @@ const props = defineProps<{
     offer: Offer
     formId?: string
     invoice?: Invoice | null
+    action?: 'preview' | 'manage'
 }>()
 
 const emit = defineEmits<{ (e: 'submit'): void }>()
@@ -21,10 +22,11 @@ function openPrint() {
 </script>
 
 <template>
-    <UModal v-model:open="model" title="Gestion de la facture" fullscreen>
+    <UModal v-model:open="model" :fullscreen="action !== 'preview'"
+        :ui="{ content: action !== 'preview' ? 'max-w-screen' : 'max-w-5xl' }">
         <template #header>
             <div class="flex items-center justify-between w-full pr-2">
-                <span class="font-semibold">Gestion de la facture</span>
+                <span class="font-semibold">{{ action === 'manage' ? 'Gestion' : 'Aperçu' }} de la facture</span>
                 <div class="flex items-center gap-2" v-if="props.invoice">
                     <UButton size="sm" icon="i-heroicons-printer" @click="openPrint" color="primary">Imprimer</UButton>
                     <UButton icon="i-lucide-x" @click="model = false" color="neutral" variant="ghost" />
@@ -32,10 +34,11 @@ function openPrint() {
             </div>
         </template>
         <template #body>
-            <div class="flex flex-col xl:flex-row gap-4 p-2 lg:p-4">
-                <InvoiceForm class="xl:basis-1/2" :offer="props.offer" :invoice="props.invoice"
-                    @refresh="emit('submit')" />
-                <InvoicePreview class="xl:basis-1/2 shadow-md rounded-lg border border-default bg-white"
+            <div class="p-2 lg:p-4" :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4' : ''">
+                <InvoiceForm v-if="action !== 'preview'" class="xl:basis-1/2" :offer="props.offer"
+                    :invoice="props.invoice" @refresh="emit('submit')" />
+                <InvoicePreview
+                    :class="action !== 'preview' ? 'xl:basis-1/2 shadow-md rounded-lg border border-default bg-white' : ''"
                     :offer="props.offer" :invoice="props.invoice || null" />
             </div>
         </template>
