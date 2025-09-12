@@ -231,10 +231,10 @@ onMounted(() => {
                             <div v-if="auth.user?.is_staff"
                                 class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
                                 <UButton v-if="item?.consuels?.length === 0" color="neutral" variant="subtle"
-                                    :icon="'i-heroicons-plus'" label="Consuel PDF" @click="manageConsuelPDF" block />
+                                    :icon="'i-heroicons-plus'" label="Consuel PDF" @click="manageConsuelPDF" />
                                 <UPopover v-else mode="hover">
                                     <UButton color="primary" variant="subtle" :icon="'i-heroicons-document-check'"
-                                        label="Consuel PDF" block />
+                                        label="Consuel PDF" />
 
                                     <template #content>
                                         <div class="p-3">

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toast } from '#build/ui'
 import { onMounted, onBeforeUnmount, ref, watch, nextTick, markRaw } from 'vue'
 type Cerfa16702Draft = {
     declarant_type: string
@@ -112,18 +113,22 @@ async function fetchPreview(immediate = false) {
     try {
         // construire le payload léger (sans fichiers)
         const { dpc1, dpc2, dpc3, dpc4, dpc5, dpc6, dpc7, dpc8, dpc11, ...rest } = props.draft as any
-        const resp = await $fetch<Blob>(`/api/administrative/cerfa/preview/`, {
-            method: 'POST',
-            body: rest,
-            credentials: 'include',
-            // @ts-ignore runtime options
-            responseType: 'blob',
-            signal: abortController.signal,
-        })
-        // Charger via PDF.js (pas d'UI native)
-        const arrayBuffer = await resp.arrayBuffer()
-        await loadPdf(arrayBuffer)
-        updateLastUpdated()
+        const resp = await apiRequest(
+            () => $fetch<Blob>(`/api/administrative/cerfa/preview/`, {
+                method: 'POST',
+                body: rest,
+                credentials: 'include',
+                // @ts-ignore runtime options
+                responseType: 'blob',
+                signal: abortController?.signal,
+            }),
+            toast
+        )
+        if (resp instanceof Blob) {
+            const arrayBuffer = await resp.arrayBuffer()
+            await loadPdf(arrayBuffer)
+            updateLastUpdated()
+        }
     } catch (e: any) {
         error.value = e?.data?.message || e?.message || 'Erreur de chargement'
     } finally {

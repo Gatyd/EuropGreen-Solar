@@ -30,24 +30,25 @@ def _draw_overlay(width: float, height: float, items: List[Dict[str, Any]], y_of
 		t = it.get("type")
 		val = it.get("value")
 		if t == "text":
-			txt = str(val) if val not in (None, "") else str(it.get("key") or it.get("label") or "")
-			c.setFont("Helvetica", 9)
-			c.drawString(x, y, txt)
+			# Afficher uniquement si une valeur utilisateur est fournie
+			if val not in (None, ""):
+				c.setFont("Helvetica", 9)
+				c.drawString(x, y, str(val))
 		elif t == "checkbox":
-			size = 3.5 * mm
-			x0, y0 = x - size/2, y - size/2
-			c.rect(x0, y0, size, size, stroke=1, fill=0)
-			# coche si True
+			# Dessiner uniquement la croix si True; ne pas dessiner de case (présente sur le template)
 			if val:
+				size = 3.5 * mm
+				x0, y0 = x - size/2, y - size/2
 				c.line(x0, y0, x0+size, y0+size)
 				c.line(x0, y0+size, x0+size, y0)
 		elif t == "image":
-			# placeholder simple (cadre); pour un vrai upload, on lirait le fichier
-			w = (float(it.get("w")) if it.get("w") else 35.0) * mm
-			h = (float(it.get("h")) if it.get("h") else 20.0) * mm
-			c.rect(x, y, w, h, stroke=1, fill=0)
-			c.setFont("Helvetica", 6)
-			c.drawString(x+2, y + h/2 - 3, (str(it.get("key") or it.get("label") or "IMAGE"))[:22])
+			# N'afficher l'image que si fournie; pas de placeholder pour l'aperçu
+			if val:
+				try:
+					# À implémenter selon le type (fichier uplodé ou bytes); laissé vide pour l'instant
+					pass
+				except Exception:
+					pass
 	c.save()
 	buf.seek(0)
 	return buf
@@ -78,9 +79,19 @@ def preview_sc144a_pdf(request):
 				writer.addpage(pg)
 				continue
 			overlay = _draw_overlay(width, height, page_items, y_offset_mm)
-			overlay_page = PdfReader(overlay).pages[0]
-			PageMerge(pg).add(overlay_page).render()
-			writer.addpage(pg)
+			try:
+				ov_reader = PdfReader(overlay)
+				ov_pages = getattr(ov_reader, "pages", []) or []
+				if len(ov_pages) == 0:
+					# Rien à fusionner (overlay vide)
+					writer.addpage(pg)
+					continue
+				overlay_page = ov_pages[0]
+				PageMerge(pg).add(overlay_page).render()
+				writer.addpage(pg)
+			except Exception:
+				# En cas de parse d'overlay échoué, on garde la page telle quelle
+				writer.addpage(pg)
 
 		out_buf = io.BytesIO()
 		writer.write(out_buf)
@@ -136,6 +147,7 @@ class ConsuelPreviewAPIView(GenericAPIView):
 
 			template_pdf = os.path.join(settings.BASE_DIR, "static", "pdf", "SC-144A.pdf")
 			if PdfReader is None:
+				print("pdfrw non disponible")
 				return Response({"status": "error", "message": "pdfrw non disponible"}, status=500)
 			reader = PdfReader(template_pdf)
 			writer = PdfWriter()
@@ -148,9 +160,17 @@ class ConsuelPreviewAPIView(GenericAPIView):
 					writer.addpage(pg)
 					continue
 				overlay = _draw_overlay(width, height, page_items, y_offset_mm)
-				overlay_page = PdfReader(overlay).pages[0]
-				PageMerge(pg).add(overlay_page).render()
-				writer.addpage(pg)
+				try:
+					ov_reader = PdfReader(overlay)
+					ov_pages = getattr(ov_reader, "pages", []) or []
+					if len(ov_pages) == 0:
+						writer.addpage(pg)
+						continue
+					overlay_page = ov_pages[0]
+					PageMerge(pg).add(overlay_page).render()
+					writer.addpage(pg)
+				except Exception:
+					writer.addpage(pg)
 
 			out_buf = io.BytesIO()
 			writer.write(out_buf)
@@ -159,5 +179,6 @@ class ConsuelPreviewAPIView(GenericAPIView):
 			resp["Content-Disposition"] = "inline; filename=consuel_preview.pdf"
 			return resp
 		except Exception as e:
+			print(e)
 			return Response({"status": "error", "message": str(e)}, status=500)
 
