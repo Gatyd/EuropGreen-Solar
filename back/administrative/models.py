@@ -250,3 +250,49 @@ class EnedisMandate(models.Model):
                 errors["client_company_represented_by"] = "Représentant requis."
         if errors:
             raise ValidationError(errors)
+
+class Consuel(models.Model):
+    
+    class Template(models.TextChoices):
+        _144A = "144a", "SC-144A"
+        _144B = "144b", "SC-144B"
+        _144C = "144c", "SC-144C"
+        _144C2 = "144c2", "SC-144C2"
+          
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    template = models.CharField(max_length=10, choices=Template.choices, default=Template._144A)
+    number = models.CharField(max_length=32, unique=True, blank=True)
+    form = models.ForeignKey("installations.Form", on_delete=models.CASCADE, related_name="consuels")
+    installer_signature = models.OneToOneField(
+        "installations.Signature",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="consuel_installer",
+    )
+
+    # PDF
+    pdf = models.FileField(upload_to="administrative/consuels/pdfs/", null=True, blank=True)
+
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="created_consuels")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "administrative_consuel"
+        ordering = ["-created_at"]
+        verbose_name = "Consuel"
+        verbose_name_plural = "Consuels"
+
+    def save(self, *args, **kwargs):
+        if not self.number:
+            template = self.template.upper()
+            base = f"SC-{template}-"
+            seq = 1
+            while True:
+                candidate = f"{base}{seq:04d}"
+                if not Consuel.objects.filter(number=candidate).exists():
+                    self.number = candidate
+                    break
+                seq += 1
+        super().save(*args, **kwargs)

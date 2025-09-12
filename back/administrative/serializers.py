@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Cerfa16702, ElectricalDiagram, EnedisMandate
+from .models import Cerfa16702, ElectricalDiagram, EnedisMandate, Consuel
 from installations.models import Signature
 
 class SignatureSerializer(serializers.ModelSerializer):
@@ -26,4 +26,10 @@ class EnedisMandateSerializer(serializers.ModelSerializer):
     installer_signature = SignatureSerializer(read_only=True)
     class Meta:
         model = EnedisMandate
+        fields = '__all__'
+
+class ConsuelSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Consuel
         fields = '__all__'
