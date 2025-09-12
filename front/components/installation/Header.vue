@@ -16,6 +16,7 @@ const invoiceLoading = ref(false)
 const openCerfa16702 = ref(false)
 const openCerfa16702Attachments = ref(false)
 const openElectricalDiagram = ref(false)
+const openConsuelPDF = ref(false)
 const openEnedisMandate = ref(false)
 const enedisMandateAction = ref<'full' | 'signature' | 'preview'>('full')
 const openInvoice = ref(false)
@@ -27,6 +28,7 @@ const sortedQuotes = computed(() => {
     return sortDirection.value === 'desc' ? quotes : [...quotes].reverse()
 })
 const quoteGridCols = computed(() => Math.min(3, sortedQuotes.value.length || 1))
+const consuelGridCols = computed(() => Math.min(3, props.item?.consuels?.length || 1))
 
 const manageCerfa16702 = () => {
     if (!props.item?.cerfa16702?.pdf) {
@@ -44,6 +46,10 @@ const manageElectricalDiagram = () => {
     if (!props.item?.electrical_diagram?.file) {
         openElectricalDiagram.value = true
     }
+}
+
+const manageConsuelPDF = () => {
+    openConsuelPDF.value = true
 }
 
 const manageEnedisMandate = () => {
@@ -113,6 +119,7 @@ onMounted(() => {
         :form-id="item?.id" :form="item" @submit="emit('submit')" />
     <InvoiceModal v-if="item?.offer" v-model="openInvoice" :offer="item?.offer" :invoice="item.invoice"
         :form-id="item?.id" @submit="emit('submit')" :action="auth.user?.is_staff ? 'manage' : 'preview'" />
+    <AdministrativeConsuelModal v-model="openConsuelPDF" :form="item" :form-id="item?.id" @submit="emit('submit')" />
     <UCard class="mt-6">
         <template v-if="!loading">
             <div class="flex flex-col md:flex-row items-start justify-between gap-6">
@@ -223,8 +230,35 @@ onMounted(() => {
                             </div>
                             <div v-if="auth.user?.is_staff"
                                 class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
-                                <UButton color="neutral" variant="subtle" :icon="'i-heroicons-plus'" label="CONSUEL PDF"
-                                    block />
+                                <UButton v-if="item?.consuels?.length === 0" color="neutral" variant="subtle"
+                                    :icon="'i-heroicons-plus'" label="Consuel PDF" @click="manageConsuelPDF" block />
+                                <UPopover v-else mode="hover">
+                                    <UButton color="primary" variant="subtle" :icon="'i-heroicons-document-check'"
+                                        label="Consuel PDF" block />
+
+                                    <template #content>
+                                        <div class="p-3">
+                                            <div v-if="item?.consuels?.length" class="grid gap-2"
+                                                :style="{ gridTemplateColumns: `repeat(${consuelGridCols}, minmax(0, 1fr))` }">
+                                                <a v-for="c in item.consuels" :key="c.id" :href="c.pdf || undefined"
+                                                    target="_blank"
+                                                    class="group flex flex-col items-center justify-center rounded-md border border-default hover:border-primary-500 hover:bg-primary-50/50 transition px-3 py-3 text-xs">
+                                                    <UIcon name="i-heroicons-document-text"
+                                                        class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-500" />
+                                                    <span class="truncate max-w-[8rem]">{{ c.number }}</span>
+                                                </a>
+                                                <button type="button" @click="manageConsuelPDF"
+                                                    class="group flex flex-col items-center justify-center rounded-md border border-default hover:border-primary-500 hover:bg-primary-50/50 transition px-3 py-3 text-xs">
+                                                    <UIcon name="i-heroicons-eye"
+                                                        class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-500" />
+                                                    <span class="truncate max-w-[8rem]">Nouveau Consuel</span>
+                                                </button>
+                                            </div>
+                                            <div v-else class="text-xs text-gray-500 px-1 py-2">Aucun consuel disponible
+                                            </div>
+                                        </div>
+                                    </template>
+                                </UPopover>
                                 <UButton v-if="auth.user?.is_staff" block
                                     :color="props.item?.electrical_diagram?.file ? 'primary' : 'neutral'"
                                     variant="subtle" label="Schéma électrique"

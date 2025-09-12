@@ -148,6 +148,7 @@ export interface InstallationForm {
   cerfa16702?: Cerfa16702 | null
   electrical_diagram?: ElectricalDiagram | null
   enedis_mandate?: EnedisMandate | null
+  consuels?: Consuel[] | null
   // Devis
   quotes?: QuotePDF[] | null
 }
@@ -304,4 +305,15 @@ export interface EnedisMandate {
 
   created_at?: string
   updated_at?: string
+}
+
+export interface Consuel {
+  id: string
+  template: '144a' | '144b' | '144c' | '144c2'
+  number?: string
+  form_id: string
+  installer_signature?: Signature | null
+  pdf?: string | null
+  created_at: string
+  updated_at: string
 }
