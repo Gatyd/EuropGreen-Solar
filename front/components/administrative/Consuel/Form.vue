@@ -19,7 +19,7 @@ onMounted(() => {
     <div class="space-y-4">
         <UTabs v-model="active" :items="tabsItems">
             <template #a>
-                <AdministrativeConsuelFormSC144A v-model="props.draft" />
+                <AdministrativeConsuelFormSC144A :draft="draft" />
             </template>
             <template #b>
                 <div class="text-gray-500 text-sm">Formulaire 144B à venir…</div>
