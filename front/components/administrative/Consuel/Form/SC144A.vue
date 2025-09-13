@@ -1,5 +1,4 @@
 <script setup lang="ts">
-const model = defineModel<any>({ default: {} })
 
 const props = defineProps<{
     draft: sc144aDraft
