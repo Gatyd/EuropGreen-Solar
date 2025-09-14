@@ -183,6 +183,44 @@ const formSections = [
                 </div>
             </template>
             <template #a1_a2_a3>
+                <div class="grid grid-cols-12 gap-3 px-5 pb-4">
+                    <UCheckbox v-model="state.connect_grid_by_consumption_install" class="col-span-12"
+                        label="Raccordement au réseau public de distribution par l’installation de consommation" />
+                    <UCheckbox v-model="state.connect_grid_at_delivery_point" class="col-span-12"
+                        label="Raccordement au réseau public de distribution directement au point de livraison" />
+                    <UFormField label="Autres sources d’alimentation DC :" class="col-span-12 md:flex items-center gap-4"
+                        required>
+                        <div class="grid grid-cols-6 items-center gap-5">
+                            <UCheckbox v-model="state.other_dc_sources_no" label="Non" class="col-span-1" />
+                            <UCheckbox v-model="state.other_dc_sources_yes" label="Oui" class="col-span-1" />
+                            <UInput v-if="state.other_dc_sources_yes" v-model="state.other_dc_sources_details"
+                                placeholder="Préciser" class="col-span-4" />
+                        </div>
+                    </UFormField>
+                    <UFormField label="Autres sources d’alimentation AC :" class="col-span-12 md:flex items-center gap-4"
+                        required>
+                        <div class="grid grid-cols-6 items-center gap-5">
+                            <UCheckbox v-model="state.other_ac_sources_no" label="Non" class="col-span-1" />
+                            <UCheckbox v-model="state.other_ac_sources_yes" label="Oui" class="col-span-1" />
+                            <UInput v-if="state.other_ac_sources_yes" v-model="state.other_ac_sources_details"
+                                placeholder="Préciser" class="col-span-4" />
+                        </div>
+                    </UFormField>
+                    <UFormField label="(A2) Modification de l’installation photovoltaïque :"
+                        class="col-span-12 flex items-center gap-4" required>
+                        <div class="flex items-center gap-4">
+                            <UCheckbox v-model="state.modified_installation_no" label="Non" class="w-full" />
+                            <UCheckbox v-model="state.modified_installation_yes" label="Oui" class="w-full" />
+                        </div>
+                    </UFormField>
+                    <UFormField label="(A3) Date de référence :" class="col-span-12 flex items-center gap-4" required>
+                        <UInput type="date" v-model="state.reference_date" class="w-full" />
+                    </UFormField>
+                    <UCheckbox v-model="state.permit_application" label="Dépôt de demande de permis de construire" class="col-span-12 md:col-span-6" />
+                    <UCheckbox v-model="state.preliminary_declaration" label="Déclaration préalable de construction" class="col-span-12 md:col-span-6" />
+                    <UCheckbox v-model="state.contract_signature" label="Signature de marché" class="col-span-12 md:col-span-6" />
+                    <UCheckbox v-model="state.order_acknowledgement" label="Accusé de réception de commande" class="col-span-12 md:col-span-6" />
+                </div>
             </template>
             <template #part1>
             </template>

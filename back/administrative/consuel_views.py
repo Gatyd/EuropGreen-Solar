@@ -37,7 +37,7 @@ def _draw_overlay(width: float, height: float, items: List[Dict[str, Any]], y_of
 		elif t == "checkbox":
 			# Dessiner uniquement la croix si True; ne pas dessiner de case (présente sur le template)
 			if val:
-				size = 3.5 * mm
+				size = 2 * mm
 				x0, y0 = x - size/2, y - size/2
 				c.line(x0, y0, x0+size, y0+size)
 				c.line(x0, y0+size, x0+size, y0)
