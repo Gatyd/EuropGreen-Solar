@@ -25,7 +25,7 @@ def _draw_overlay(width: float, height: float, items: List[Dict[str, Any]], y_of
 	c = canvas.Canvas(buf, pagesize=(width, height))
 	for it in items:
 		x = float(it["x"]) * mm
-		y = float(it["y"]) - float(y_offset_mm)
+		y = float(it["y"]) #- float(y_offset_mm)
 		y = height - y * mm  # origine haut-gauche -> bas-gauche
 		t = it.get("type")
 		val = it.get("value")

@@ -123,7 +123,7 @@ const formSections = [
     },
     {
         value: 'part6',
-        label: 'Branchement*',
+        label: 'Branchement',
         slot: 'part6'
     },
     {
@@ -133,10 +133,14 @@ const formSections = [
     },
 ]
 
+const onSubmit = () => {
+
+}
+
 </script>
 
 <template>
-    <UForm :state="draft" class="space-y-3">
+    <UForm :state="draft" class="space-y-3" @submit="onSubmit">
         <UPageAccordion :default-value="['installer_info']" :items="formSections" type="multiple">
             <template #installer_info>
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
@@ -165,7 +169,7 @@ const formSections = [
             </template>
             <template #installation_info>
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
-                    <UFormField label="Nom" class="col-span-12">
+                    <UFormField label="Nom du client" class="col-span-12">
                         <UInput v-model="state.client_name" class="w-full" />
                     </UFormField>
                     <UFormField label="Adresse" class="col-span-12">
@@ -188,8 +192,8 @@ const formSections = [
                         label="Raccordement au réseau public de distribution par l’installation de consommation" />
                     <UCheckbox v-model="state.connect_grid_at_delivery_point" class="col-span-12"
                         label="Raccordement au réseau public de distribution directement au point de livraison" />
-                    <UFormField label="Autres sources d’alimentation DC :" class="col-span-12 md:flex items-center gap-4"
-                        required>
+                    <UFormField label="Autres sources d’alimentation DC :"
+                        class="col-span-12 md:flex items-center gap-4" required>
                         <div class="grid grid-cols-6 items-center gap-5">
                             <UCheckbox v-model="state.other_dc_sources_no" label="Non" class="col-span-1" />
                             <UCheckbox v-model="state.other_dc_sources_yes" label="Oui" class="col-span-1" />
@@ -197,8 +201,8 @@ const formSections = [
                                 placeholder="Préciser" class="col-span-4" />
                         </div>
                     </UFormField>
-                    <UFormField label="Autres sources d’alimentation AC :" class="col-span-12 md:flex items-center gap-4"
-                        required>
+                    <UFormField label="Autres sources d’alimentation AC :"
+                        class="col-span-12 md:flex items-center gap-4" required>
                         <div class="grid grid-cols-6 items-center gap-5">
                             <UCheckbox v-model="state.other_ac_sources_no" label="Non" class="col-span-1" />
                             <UCheckbox v-model="state.other_ac_sources_yes" label="Oui" class="col-span-1" />
@@ -213,29 +217,169 @@ const formSections = [
                             <UCheckbox v-model="state.modified_installation_yes" label="Oui" class="w-full" />
                         </div>
                     </UFormField>
+                    <div v-if="state.modified_installation_yes" class="col-span-12 grid grid-cols-12 gap-2">
+                        <p class="col-span-12 font-medium underline">A. Installation existante</p>
+                        <UFormField class="col-span-12 flex items-center gap-4"
+                            label="Date de la mise sous tension de l’installation de production existante :">
+                            <UInput v-model="state.existing_install_energization_date" class="w-full" />
+                        </UFormField>
+                        <UFormField class="col-span-12 flex items-center gap-4"
+                            label="Puissance initiale de production PV (en kVA) :">
+                            <UInput v-model="state.initial_pv_power" class="w-full" />
+                        </UFormField>
+                        <UFormField label="Présence de dispositifs de protection contre les surintensités côté DC :"
+                            class="col-span-12 flex items-center gap-4" required>
+                            <div class="flex items-center gap-4">
+                                <UCheckbox v-model="state.dc_overcurrent_protection_yes" label="Oui" class="w-full" />
+                                <UCheckbox v-model="state.dc_overcurrent_protection_no" label="Non" class="w-full" />
+                            </div>
+                        </UFormField>
+                        <UFormField label="Installation modifiée :" class="col-span-12 flex items-center gap-4"
+                            required>
+                            <div class="grid items-center grid-cols-12 gap-4">
+                                <UCheckbox v-model="state.modified_dc_only" label="Uniquement côté DC"
+                                    class="col-span-4" />
+                                <UCheckbox v-model="state.modified_ac_only" label="Uniquement côté AC"
+                                    class="col-span-4" />
+                                <UCheckbox v-model="state.modified_dc_ac" label="Côté DC et AC" class="col-span-4" />
+                            </div>
+                        </UFormField>
+                        <p class="col-span-12 font-medium underline">B. Partie nouvelle de l'installation</p>
+                        <UFormField class="col-span-12 flex items-center gap-4"
+                            label="Puissance de production PV (sans la partie existante) :">
+                            <UInput v-model="state.pv_power_without_existing" class="w-full" />
+                        </UFormField>
+                        <UFormField label="Onduleur(s) ajoutés :" class="col-span-12 md:flex items-center gap-4"
+                            required>
+                            <div class="grid grid-cols-4 items-center gap-5">
+                                <UCheckbox v-model="state.inverter_added_no" label="Non" class="col-span-1" />
+                                <UCheckbox v-model="state.inverter_added_yes" label="Oui" class="col-span-1" />
+                                <UInput v-if="state.inverter_added_yes" v-model="state.inverter_added_count"
+                                    placeholder="Nombre" type="number" class="col-span-2" />
+                            </div>
+                        </UFormField>
+                        <UFormField label="Onduleur(s) remplacé(s) :" class="col-span-12 md:flex items-center gap-4"
+                            required>
+                            <div class="grid grid-cols-4 items-center gap-5">
+                                <UCheckbox v-model="state.inverter_replaced_no" label="Non" class="col-span-1" />
+                                <UCheckbox v-model="state.inverter_replaced_yes" label="Oui" class="col-span-1" />
+                                <UInput v-if="state.inverter_replaced_yes" v-model="state.inverter_replaced_count"
+                                    placeholder="Nombre" type="number" class="col-span-2" />
+                            </div>
+                        </UFormField>
+                        <UFormField label="Onduleur(s) conservé(s) :" class="col-span-12 md:flex items-center gap-4"
+                            required>
+                            <div class="grid grid-cols-4 items-center gap-5">
+                                <UCheckbox v-model="state.inverter_kept_no" label="Non" class="col-span-1" />
+                                <UCheckbox v-model="state.inverter_kept_yes" label="Oui" class="col-span-1" />
+                                <UInput v-if="state.inverter_kept_yes" v-model="state.inverter_kept_count"
+                                    placeholder="Nombre" type="number" class="col-span-2" />
+                            </div>
+                        </UFormField>
+                    </div>
                     <UFormField label="(A3) Date de référence :" class="col-span-12 flex items-center gap-4" required>
                         <UInput type="date" v-model="state.reference_date" class="w-full" />
                     </UFormField>
-                    <UCheckbox v-model="state.permit_application" label="Dépôt de demande de permis de construire" class="col-span-12 md:col-span-6" />
-                    <UCheckbox v-model="state.preliminary_declaration" label="Déclaration préalable de construction" class="col-span-12 md:col-span-6" />
-                    <UCheckbox v-model="state.contract_signature" label="Signature de marché" class="col-span-12 md:col-span-6" />
-                    <UCheckbox v-model="state.order_acknowledgement" label="Accusé de réception de commande" class="col-span-12 md:col-span-6" />
+                    <UCheckbox v-model="state.permit_application" label="Dépôt de demande de permis de construire"
+                        class="col-span-12 md:col-span-6" />
+                    <UCheckbox v-model="state.preliminary_declaration" label="Déclaration préalable de construction"
+                        class="col-span-12 md:col-span-6" />
+                    <UCheckbox v-model="state.contract_signature" label="Signature de marché"
+                        class="col-span-12 md:col-span-6" />
+                    <UCheckbox v-model="state.order_acknowledgement" label="Accusé de réception de commande"
+                        class="col-span-12 md:col-span-6" />
                 </div>
             </template>
             <template #part1>
+                <div class="grid grid-cols-12 gap-3 px-5 pb-4">
+                    <UFormField label="Nombre de chaines" class="col-span-12 md:col-span-6 flex items-center gap-4">
+                        <UInput v-model="state.pv_module_string_count" class="w-full" />
+                    </UFormField>
+                    <UFormField label="U ocmax en V" class="col-span-12 md:col-span-6 flex items-center gap-4">
+                        <UInput v-model="state.pv_uocmax" class="w-full" />
+                    </UFormField>
+                    <UFormField label="I scmax-générateur (ou optimiseur) PV"
+                        class="col-span-12 flex items-center gap-4">
+                        <UInput v-model="state.pv_iscmax" class="w-full" />
+                    </UFormField>
+                </div>
             </template>
             <template #part2>
+                <div class="grid grid-cols-12 gap-3 px-5 pb-4">
+                    <UFormField label="Section (en mm²)" class="col-span-12 md:col-span-6 flex items-center gap-4">
+                        <UInput v-model="state.pv_main_cable_section" class="w-full" />
+                    </UFormField>
+                    <UFormField label="U" class="col-span-12 md:col-span-6 flex items-center gap-4">
+                        <UInput v-model="state.pv_main_cable_voltage" class="w-full">
+                            <template #trailing>
+                                <UKbd variant="outline" value="V (en courant continu)" />
+                            </template>
+                        </UInput>
+                    </UFormField>
+                    <UFormField label="Température admissible sur l’âme (en °C)"
+                        class="col-span-12 flex items-center gap-4">
+                        <UInput v-model="state.pv_main_cable_temp_rating" class="w-full" />
+                    </UFormField>
+                </div>
             </template>
             <template #part3>
+                <div class="grid grid-cols-12 gap-3 px-5 pb-4">
+                    <UFormField label="U n (en V)" class="col-span-12 md:col-span-6 flex items-center gap-4">
+                        <UInput v-model="state.dc_isolator_un" class="w-full" />
+                    </UFormField>
+                    <UFormField label="I n (en A)" class="col-span-12 md:col-span-6 flex items-center gap-4">
+                        <UInput v-model="state.dc_isolator_in" class="w-full" />
+                    </UFormField>
+                    <UCheckbox v-model="state.dc_isolator_not_applicable" class="col-span-12"
+                        label="Sans objet (ex : onduleur avec sectionneur intégré)" />
+                </div>
             </template>
             <template #part4>
+                <div class="grid grid-cols-12 px-5 pb-4">
+                    <div class="col-span-6 md:col-span-3 flex items-center gap-4">
+                        <UCheckbox v-model="state.dc_polarity_to_earth_no" label="Non" class="w-full" />
+                        <UCheckbox v-model="state.dc_polarity_to_earth_yes" label="Oui" class="w-full" />
+                    </div>
+                </div>
             </template>
             <template #part5>
+                <div class="grid grid-cols-12 gap-3 px-5 pb-4">
+                    <UFormField label="Nombre d’onduleurs identiques au(x) générateur(s) PV"
+                        class="col-span-12 flex items-center gap-4">
+                        <UInput v-model="state.inverter_identical_generator_count" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Marque et modèle"
+                        class="col-span-12 flex items-center gap-4">
+                        <UInput v-model="state.inverter_brand_model" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Sys. Découplage" required
+                        class="col-span-12 flex items-center gap-4">
+                        <div class="grid grid-cols-2 items-center gap-4">
+                            <UCheckbox v-model="state.inverter_ext_decoupling" label="externe" class="w-full" />
+                            <UCheckbox v-model="state.inverter_int_decoupling" label="intégré à l'onduleur" class="w-full" />
+                        </div>
+                    </UFormField>
+                </div>
             </template>
             <template #part6>
+                <div class="grid grid-cols-12 px-5 pb-4">
+                    <div class="col-span-6 grid grid-cols-2 items-center gap-4">
+                        <UCheckbox v-model="state.connection_power_limited" label="Puissance limitée" class="w-full" />
+                        <UCheckbox v-model="state.connection_power_monitored" label="Puissance surveillée" class="w-full" />
+                    </div>
+                </div>
             </template>
             <template #part7>
+                <div class="grid grid-cols-12 gap-3 px-5 pb-4">
+                    <CommonSignatureField label="Nom de l'installateur" required class="col-span-12" />
+                    <UFormField label="Cachet de l’installateur" class="col-span-12" required>
+                        <UFileUpload class="w-full" />
+                    </UFormField>
+                </div>
             </template>
         </UPageAccordion>
+        <div class="flex items-center justify-end px-5 pb-4">
+            <UButton type="submit" label="Enregistrer" />
+        </div>
     </UForm>
 </template>
