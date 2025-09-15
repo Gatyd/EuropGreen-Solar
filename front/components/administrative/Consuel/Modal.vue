@@ -12,7 +12,7 @@ const emit = defineEmits<{ (e: 'submit'): void }>()
 
 // Brouillon minimal; le contenu précis sera géré par les sous-formulaires
 const draft = reactive<any>({
-    model: 'SC-144A',
+    template: '144a',
     // y_offset_mm: 8,
     client_name: "",
     site_address_line1: "",

@@ -5,10 +5,12 @@ from rest_framework.viewsets import GenericViewSet
 from django.db import transaction
 from django.core.files.base import ContentFile
 from EuropGreenSolar.utils.helpers import get_client_ip
+from EuropGreenSolar.utils.helpers import decode_data_url_image
 from authentication.permissions import HasAdministrativeAccess
-from .models import Cerfa16702, ElectricalDiagram
+from .models import Cerfa16702, ElectricalDiagram, Consuel
 from installations.models import AdministrativeValidation
 from .serializers import Cerfa16702Serializer, ElectricalDiagramSerializer
+from .serializers import ConsuelSerializer
 from installations.models import Form, Signature
 import os
 from rest_framework.decorators import api_view, permission_classes
@@ -19,6 +21,14 @@ from datetime import datetime
 from django.http import HttpResponse
 from .pdf import CERFA_FIELD_MAPPING
 from .pdf import render_cerfa16702_attachments_pdf
+from .consuel_views import _draw_overlay
+import io
+try:
+    from pdfrw import PdfReader, PdfWriter, PageMerge
+except Exception:
+    PdfReader = None  # type: ignore
+    PdfWriter = None  # type: ignore
+    PageMerge = None  # type: ignore
 
 def format_date(value):
     """Transforme YYYY-MM-DD -> DDMMYYYY"""
@@ -284,3 +294,6 @@ class ElectricalDiagramViewSet(GenericViewSet):
 
         serializer = ElectricalDiagramSerializer(electric_diagram, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+## ConsuelViewSet déplacé dans consuel_views.py

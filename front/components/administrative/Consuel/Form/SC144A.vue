@@ -2,6 +2,10 @@
 
 const props = defineProps<{
     draft: sc144aDraft
+    loading: boolean
+}>()
+const emit = defineEmits<{
+    (e: 'submit'): void
 }>()
 
 type sc144aDraft = {
@@ -133,14 +137,10 @@ const formSections = [
     },
 ]
 
-const onSubmit = () => {
-
-}
-
 </script>
 
 <template>
-    <UForm :state="draft" class="space-y-3" @submit="onSubmit">
+    <UForm :state="draft" class="space-y-3" @submit="emit('submit')">
         <UPageAccordion :default-value="['installer_info']" :items="formSections" type="multiple">
             <template #installer_info>
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
@@ -379,7 +379,7 @@ const onSubmit = () => {
             </template>
         </UPageAccordion>
         <div class="flex items-center justify-end px-5 pb-4">
-            <UButton type="submit" label="Enregistrer" />
+            <UButton type="submit" :loading="loading" label="Enregistrer" />
         </div>
     </UForm>
 </template>
