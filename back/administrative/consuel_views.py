@@ -13,6 +13,9 @@ from .consuel_serializers import SC144APreviewSerializer
 
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+
+from EuropGreenSolar.utils.helpers import decode_data_url_image
 
 try:
 	from pdfrw import PdfReader, PdfWriter, PageMerge
@@ -24,9 +27,10 @@ def _draw_overlay(width: float, height: float, items: List[Dict[str, Any]], y_of
 	buf = io.BytesIO()
 	c = canvas.Canvas(buf, pagesize=(width, height))
 	for it in items:
+		# Positions définies en mm dans la config; appliquer un décalage vertical si fourni
 		x = float(it["x"]) * mm
-		y = float(it["y"]) #- float(y_offset_mm)
-		y = height - y * mm  # origine haut-gauche -> bas-gauche
+		y_mm = float(it["y"]) # - float(y_offset_mm or 0)
+		y = height - y_mm * mm  # origine haut-gauche -> bas-gauche
 		t = it.get("type")
 		val = it.get("value")
 		if t == "text":
@@ -45,8 +49,54 @@ def _draw_overlay(width: float, height: float, items: List[Dict[str, Any]], y_of
 			# N'afficher l'image que si fournie; pas de placeholder pour l'aperçu
 			if val:
 				try:
-					# À implémenter selon le type (fichier uplodé ou bytes); laissé vide pour l'instant
-					pass
+					image_obj = None
+					# val peut être un fichier Django (InMemoryUploadedFile, ContentFile) ou un chemin/bytes
+					# Support minimal: UploadedFile/ContentFile/bytes/chemin
+					if hasattr(val, "read"):
+						# Remettre le curseur en début au cas où
+						try:
+							val.seek(0)
+						except Exception:
+							pass
+						image_obj = ImageReader(val)
+					elif isinstance(val, (bytes, bytearray)):
+						image_obj = ImageReader(io.BytesIO(val))
+					elif isinstance(val, str):
+						# On peut accepter une data URL brute si passée jusqu'ici (peu probable après validation)
+						if val.startswith("data:image/"):
+							content, _ext = decode_data_url_image(val)
+							if content:
+								try:
+									content.seek(0)
+								except Exception:
+									pass
+								image_obj = ImageReader(content)
+						else:
+							# considérer comme chemin de fichier
+							if os.path.exists(val):
+								image_obj = ImageReader(val)
+
+					if image_obj is not None:
+						# Dimensions: utiliser w/h (mm) si fournis; sinon garder ratio à partir de l'image
+						target_w_mm = it.get("w")
+						target_h_mm = it.get("h")
+						if target_w_mm and target_h_mm:
+							w_pt = float(target_w_mm) * mm
+							h_pt = float(target_h_mm) * mm
+						else:
+							# Taille par défaut: 30x15 mm si non spécifié, en conservant le ratio
+							iw, ih = image_obj.getSize()
+							default_w_pt = 30.0 * mm
+							if iw and ih:
+								ratio = ih / float(iw)
+								w_pt = float(target_w_mm) * mm if target_w_mm else default_w_pt
+								h_pt = float(target_h_mm) * mm if target_h_mm else (w_pt * ratio)
+							else:
+								w_pt = default_w_pt
+								h_pt = 15.0 * mm
+
+						# drawImage attend le coin inférieur-gauche; notre y est calé sur la ligne de base/haut
+						c.drawImage(image_obj, x, y - h_pt, width=w_pt, height=h_pt, preserveAspectRatio=True, mask='auto')
 				except Exception:
 					pass
 	c.save()
@@ -140,7 +190,34 @@ class ConsuelPreviewAPIView(GenericAPIView):
 
 			payload = request.data.copy()
 			payload.pop("model", None)
-			serializer = self.get_serializer(data=payload)
+
+			# Tenter de prendre en charge les signatures dessinées transmises en data URL (champ *_data_url)
+			# On inspecte la config via un serializer temporaire pour récupérer les clés images.
+			temp_serializer = self.get_serializer(data=payload)
+			image_keys: List[str] = []
+			try:
+				for it in getattr(temp_serializer, "_config", []):
+					if it.get("type") == "image":
+						k = str(it.get("key"))
+						if k:
+							image_keys.append(k)
+			except Exception:
+				pass
+			# Construire un dict mutable pour insérer des fichiers décodés
+			mutable_payload: Dict[str, Any] = {}
+			for key in payload:
+				mutable_payload[key] = payload.get(key)
+			# Pour chaque clé image, si <key> n'est pas fourni en fichier mais <key>_data_url est présent, le décoder
+			for k in image_keys:
+				data_url_key = f"{k}_data_url"
+				if data_url_key in payload and (not payload.get(k)):
+					content, ext = decode_data_url_image(payload.get(data_url_key))
+					if content:
+						# Donner un nom de fichier pour que ImageField soit content
+						content.name = f"{k}.{ext or 'png'}"
+						mutable_payload[k] = content
+
+			serializer = self.get_serializer(data=mutable_payload)
 			serializer.is_valid(raise_exception=True)
 			items = serializer.get_items()
 			y_offset_mm = serializer.validated_data.get("y_offset_mm", 8.0)

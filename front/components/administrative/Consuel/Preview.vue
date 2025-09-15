@@ -59,16 +59,56 @@ async function fetchPreview(immediate = false) {
     loading.value = true
     error.value = null
     try {
-        // construire le payload léger (sans fichiers)
-        const { dpc1, dpc2, dpc3, dpc4, dpc5, dpc6, dpc7, dpc8, dpc11, ...rest } = props.draft as any
+        // Construire le payload: si signature/cachet fournis, utiliser FormData, sinon JSON
+        const draft: any = props.draft
+        const hasSignatureUpload = !!(draft?.installer_signature?.file)
+        const hasSignatureDraw = !!(draft?.installer_signature?.dataUrl)
+        const hasStamp = !!draft?.installer_stamp
+
+        let bodyToSend: any = null
+        let headers: any = undefined
+        if (hasSignatureUpload || hasSignatureDraw || hasStamp) {
+            const fd = new FormData()
+            for (const [k, v] of Object.entries(draft)) {
+                if (k === 'installer_signature' || k === 'installer_stamp') continue
+                // sérialiser booléens en '1'/'0'
+                if (typeof v === 'boolean') fd.append(k, v ? '1' : '0')
+                else if (v != null) fd.append(k, String(v))
+            }
+            // Signature
+            if (hasSignatureUpload && draft.installer_signature.file) {
+                fd.append('installer_signature', draft.installer_signature.file)
+                if (draft.installer_signature.signer_name) fd.append('installer_name', draft.installer_signature.signer_name)
+            } else if (hasSignatureDraw && draft.installer_signature.dataUrl) {
+                // Passer via data URL; le backend la décodera si aucun fichier direct n'est fourni
+                fd.append('installer_signature_data_url', draft.installer_signature.dataUrl)
+                if (draft.installer_signature.signer_name) fd.append('installer_name', draft.installer_signature.signer_name)
+            }
+            // Cachet
+            const stamp: any = draft.installer_stamp
+            if (stamp && typeof stamp === 'object' && 'name' in stamp && 'size' in stamp) {
+                // suppose un File ou Blob avec name
+                fd.append('installer_stamp', stamp as File)
+            } else if (draft.installer_stamp && (draft.installer_stamp as any).name) {
+                fd.append('installer_stamp', draft.installer_stamp as File)
+            }
+            bodyToSend = fd
+        } else {
+            // JSON simple (les booléens peuvent rester booleans)
+            const { installer_signature, installer_stamp, ...rest } = draft
+            bodyToSend = rest
+            headers = { 'Content-Type': 'application/json' }
+        }
+
         const resp = await apiRequest(
             () => $fetch<Blob>(`/api/administrative/consuel/preview/`, {
                 method: 'POST',
-                body: rest,
+                body: bodyToSend,
                 credentials: 'include',
                 // @ts-ignore runtime options
                 responseType: 'blob',
                 signal: abortController?.signal,
+                headers,
             }),
             toast
         )

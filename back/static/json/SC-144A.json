@@ -81,7 +81,7 @@
     { "key": "connection_power_monitored", "x": 73.5, "y": 228.3, "type": "checkbox" },
 
     { "key": "installer_name", "x": 40, "y": 252, "type": "text" },
-    { "key": "installer_signature", "x": 110, "y": 241, "type": "image" },
+    { "key": "installer_signature", "x": 105, "y": 228, "type": "image", "w": 42, "h": 47 },
     { "key": "signature_date", "x": 115, "y": 265, "type": "text" },
-    { "key": "installer_stamp", "x": 157, "y": 241, "type": "image" }
+    { "key": "installer_stamp", "x": 152, "y": 238, "type": "image", "w": 45, "h": 45 }
 ]

@@ -13,7 +13,7 @@ const emit = defineEmits<{ (e: 'submit'): void }>()
 // Brouillon minimal; le contenu précis sera géré par les sous-formulaires
 const draft = reactive<any>({
     model: 'SC-144A',
-    y_offset_mm: 8,
+    // y_offset_mm: 8,
     client_name: "",
     site_address_line1: "",
     site_address_line2: "",
@@ -76,10 +76,10 @@ const draft = reactive<any>({
     inverter_int_decoupling: false,
     connection_power_limited: false,
     connection_power_monitored: false,
-    // installer_name: "",
-    // installer_signature: "",
-    // signature_date: "",
-    // installer_stamp: ""
+    installer_name: "",
+    installer_signature: null,
+    signature_date: "",
+    installer_stamp: null
 })
 
 const onSubmit = () => {

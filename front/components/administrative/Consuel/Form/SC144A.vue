@@ -68,9 +68,9 @@ type sc144aDraft = {
     connection_power_limited: boolean,
     connection_power_monitored: boolean,
     installer_name: string,
-    installer_signature: string,
+    installer_signature: any,
     signature_date: string,
-    installer_stamp: string
+    installer_stamp: any
 }
 
 const state = toRef(props, 'draft')
@@ -225,7 +225,7 @@ const onSubmit = () => {
                         </UFormField>
                         <UFormField class="col-span-12 flex items-center gap-4"
                             label="Puissance initiale de production PV (en kVA) :">
-                            <UInput v-model="state.initial_pv_power" class="w-full" />
+                            <UInput v-model="state.initial_pv_power" type="number" class="w-full" />
                         </UFormField>
                         <UFormField label="Présence de dispositifs de protection contre les surintensités côté DC :"
                             class="col-span-12 flex items-center gap-4" required>
@@ -247,7 +247,7 @@ const onSubmit = () => {
                         <p class="col-span-12 font-medium underline">B. Partie nouvelle de l'installation</p>
                         <UFormField class="col-span-12 flex items-center gap-4"
                             label="Puissance de production PV (sans la partie existante) :">
-                            <UInput v-model="state.pv_power_without_existing" class="w-full" />
+                            <UInput v-model="state.pv_power_without_existing" type="number" class="w-full" />
                         </UFormField>
                         <UFormField label="Onduleur(s) ajoutés :" class="col-span-12 md:flex items-center gap-4"
                             required>
@@ -293,24 +293,24 @@ const onSubmit = () => {
             <template #part1>
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
                     <UFormField label="Nombre de chaines" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.pv_module_string_count" class="w-full" />
+                        <UInput v-model="state.pv_module_string_count" type="number" class="w-full" />
                     </UFormField>
                     <UFormField label="U ocmax en V" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.pv_uocmax" class="w-full" />
+                        <UInput v-model="state.pv_uocmax" type="number" class="w-full" />
                     </UFormField>
                     <UFormField label="I scmax-générateur (ou optimiseur) PV"
                         class="col-span-12 flex items-center gap-4">
-                        <UInput v-model="state.pv_iscmax" class="w-full" />
+                        <UInput v-model="state.pv_iscmax" type="number" class="w-full" />
                     </UFormField>
                 </div>
             </template>
             <template #part2>
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
                     <UFormField label="Section (en mm²)" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.pv_main_cable_section" class="w-full" />
+                        <UInput v-model="state.pv_main_cable_section" type="number" class="w-full" />
                     </UFormField>
                     <UFormField label="U" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.pv_main_cable_voltage" class="w-full">
+                        <UInput v-model="state.pv_main_cable_voltage" type="number" class="w-full">
                             <template #trailing>
                                 <UKbd variant="outline" value="V (en courant continu)" />
                             </template>
@@ -318,17 +318,17 @@ const onSubmit = () => {
                     </UFormField>
                     <UFormField label="Température admissible sur l’âme (en °C)"
                         class="col-span-12 flex items-center gap-4">
-                        <UInput v-model="state.pv_main_cable_temp_rating" class="w-full" />
+                        <UInput v-model="state.pv_main_cable_temp_rating" type="number" class="w-full" />
                     </UFormField>
                 </div>
             </template>
             <template #part3>
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
                     <UFormField label="U n (en V)" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.dc_isolator_un" class="w-full" />
+                        <UInput v-model="state.dc_isolator_un" type="number" class="w-full" />
                     </UFormField>
                     <UFormField label="I n (en A)" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.dc_isolator_in" class="w-full" />
+                        <UInput v-model="state.dc_isolator_in" type="number" class="w-full" />
                     </UFormField>
                     <UCheckbox v-model="state.dc_isolator_not_applicable" class="col-span-12"
                         label="Sans objet (ex : onduleur avec sectionneur intégré)" />
@@ -346,7 +346,7 @@ const onSubmit = () => {
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
                     <UFormField label="Nombre d’onduleurs identiques au(x) générateur(s) PV"
                         class="col-span-12 flex items-center gap-4">
-                        <UInput v-model="state.inverter_identical_generator_count" class="w-full" />
+                        <UInput v-model="state.inverter_identical_generator_count" type="number" class="w-full" />
                     </UFormField>
                     <UFormField label="Marque et modèle"
                         class="col-span-12 flex items-center gap-4">
@@ -371,9 +371,9 @@ const onSubmit = () => {
             </template>
             <template #part7>
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
-                    <CommonSignatureField label="Nom de l'installateur" required class="col-span-12" />
+                    <CommonSignatureField v-model="state.installer_signature" label="Nom de l'installateur" required class="col-span-12" />
                     <UFormField label="Cachet de l’installateur" class="col-span-12" required>
-                        <UFileUpload class="w-full" />
+                        <UFileUpload v-model="state.installer_stamp" class="w-full" accept="image/png,image/jpeg" :multiple="false" />
                     </UFormField>
                 </div>
             </template>
