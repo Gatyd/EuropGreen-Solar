@@ -62,7 +62,7 @@ async function onSubmit() {
         }
 
         const resp = await apiRequest(
-            () => $fetch(`/api/administrative/consuel/preview/`, {
+            () => $fetch(`/api/administrative/consuel/form/${props.formId}/`, {
                 method: 'POST',
                 body: bodyToSend,
                 credentials: 'include'

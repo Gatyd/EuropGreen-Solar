@@ -28,7 +28,7 @@ const sortedQuotes = computed(() => {
     return sortDirection.value === 'desc' ? quotes : [...quotes].reverse()
 })
 const quoteGridCols = computed(() => Math.min(3, sortedQuotes.value.length || 1))
-const consuelGridCols = computed(() => Math.min(3, props.item?.consuels?.length || 1))
+const consuelGridCols = computed(() => Math.min(3, (props.item?.consuels?.length || 1) + 1))
 
 const manageCerfa16702 = () => {
     if (!props.item?.cerfa16702?.pdf) {
@@ -249,7 +249,7 @@ onMounted(() => {
                                                 </a>
                                                 <button type="button" @click="manageConsuelPDF"
                                                     class="group flex flex-col items-center justify-center rounded-md border border-default hover:border-primary-500 hover:bg-primary-50/50 transition px-3 py-3 text-xs">
-                                                    <UIcon name="i-heroicons-eye"
+                                                    <UIcon name="i-heroicons-plus"
                                                         class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-500" />
                                                     <span class="truncate max-w-[8rem]">Nouveau Consuel</span>
                                                 </button>
