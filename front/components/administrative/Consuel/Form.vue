@@ -91,7 +91,7 @@ async function onSubmit() {
                 <AdministrativeConsuelFormSC144A :draft="draft" :loading="loading" @submit="onSubmit" />
             </template>
             <template #b>
-                <div class="text-gray-500 text-sm">Formulaire 144B à venir…</div>
+                <AdministrativeConsuelFormSC144B :draft="draft" :loading="loading" @submit="onSubmit" />
             </template>
             <template #c>
                 <div class="text-gray-500 text-sm">Formulaire 144C à venir…</div>

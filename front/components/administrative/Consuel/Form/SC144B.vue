@@ -101,6 +101,11 @@ const formSections = [
         slot: 'cote_continu'
     },
     {
+        value: 'tableau_cc',
+        label: 'TABLEAU COTE CONTINU',
+        slot: 'tableau_cc'
+    },
+    {
         value: 'ac',
         label: 'AC',
         slot: 'ac'

@@ -118,6 +118,59 @@ def _draw_overlay(width: float, height: float, items: List[Dict[str, Any]], y_of
 	return buf
 
 
+def _filter_items_for_page(items: List[Dict[str, Any]], page_index: int, page_height_pts: float) -> List[Dict[str, Any]]:
+	"""
+	Supporte deux modes de positionnement:
+	- Position locale par page: l'item a un champ 'page' (1-based) et 'y' exprimé en mm pour cette page.
+	- Position globale continue: l'item n'a pas de champ 'page' et 'y' est exprimé en mm depuis le haut de la première page;
+	  on en déduit la page via la hauteur de page et on convertit en y local pour cette page.
+
+	Retourne uniquement les items appartenant à la page demandée, avec 'y' normalisé en mm locaux.
+	"""
+	out: List[Dict[str, Any]] = []
+	try:
+		page_height_mm = float(page_height_pts) / float(mm) if page_height_pts else 0.0
+	except Exception:
+		page_height_mm = 0.0
+	for it in items:
+		try:
+			raw_y = float(it.get("y", 0))
+			has_page_flag = it.get("page") is not None
+			p_flag = int(it.get("page", 1)) if has_page_flag else None
+
+			if has_page_flag:
+				# Si la config a injecté page=1 par défaut mais y dépasse la hauteur -> interpréter comme global
+				if page_height_mm > 0 and raw_y >= page_height_mm:
+					# recalcul global
+					p = int(raw_y // page_height_mm) + 1
+					if p != page_index:
+						continue
+					y_local = raw_y - (p - 1) * page_height_mm
+				else:
+					# Mode local classique
+					if p_flag != page_index:
+						continue
+					y_local = raw_y
+			else:
+				# Mode global sans page explicite
+				if page_height_mm > 0:
+					p = int(raw_y // page_height_mm) + 1
+					if p != page_index:
+						continue
+					y_local = raw_y - (p - 1) * page_height_mm
+				else:
+					if page_index != 1:
+						continue
+					y_local = raw_y
+
+			new_it = dict(it)
+			new_it["y"] = y_local
+			out.append(new_it)
+		except Exception:
+			continue
+	return out
+
+
 def _fmt_date_ddmmyyyy(value: str | None) -> str:
 	"""YYYY-MM-DD -> DD/MM/YYYY; passthrough otherwise."""
 	if not value:
@@ -206,7 +259,8 @@ def generate_consuel_pdf(raw_payload: Dict[str, Any], template: str = "144a") ->
 		m = pg.MediaBox
 		width = float(m[2]) - float(m[0])
 		height = float(m[3]) - float(m[1])
-		page_items = [it for it in items if int(it.get("page", 1)) == i]
+		# Support des coordonnées globales (y au-delà d'une page) et des items sans 'page'
+		page_items = _filter_items_for_page(items, i, height)
 		if not page_items:
 			writer.addpage(pg)
 			continue
