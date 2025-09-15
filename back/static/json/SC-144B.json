@@ -78,10 +78,59 @@
     { "key": "inverter_int_decoupling", "x": 63.5, "y": 222.9, "type": "checkbox" },
 
     { "key": "connection_power_limited", "x": 43.5, "y": 95, "type": "checkbox", "page": 2 },
+    { "key": "connection_power_limited_details", "x": 68.5, "y": 95, "type": "text", "page": 2 },
     { "key": "connection_power_monitored", "x": 76.5, "y": 95, "type": "checkbox", "page": 2 },
 
     { "key": "installer_name", "x": 40, "y": 119, "type": "text", "page": 2 },
     { "key": "installer_signature", "x": 100, "y": 90, "type": "image", "page": 2, "w": 35, "h": 55 },
     { "key": "signature_date", "x": 105, "y": 132, "type": "text", "page": 2 },
-    { "key": "installer_stamp", "x": 140, "y": 100, "type": "image", "page": 2, "w": 45, "h": 45 }
+    { "key": "installer_stamp", "x": 140, "y": 100, "type": "image", "page": 2, "w": 45, "h": 45 },
+    
+    { "key": "a_number_of_strings_1", "x": 123, "y": 47, "type": "text", "page": 2 },
+    { "key": "a_number_of_strings_2", "x": 140, "y": 47, "type": "text", "page": 2 },
+    { "key": "a_number_of_strings_3", "x": 157, "y": 47, "type": "text", "page": 2 },
+    { "key": "a_number_of_strings_4", "x": 172, "y": 47, "type": "text", "page": 2 },
+    { "key": "a_number_of_strings_5", "x": 189, "y": 47, "type": "text", "page": 2 },
+
+    { "key": "b_iscmax_module_1", "x": 123, "y": 53, "type": "text", "page": 2 },
+    { "key": "b_iscmax_module_2", "x": 140, "y": 53, "type": "text", "page": 2 },
+    { "key": "b_iscmax_module_3", "x": 157, "y": 53, "type": "text", "page": 2 },
+    { "key": "b_iscmax_module_4", "x": 172, "y": 53, "type": "text", "page": 2 },
+    { "key": "b_iscmax_module_5", "x": 189, "y": 53, "type": "text", "page": 2 },
+
+    { "key": "c_irm_modules_1", "x": 123, "y": 59, "type": "text", "page": 2 },
+    { "key": "c_irm_modules_2", "x": 140, "y": 59, "type": "text", "page": 2 },
+    { "key": "c_irm_modules_3", "x": 157, "y": 59, "type": "text", "page": 2 },
+    { "key": "c_irm_modules_4", "x": 172, "y": 59, "type": "text", "page": 2 },
+    { "key": "c_irm_modules_5", "x": 189, "y": 59, "type": "text", "page": 2 },
+
+    { "key": "d_courant_admissible_cable_chaine_1", "x": 123, "y": 65, "type": "text", "page": 2 },
+    { "key": "d_courant_admissible_cable_chaine_2", "x": 140, "y": 65, "type": "text", "page": 2 },
+    { "key": "d_courant_admissible_cable_chaine_3", "x": 157, "y": 65, "type": "text", "page": 2 },
+    { "key": "d_courant_admissible_cable_chaine_4", "x": 172, "y": 65, "type": "text", "page": 2 },
+    { "key": "d_courant_admissible_cable_chaine_5", "x": 189, "y": 65, "type": "text", "page": 2 },
+
+    { "key": "e_type_courant_protection_chaine_1", "x": 123, "y": 71, "type": "text", "page": 2 },
+    { "key": "e_type_courant_protection_chaine_2", "x": 140, "y": 71, "type": "text", "page": 2 },
+    { "key": "e_type_courant_protection_chaine_3", "x": 157, "y": 71, "type": "text", "page": 2 },
+    { "key": "e_type_courant_protection_chaine_4", "x": 172, "y": 71, "type": "text", "page": 2 },
+    { "key": "e_type_courant_protection_chaine_5", "x": 189, "y": 71, "type": "text", "page": 2 },
+
+    { "key": "f_courant_admissible_cable_groupe_1", "x": 123, "y": 77, "type": "text", "page": 2 },
+    { "key": "f_courant_admissible_cable_groupe_2", "x": 140, "y": 77, "type": "text", "page": 2 },
+    { "key": "f_courant_admissible_cable_groupe_3", "x": 157, "y": 77, "type": "text", "page": 2 },
+    { "key": "f_courant_admissible_cable_groupe_4", "x": 172, "y": 77, "type": "text", "page": 2 },
+    { "key": "f_courant_admissible_cable_groupe_5", "x": 189, "y": 77, "type": "text", "page": 2 },
+
+    { "key": "g_iscmax_groupe_1", "x": 123, "y": 83, "type": "text", "page": 2 },
+    { "key": "g_iscmax_groupe_2", "x": 140, "y": 83, "type": "text", "page": 2 },
+    { "key": "g_iscmax_groupe_3", "x": 157, "y": 83, "type": "text", "page": 2 },
+    { "key": "g_iscmax_groupe_4", "x": 172, "y": 83, "type": "text", "page": 2 },
+    { "key": "g_iscmax_groupe_5", "x": 189, "y": 83, "type": "text", "page": 2 },
+
+    { "key": "h_type_courant_protection_groupe_1", "x": 123, "y": 89, "type": "text", "page": 2 },
+    { "key": "h_type_courant_protection_groupe_2", "x": 140, "y": 89, "type": "text", "page": 2 },
+    { "key": "h_type_courant_protection_groupe_3", "x": 157, "y": 89, "type": "text", "page": 2 },
+    { "key": "h_type_courant_protection_groupe_4", "x": 172, "y": 89, "type": "text", "page": 2 },
+    { "key": "h_type_courant_protection_groupe_5", "x": 189, "y": 89, "type": "text", "page": 2 }
 ]

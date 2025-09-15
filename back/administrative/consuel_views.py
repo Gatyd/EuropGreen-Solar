@@ -311,7 +311,6 @@ def _normalize_template(value: str | None) -> str:
 
 class ConsuelPreviewAPIView(GenericAPIView):
 	permission_classes = [HasAdministrativeAccess]
-	serializer_class = SC144APreviewSerializer  # par défaut: SC-144A
 
 	@extend_schema(
 		parameters=[
@@ -353,9 +352,14 @@ class ConsuelViewSet(GenericViewSet):
 			AdministrativeValidation.objects.create(form=form, created_by=request.user)
 
 		payload = request.data
-		consuel, _created = Consuel.objects.get_or_create(
+
+		# Template (strict)
+		template = _normalize_template(payload.get('template'))
+
+		consuel = Consuel.objects.create(
 			form=form,
-			defaults={'created_by': request.user}
+			template=template,
+			created_by=request.user
 		)
 
 		# Signature installateur (enregistrer le modèle Signature)
@@ -387,17 +391,8 @@ class ConsuelViewSet(GenericViewSet):
 			sig.save()
 			consuel.installer_signature = sig
 
-		# Template (strict)
-		template = _normalize_template(payload.get('template'))
-		if template in {"144a", "144b", "144c", "144c2"}:
-			consuel.template = template
-
-		consuel.created_by = consuel.created_by or request.user
 		consuel.save()
 
-		# Générer le PDF (seulement 144a pour l'instant)
-		if template != "144a":
-			return Response({"detail": f"template '{template}' non supporté pour le moment"}, status=status.HTTP_400_BAD_REQUEST)
 		try:
 			# Préparer un payload mutable avec fichiers éventuels (tampon)
 			mutable_payload: Dict[str, Any] = {k: payload.get(k) for k in payload}

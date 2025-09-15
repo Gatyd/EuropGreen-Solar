@@ -75,11 +75,21 @@ const draft = reactive<any>({
     inverter_ext_decoupling: false,
     inverter_int_decoupling: false,
     connection_power_limited: false,
+    connection_power_limited_details: "",
     connection_power_monitored: false,
     installer_name: "",
     installer_signature: null,
     signature_date: "",
     installer_stamp: null
+    // Tableau caractéristique groupes / chaînes (SC-144B)
+    , a_number_of_strings_1: "", a_number_of_strings_2: "", a_number_of_strings_3: "", a_number_of_strings_4: "", a_number_of_strings_5: ""
+    , b_iscmax_module_1: "", b_iscmax_module_2: "", b_iscmax_module_3: "", b_iscmax_module_4: "", b_iscmax_module_5: ""
+    , c_irm_modules_1: "", c_irm_modules_2: "", c_irm_modules_3: "", c_irm_modules_4: "", c_irm_modules_5: ""
+    , d_courant_admissible_cable_chaine_1: "", d_courant_admissible_cable_chaine_2: "", d_courant_admissible_cable_chaine_3: "", d_courant_admissible_cable_chaine_4: "", d_courant_admissible_cable_chaine_5: ""
+    , e_type_courant_protection_chaine_1: "", e_type_courant_protection_chaine_2: "", e_type_courant_protection_chaine_3: "", e_type_courant_protection_chaine_4: "", e_type_courant_protection_chaine_5: ""
+    , f_courant_admissible_cable_groupe_1: "", f_courant_admissible_cable_groupe_2: "", f_courant_admissible_cable_groupe_3: "", f_courant_admissible_cable_groupe_4: "", f_courant_admissible_cable_groupe_5: ""
+    , g_iscmax_groupe_1: "", g_iscmax_groupe_2: "", g_iscmax_groupe_3: "", g_iscmax_groupe_4: "", g_iscmax_groupe_5: ""
+    , h_type_courant_protection_groupe_1: "", h_type_courant_protection_groupe_2: "", h_type_courant_protection_groupe_3: "", h_type_courant_protection_groupe_4: "", h_type_courant_protection_groupe_5: ""
 })
 
 const onSubmit = () => {

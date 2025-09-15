@@ -70,11 +70,20 @@ type sc144aDraft = {
     inverter_ext_decoupling: boolean,
     inverter_int_decoupling: boolean,
     connection_power_limited: boolean,
+    connection_power_limited_details: string,
     connection_power_monitored: boolean,
     installer_name: string,
     installer_signature: any,
     signature_date: string,
     installer_stamp: any
+    a_number_of_strings_1: string; a_number_of_strings_2: string; a_number_of_strings_3: string; a_number_of_strings_4: string; a_number_of_strings_5: string;
+    b_iscmax_module_1: string; b_iscmax_module_2: string; b_iscmax_module_3: string; b_iscmax_module_4: string; b_iscmax_module_5: string;
+    c_irm_modules_1: string; c_irm_modules_2: string; c_irm_modules_3: string; c_irm_modules_4: string; c_irm_modules_5: string;
+    d_courant_admissible_cable_chaine_1: string; d_courant_admissible_cable_chaine_2: string; d_courant_admissible_cable_chaine_3: string; d_courant_admissible_cable_chaine_4: string; d_courant_admissible_cable_chaine_5: string;
+    e_type_courant_protection_chaine_1: string; e_type_courant_protection_chaine_2: string; e_type_courant_protection_chaine_3: string; e_type_courant_protection_chaine_4: string; e_type_courant_protection_chaine_5: string;
+    f_courant_admissible_cable_groupe_1: string; f_courant_admissible_cable_groupe_2: string; f_courant_admissible_cable_groupe_3: string; f_courant_admissible_cable_groupe_4: string; f_courant_admissible_cable_groupe_5: string;
+    g_iscmax_groupe_1: string; g_iscmax_groupe_2: string; g_iscmax_groupe_3: string; g_iscmax_groupe_4: string; g_iscmax_groupe_5: string;
+    h_type_courant_protection_groupe_1: string; h_type_courant_protection_groupe_2: string; h_type_courant_protection_groupe_3: string; h_type_courant_protection_groupe_4: string; h_type_courant_protection_groupe_5: string;
 }
 
 const state = toRef(props, 'draft')
@@ -102,7 +111,7 @@ const formSections = [
     },
     {
         value: 'tableau_cc',
-        label: 'TABLEAU COTE CONTINU',
+        label: 'Tableau des caractéristiques de chaque groupe / chaîne PV',
         slot: 'tableau_cc'
     },
     {
@@ -298,7 +307,8 @@ const formSections = [
                         class="col-span-12 flex items-center gap-4">
                         <UInput v-model="state.pv_main_cable_temp_rating" type="number" class="w-full" />
                     </UFormField>
-                    <p class="col-span-12 font-bold"><span class="text-sky-500">(3)</span> Interrupteur-Sectionneur général DC :</p>
+                    <p class="col-span-12 font-bold"><span class="text-sky-500">(3)</span> Interrupteur-Sectionneur
+                        général DC :</p>
                     <UFormField label="U n (en V)" class="col-span-12 md:col-span-6 flex items-center gap-4">
                         <UInput v-model="state.dc_isolator_un" type="number" class="w-full" />
                     </UFormField>
@@ -308,7 +318,8 @@ const formSections = [
                     <UCheckbox v-model="state.dc_isolator_not_applicable" class="col-span-12"
                         label="Sans objet (ex : onduleur avec sectionneur intégré)" />
                     <div class="col-span-12 grid grid-cols-2 md:grid-cols-3 items-center gap-4">
-                        <p class="col-span-2 md:col-span-1 font-bold"><span class="text-sky-500">(4)</span> Polarité à la terre* :</p>
+                        <p class="col-span-2 md:col-span-1 font-bold"><span class="text-sky-500">(4)</span> Polarité à
+                            la terre* :</p>
                         <UCheckbox v-model="state.dc_polarity_to_earth_no" label="Non" class="w-full" />
                         <UCheckbox v-model="state.dc_polarity_to_earth_yes" label="Oui" class="w-full" />
                     </div>
@@ -329,13 +340,88 @@ const formSections = [
                     </UFormField>
                 </div>
             </template>
+            <template #tableau_cc>
+                <div class="px-3 md:px-5 pb-4 space-y-4">
+                    <div class="overflow-auto">
+                        <table class="min-w-full border border-gray-300 text-xs">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 p-1 text-left w-40">Paramètre</th>
+                                    <th v-for="i in 5" :key="'col-head-' + i"
+                                        class="border border-gray-300 p-1 w-16 text-center">{{ i }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-gray-300 p-1">A. Nombre de chaînes</td>
+                                    <td v-for="i in 5" :key="'a_' + i" class="border border-gray-300 p-0">
+                                        <UInput v-model="(state as any)['a_number_of_strings_' + i]"
+                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 p-1">B. Iscmax module</td>
+                                    <td v-for="i in 5" :key="'b_' + i" class="border border-gray-300 p-0">
+                                        <UInput v-model="(state as any)['b_iscmax_module_' + i]"
+                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 p-1">C. IRM modules</td>
+                                    <td v-for="i in 5" :key="'c_' + i" class="border border-gray-300 p-0">
+                                        <UInput v-model="(state as any)['c_irm_modules_' + i]"
+                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 p-1">D. Courant admissible câble chaîne</td>
+                                    <td v-for="i in 5" :key="'d_' + i" class="border border-gray-300 p-0">
+                                        <UInput v-model="(state as any)['d_courant_admissible_cable_chaine_' + i]"
+                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 p-1">E. Type & courant protection chaîne</td>
+                                    <td v-for="i in 5" :key="'e_' + i" class="border border-gray-300 p-0">
+                                        <UInput v-model="(state as any)['e_type_courant_protection_chaine_' + i]"
+                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 p-1">F. Courant admissible câble groupe</td>
+                                    <td v-for="i in 5" :key="'f_' + i" class="border border-gray-300 p-0">
+                                        <UInput v-model="(state as any)['f_courant_admissible_cable_groupe_' + i]"
+                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 p-1">G. Iscmax groupe</td>
+                                    <td v-for="i in 5" :key="'g_' + i" class="border border-gray-300 p-0">
+                                        <UInput v-model="(state as any)['g_iscmax_groupe_' + i]"
+                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 p-1">H. Type & courant protection groupe</td>
+                                    <td v-for="i in 5" :key="'h_' + i" class="border border-gray-300 p-0">
+                                        <UInput v-model="(state as any)['h_type_courant_protection_groupe_' + i]"
+                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </template>
             <template #ac>
                 <div class="grid grid-cols-12 px-5 pb-4">
-                    <div class="col-span-12 grid grid-cols-2 md:grid-cols-3 items-center gap-4">
-                        <p class="col-span-2 md:col-span-1 font-bold"><span class="text-sky-500">(6)</span> Branchement* :</p>
+                    <div class="col-span-12 grid grid-cols-2 md:grid-cols-4 items-center gap-4">
+                        <p class="col-span-2 md:col-span-1 font-bold"><span class="text-sky-500">(6)</span> Branchement*:</p>
                         <UCheckbox v-model="state.connection_power_limited" label="Puissance limitée" class="w-full" />
                         <UCheckbox v-model="state.connection_power_monitored" label="Puissance surveillée"
                             class="w-full" />
+                        <UInput v-if="state.connection_power_limited" v-model="state.connection_power_limited_details"
+                            placeholder="Préciser" />
                     </div>
                 </div>
             </template>
