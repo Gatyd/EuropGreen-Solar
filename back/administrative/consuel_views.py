@@ -13,7 +13,13 @@ from django.core.files.base import ContentFile
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
 from authentication.permissions import HasAdministrativeAccess
-from .consuel_serializers import SC144APreviewSerializer
+from .consuel_serializers import (
+	SC144APreviewSerializer,
+	SC144BPreviewSerializer,
+	SC144CPreviewSerializer,
+	SC144C2PreviewSerializer,
+	ConsuelPreviewSerializer,
+)
 from .models import Consuel
 from installations.models import AdministrativeValidation, Form, Signature
 
@@ -123,7 +129,7 @@ def _fmt_date_ddmmyyyy(value: str | None) -> str:
 		return str(value)
 
 
-def _prepare_payload_for_pdf(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
+def _prepare_payload_for_pdf(raw_payload: Dict[str, Any], template: str = "144a") -> Dict[str, Any]:
 	"""Clone and normalize payload for PDF generation:
 	- decode any <image_key>_data_url to a ContentFile and assign to key
 	- accept direct files from request.FILES (caller should inject them)
@@ -134,9 +140,9 @@ def _prepare_payload_for_pdf(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
 	for k in raw_payload:
 		payload[k] = raw_payload.get(k)
 
-	# Discover image keys from serializer config
+	# Discover image keys from serializer config for this template
 	try:
-		_temp = SC144APreviewSerializer(data={})
+		_temp = ConsuelPreviewSerializer(data={}, template=template)
 		image_keys: List[str] = [str(it.get("key")) for it in getattr(_temp, "_config", []) if it.get("type") == "image" and it.get("key")]
 	except Exception:
 		image_keys = []
@@ -170,23 +176,30 @@ def generate_consuel_pdf(raw_payload: Dict[str, Any], template: str = "144a") ->
 	template = (template or "").strip().lower() or "144a"
 	if template not in {"144a", "144b", "144c", "144c2"}:
 		raise ValueError("template invalide")
-	if template != "144a":
-		raise ValueError("template non supporté pour le moment")
 
 	if PdfReader is None or PdfWriter is None or PageMerge is None:
 		raise RuntimeError("pdfrw non disponible")
 
 	# Normalize payload
-	payload = _prepare_payload_for_pdf(raw_payload)
+	payload = _prepare_payload_for_pdf(raw_payload, template=template)
 
-	# Build items via serializer
-	ser = SC144APreviewSerializer(data=payload)
+	# Build items via serializer (chooser per template)
+	tpl = template
+	if tpl == "144a":
+		ser = SC144APreviewSerializer(data=payload)
+	elif tpl == "144b":
+		ser = SC144BPreviewSerializer(data=payload)
+	elif tpl == "144c":
+		ser = SC144CPreviewSerializer(data=payload)
+	else:  # 144c2
+		ser = SC144C2PreviewSerializer(data=payload)
 	ser.is_valid(raise_exception=True)
 	items = ser.get_items()
 	y_offset_mm = ser.validated_data.get("y_offset_mm", 8.0)
 
 	# Template file mapping
-	input_pdf = os.path.join(settings.BASE_DIR, "static", "pdf", "SC-144A.pdf")
+	input_file_name = f"SC-144{'A' if template == '144a' else 'B' if template == '144b' else 'C' if template == '144c' else 'C2'}.pdf"
+	input_pdf = os.path.join(settings.BASE_DIR, "static", "pdf", input_file_name)
 	reader = PdfReader(input_pdf)
 	writer = PdfWriter()
 	for i, pg in enumerate(reader.pages, 1):
@@ -257,9 +270,6 @@ class ConsuelPreviewAPIView(GenericAPIView):
 	def post(self, request, *args, **kwargs):
 		try:
 			tpl = _normalize_template(request.query_params.get("template") or request.data.get("template"))
-			# Only 144a supported at the moment
-			if tpl != "144a":
-				return Response({"status": "error", "message": f"template '{tpl}' non supporté pour le moment"}, status=400)
 			pdf_bytes = generate_consuel_pdf(request.data, template=tpl)
 			resp = HttpResponse(pdf_bytes, content_type="application/pdf")
 			resp["Content-Disposition"] = "inline; filename=consuel_preview.pdf"
