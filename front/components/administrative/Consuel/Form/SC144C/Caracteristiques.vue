@@ -107,7 +107,8 @@ defineProps<{ state: any }>()
             <UInput v-model="state.inverter_brand_model" class="w-full" />
         </UFormField>
         <UFormField label="Sys. Découplage" required class="col-span-12 flex items-center gap-4">
-            <div class="grid grid-cols-2 items-center gap-4">
+            <div class="grid grid-cols-3 items-center gap-4">
+                <UCheckbox v-model="state.inverter_na_decoupling" label="sans objet" class="w-full" />
                 <UCheckbox v-model="state.inverter_ext_decoupling" label="externe" class="w-full" />
                 <UCheckbox v-model="state.inverter_int_decoupling" label="intégré à l'onduleur" class="w-full" />
             </div>

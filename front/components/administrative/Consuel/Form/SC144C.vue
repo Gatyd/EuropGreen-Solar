@@ -20,14 +20,22 @@ type sc144cDraft = {
     connect_grid_by_consumption_install: boolean,
     connect_grid_at_delivery_point: boolean,
     no_connect_grid: boolean,
+    dc_bus_photovoltaic_yes: boolean,
+    dc_bus_photovoltaic_no: boolean,
+    ac_bus_photovoltaic_yes: boolean,
+    ac_bus_photovoltaic_no: boolean,
     other_dc_sources_no: boolean,
     other_dc_sources_yes: boolean,
     other_dc_sources_details: string,
     other_ac_sources_no: boolean,
     other_ac_sources_yes: boolean,
     other_ac_sources_details: string,
+    stand_alone_installation_yes: boolean,
+    stand_alone_installation_no: boolean,
     modified_installation_no: boolean,
     modified_installation_yes: boolean,
+    adding_batteries_yes: boolean,
+    adding_batteries_no: boolean,
     reference_date: string,
     permit_application: boolean,
     preliminary_declaration: boolean,
@@ -87,6 +95,7 @@ type sc144cDraft = {
     dc_polarity_to_earth_yes: boolean,
     inverter_identical_generator_count: string,
     inverter_brand_model: string,
+    inverter_na_decoupling: boolean,
     inverter_ext_decoupling: boolean,
     inverter_int_decoupling: boolean,
     connection_power_limited: boolean,
@@ -174,7 +183,7 @@ const formSections = [
     },
     {
         value: 'tableau_ct',
-        label: 'Tableau des caractéristiques de chaque groupe / chaîne PV',
+        label: 'TABLEAU DES CARACTERISTIQUES DE CHAQUE GROUPE / CHAINE PV',
         slot: 'tableau_ct'
     },
     {
@@ -184,7 +193,7 @@ const formSections = [
     },
     {
         value: 'signature_stamp',
-        label: 'Signature et Cachet',
+        label: 'SIGNATURE ET CACHET',
         slot: 'signature_stamp'
     },
 ]
@@ -246,6 +255,12 @@ const formSections = [
                         label="Raccordement au réseau public de distribution directement au point de livraison" />
                     <UCheckbox v-model="state.no_connect_grid" class="col-span-12"
                         label="Non raccordée au réseau public de distribution (installation autonome)" />
+                    <p class="col-span-12 md:col-span-6 font-medium">Photovoltaïque sur bus à courant continu :</p>
+                    <UCheckbox v-model="state.dc_bus_photovoltaic_yes" class="col-span-6 md:col-span-1" label="Oui" />
+                    <UCheckbox v-model="state.dc_bus_photovoltaic_no" class="col-span-6 md:col-span-1" label="Non" />
+                    <p class="col-span-12 md:col-span-6 font-medium">Photovoltaïque sur bus à courant alternatif :</p>
+                    <UCheckbox v-model="state.ac_bus_photovoltaic_yes" class="col-span-6 md:col-span-1" label="Oui" />
+                    <UCheckbox v-model="state.ac_bus_photovoltaic_no" class="col-span-6 md:col-span-1" label="Non" />
                     <UFormField label="Autres sources d’alimentation DC :"
                         class="col-span-12 md:flex items-center gap-4" required>
                         <div class="grid grid-cols-6 items-center gap-5">
@@ -264,6 +279,9 @@ const formSections = [
                                 placeholder="Préciser" class="col-span-4" />
                         </div>
                     </UFormField>
+                    <p class="col-span-12 md:col-span-8 font-medium">Installation autonome ou installation raccordée au réseau :</p>
+                    <UCheckbox v-model="state.stand_alone_installation_no" class="col-span-6 md:col-span-2" label="Non" />
+                    <UCheckbox v-model="state.stand_alone_installation_yes" class="col-span-6 md:col-span-2" label="Oui" />
                     <UFormField label="(A2) Modification de l’installation photovoltaïque :"
                         class="col-span-12 flex items-center gap-4" required>
                         <div class="flex items-center gap-4">
@@ -271,6 +289,9 @@ const formSections = [
                             <UCheckbox v-model="state.modified_installation_yes" label="Oui" class="w-full" />
                         </div>
                     </UFormField>
+                    <p class="col-span-12 md:col-span-4 font-medium">Ajout de battéries :</p>
+                    <UCheckbox v-model="state.adding_batteries_no" class="col-span-6 md:col-span-2" label="Non" />
+                    <UCheckbox v-model="state.adding_batteries_yes" class="col-span-6 md:col-span-2" label="Oui" />
                     <UFormField label="(A3) Date de référence :" class="col-span-12 flex items-center gap-4" required>
                         <UInput type="date" v-model="state.reference_date" class="w-full" />
                     </UFormField>

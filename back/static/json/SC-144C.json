@@ -9,6 +9,11 @@
     { "key": "connect_grid_at_delivery_point", "x": 47.2, "y": 57.6, "type": "checkbox" },
     { "key": "no_connect_grid", "x": 47.2, "y": 62.5, "type": "checkbox" },
 
+    { "key": "dc_bus_photovoltaic_yes", "x": 105, "y": 69, "type": "checkbox" },
+    { "key": "dc_bus_photovoltaic_no", "x": 115.5, "y": 69, "type": "checkbox" },
+    { "key": "ac_bus_photovoltaic_yes", "x": 105, "y": 74, "type": "checkbox" },
+    { "key": "ac_bus_photovoltaic_no", "x": 115.5, "y": 74, "type": "checkbox" },
+
     { "key": "other_dc_sources_no", "x": 94, "y": 80, "type": "checkbox" },
     { "key": "other_dc_sources_yes", "x": 106.5, "y": 80, "type": "checkbox" },
     { "key": "other_dc_sources_details", "x": 146, "y": 80, "type": "text" },
@@ -17,8 +22,13 @@
     { "key": "other_ac_sources_yes", "x": 106.5, "y": 87, "type": "checkbox" },
     { "key": "other_ac_sources_details", "x": 146, "y": 87, "type": "text" },
 
+    { "key": "stand_alone_installation_no", "x": 47.2, "y": 101.5, "type": "checkbox" },
+    { "key": "stand_alone_installation_yes", "x": 57.7, "y": 101.5, "type": "checkbox" },
+
     { "key": "modified_installation_no", "x": 46.2, "y": 115.5, "type": "checkbox" },
     { "key": "modified_installation_yes", "x": 61, "y": 115.5, "type": "checkbox" },
+    { "key": "adding_batteries_yes", "x": 46, "y": 120.5, "type": "checkbox" },
+    { "key": "adding_batteries_no", "x": 61, "y": 120.5, "type": "checkbox" },
     { "key": "reference_date", "x": 107, "y": 116.7, "type": "text" },
 
     { "key": "permit_application", "x": 141.5, "y": 107.5, "type": "checkbox" },
@@ -96,8 +106,55 @@
 
     { "key": "inverter_identical_generator_count", "x": 175, "y": 40, "type": "text", "page": 2 },
     { "key": "inverter_brand_model", "x": 42, "y": 46, "type": "text", "page": 2 },
+    { "key": "inverter_na_decoupling", "x": 41.5, "y": 50.5, "type": "checkbox", "page": 2 },
     { "key": "inverter_ext_decoupling", "x": 63.5, "y": 50.5, "type": "checkbox", "page": 2 },
     { "key": "inverter_int_decoupling", "x": 81, "y": 50.5, "type": "checkbox", "page": 2 },
+
+    { "key": "inverter_charger_brand_model", "x": 93, "y": 56, "type": "text", "page": 2 },
+    { "key": "inverter_charger_reference", "x": 56, "y": 60.8, "type": "text", "page": 2 },
+    { "key": "battery_converter_subset_reference", "x": 165, "y": 60.8, "type": "text", "page": 2 },
+    { "key": "inverter_charger_decoupling_na", "x": 41.5, "y": 66, "type": "checkbox", "page": 2 },
+    { "key": "inverter_charger_decoupling_external", "x": 63.5, "y": 66, "type": "checkbox", "page": 2 },
+    { "key": "inverter_charger_decoupling_integrated", "x": 80.6, "y": 66, "type": "checkbox", "page": 2 },
+
+    { "key": "decoupling_protection_verified_commitment", "x": 22, "y": 76, "type": "checkbox", "page": 2 },
+
+    { "key": "dc_indirect_contact_by_slt", "x": 15, "y": 89, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_slt_tt", "x": 50.1, "y": 94, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_slt_it", "x": 60.1, "y": 94, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_slt_commitment_441", "x": 27.3, "y": 98.5, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_tt_no_galvanic_separation_commitment", "x": 37, "y": 108, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_it_with_galvanic_separation_commitment", "x": 37, "y": 117, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_cpi_integrated_yes", "x": 55.5, "y": 122, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_cpi_integrated_no", "x": 55.5, "y": 126.5, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_tbts_tbtp", "x": 15, "y": 131.5, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_tbts_tbtp_galvanic_separation_commitment", "x": 31, "y": 135.5, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_electrical_separation", "x": 15, "y": 140.5, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_electrical_separation_charge_regulator_branch", "x": 31.5, "y": 145.5, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_electrical_separation_galvanic_on_battery_input", "x": 31.5, "y": 149.5, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_electrical_separation_galvanic_regulator_commitment", "x": 31, "y": 159, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_electrical_separation_article_413_commitment", "x": 31, "y": 168, "type": "checkbox", "page": 2 },
+    { "key": "dc_indirect_contact_intrinsic_microinverter_battery_subset", "x": 15, "y": 172.6, "type": "checkbox", "page": 2 },
+
+    { "key": "autonomous_mode_slt_description", "x": 120, "y": 188, "type": "text", "page": 2 },
+    { "key": "autonomous_mode_neutral_contactor_management_commitment", "x": 19, "y": 199, "type": "checkbox", "page": 2 },
+
+    { "key": "udc_voltage", "x": 20, "y": 213, "type": "text", "page": 2 },
+
+    { "key": "lead_battery_cxu_le_1000", "x": 51.5, "y": 224, "type": "checkbox", "page": 2 },
+    { "key": "lead_battery_cxu_gt_1000", "x": 90, "y": 224, "type": "checkbox", "page": 2 },
+    { "key": "lead_battery_ventilation_natural", "x": 51.5, "y": 228.8, "type": "checkbox", "page": 2 },
+    { "key": "lead_battery_ventilation_forced", "x": 74, "y": 228.8, "type": "checkbox", "page": 2 },
+    { "key": "lead_battery_ventilation_none", "x": 94, "y": 228.8, "type": "checkbox", "page": 2 },
+
+    { "key": "li_ion_battery_count", "x": 85, "y": 235, "type": "text", "page": 2 },
+    { "key": "li_ion_battery_room_yes_commitment", "x": 15, "y": 247, "type": "checkbox", "page": 2 },
+    { "key": "li_ion_battery_room_no_commitment", "x": 15, "y": 252, "type": "checkbox", "page": 2 },
+    { "key": "li_ion_battery_outside_room_energy_le_15kwh", "x": 88.5, "y": 256.5, "type": "checkbox", "page": 2 },
+    { "key": "li_ion_battery_outside_room_energy_gt_15kwh", "x": 115, "y": 256.5, "type": "checkbox", "page": 2 },
+
+    { "key": "other_battery_description", "x": 53.5, "y": 262.5, "type": "text", "page": 2 },
+    { "key": "other_battery_norm_and_installation_commitment", "x": 15, "y": 267.5, "type": "checkbox", "page": 2 },
 
     { "key": "connection_power_limited", "x": 41.5, "y": 114.7, "type": "checkbox", "page": 3 },
     { "key": "connection_power_monitored", "x": 73, "y": 114.7, "type": "checkbox", "page": 3 },

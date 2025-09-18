@@ -330,6 +330,7 @@ class ConsuelPreviewAPIView(GenericAPIView):
 		except ValueError as e:
 			return Response({"status": "error", "message": str(e)}, status=400)
 		except Exception as e:
+			print(e)
 			return Response({"status": "error", "message": str(e)}, status=500)
 
 
