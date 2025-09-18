@@ -21,8 +21,8 @@
     { "key": "modified_installation_yes", "x": 61, "y": 115.5, "type": "checkbox" },
     { "key": "reference_date", "x": 107, "y": 116.7, "type": "text" },
 
-    { "key": "permit_application", "x": 141.5, "y": 107.8, "type": "checkbox" },
-    { "key": "preliminary_declaration", "x": 141.5, "y": 112.6, "type": "checkbox" },
+    { "key": "permit_application", "x": 141.5, "y": 107.5, "type": "checkbox" },
+    { "key": "preliminary_declaration", "x": 141.5, "y": 112.1, "type": "checkbox" },
     { "key": "contract_signature", "x": 141.5, "y": 117.1, "type": "checkbox" },
     { "key": "order_acknowledgement", "x": 141.5, "y": 121.9, "type": "checkbox" },
 
@@ -70,13 +70,34 @@
     { "key": "dc_isolator_in", "x": 140, "y": 244, "type": "text" },
     { "key": "dc_isolator_not_applicable", "x": 106.5, "y": 250, "type": "checkbox" },
 
+    { "key": "dc_battery_isolator_un", "x": 119, "y": 256, "type": "text" },
+    { "key": "dc_battery_isolator_in", "x": 160, "y": 256, "type": "text" },
+    { "key": "dc_battery_isolator_not_applicable", "x": 177, "y": 256, "type": "checkbox" },
+    { "key": "dc_battery_isolator_integrated_yes", "x": 81, "y": 262, "type": "checkbox" },
+    { "key": "dc_battery_isolator_integrated_no", "x": 95, "y": 262, "type": "checkbox" },
+
+    { "key": "dc_other_isolator_no", "x": 116.5, "y": 271, "type": "checkbox" },
+    { "key": "dc_other_isolator_yes", "x": 131.5, "y": 271, "type": "checkbox" },
+    { "key": "dc_other_isolator_un", "x": 162, "y": 271, "type": "text" },
+    { "key": "dc_other_isolator_in", "x": 185, "y": 271, "type": "text" },
+
+    { "key": "dc_circuit_isolator_yes", "x": 104, "y": 277, "type": "checkbox" },
+    { "key": "dc_circuit_isolator_no", "x": 119, "y": 277, "type": "checkbox" },
+    { "key": "dc_circuit_isolator_un", "x": 150, "y": 277, "type": "text" },
+    { "key": "dc_circuit_isolator_in", "x": 175, "y": 277, "type": "text" },
+    
+    { "key": "ac_isolator_no", "x": 116.5, "y": 26, "type": "checkbox", "page": 2 },
+    { "key": "ac_isolator_yes", "x": 129, "y": 26, "type": "checkbox", "page": 2 },
+    { "key": "ac_isolator_un", "x": 160, "y": 26, "type": "text", "page": 2 },
+    { "key": "ac_isolator_in", "x": 180, "y": 26, "type": "text", "page": 2 },
+
     { "key": "dc_polarity_to_earth_no", "x": 51.5, "y": 30.8, "type": "checkbox", "page": 2 },
     { "key": "dc_polarity_to_earth_yes", "x": 66.5, "y": 30.8, "type": "checkbox", "page": 2 },
 
     { "key": "inverter_identical_generator_count", "x": 175, "y": 40, "type": "text", "page": 2 },
     { "key": "inverter_brand_model", "x": 42, "y": 46, "type": "text", "page": 2 },
-    { "key": "inverter_ext_decoupling", "x": 41.5, "y": 50.5, "type": "checkbox", "page": 2 },
-    { "key": "inverter_int_decoupling", "x": 63.5, "y": 50.5, "type": "checkbox", "page": 2 },
+    { "key": "inverter_ext_decoupling", "x": 63.5, "y": 50.5, "type": "checkbox", "page": 2 },
+    { "key": "inverter_int_decoupling", "x": 81, "y": 50.5, "type": "checkbox", "page": 2 },
 
     { "key": "connection_power_limited", "x": 41.5, "y": 114.7, "type": "checkbox", "page": 3 },
     { "key": "connection_power_monitored", "x": 73, "y": 114.7, "type": "checkbox", "page": 3 },
