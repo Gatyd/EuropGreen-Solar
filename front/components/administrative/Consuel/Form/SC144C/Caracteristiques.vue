@@ -4,7 +4,7 @@ defineProps<{ state: any }>()
 
 </script>
 <template>
-    <div class="grid grid-cols-12 items-start gap-3 px-5 pb-4">
+    <div class="grid grid-cols-12 items-center gap-3 px-5 pb-4">
         <p class="col-span-12 font-semibold"><span class="text-sky-500">(1)</span> Module PV :</p>
         <UFormField label="Nombre de chaines" class="col-span-12 md:col-span-6 flex items-center gap-4">
             <UInput v-model="state.pv_module_string_count" type="number" class="w-full" />

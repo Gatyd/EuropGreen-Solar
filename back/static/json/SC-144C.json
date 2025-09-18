@@ -155,6 +155,52 @@
 
     { "key": "other_battery_description", "x": 53.5, "y": 262.5, "type": "text", "page": 2 },
     { "key": "other_battery_norm_and_installation_commitment", "x": 15, "y": 267.5, "type": "checkbox", "page": 2 },
+    
+    { "key": "a_number_of_strings_1", "x": 123, "y": 38, "type": "text", "page": 3 },
+    { "key": "a_number_of_strings_2", "x": 140, "y": 38, "type": "text", "page": 3 },
+    { "key": "a_number_of_strings_3", "x": 157, "y": 38, "type": "text", "page": 3 },
+    { "key": "a_number_of_strings_4", "x": 172, "y": 38, "type": "text", "page": 3 },
+    { "key": "a_number_of_strings_5", "x": 189, "y": 38, "type": "text", "page": 3 },
+
+    { "key": "b_chain_protection_type_in_1", "x": 123, "y": 44, "type": "text", "page": 3 },
+    { "key": "b_chain_protection_type_in_2", "x": 140, "y": 44, "type": "text", "page": 3 },
+    { "key": "b_chain_protection_type_in_3", "x": 157, "y": 44, "type": "text", "page": 3 },
+    { "key": "b_chain_protection_type_in_4", "x": 172, "y": 44, "type": "text", "page": 3 },
+    { "key": "b_chain_protection_type_in_5", "x": 189, "y": 44, "type": "text", "page": 3 },
+
+    { "key": "c_group_protection_type_in_1", "x": 123, "y": 50, "type": "text", "page": 3 },
+    { "key": "c_group_protection_type_in_2", "x": 140, "y": 50, "type": "text", "page": 3 },
+    { "key": "c_group_protection_type_in_3", "x": 157, "y": 50, "type": "text", "page": 3 },
+    { "key": "c_group_protection_type_in_4", "x": 172, "y": 50, "type": "text", "page": 3 },
+    { "key": "c_group_protection_type_in_5", "x": 189, "y": 50, "type": "text", "page": 3 },
+    
+    { "key": "d_main_pv_cable_not_applicable", "x": 119.5, "y": 56, "type": "checkbox", "page": 3 },
+    { "key": "d_main_pv_cable_yes", "x": 119.5, "y": 61.5, "type": "checkbox", "page": 3 },
+    { "key": "d_main_pv_cable_in", "x": 144.5, "y": 61.5, "type": "text", "page": 3 },
+    { "key": "d_main_pv_cable_assured_by", "x": 179.5, "y": 61.5, "type": "text", "page": 3 },
+    
+    { "key": "e_battery_cable_in", "x": 123, "y": 67.5, "type": "text", "page": 3 },
+    { "key": "e_battery_cable_integrated_enclosure", "x": 119.5, "y": 73, "type": "checkbox", "page": 3 },
+    
+    { "key": "f_regulator_cable_not_applicable", "x": 119.5, "y": 79, "type": "checkbox", "page": 3 },
+    { "key": "f_regulator_cable_yes", "x": 138.5, "y": 79, "type": "checkbox", "page": 3 },
+    { "key": "f_regulator_cable_in", "x": 167, "y": 79, "type": "text", "page": 3 },
+    
+    { "key": "g_dc_usage_cable_not_applicable", "x": 119.5, "y": 85, "type": "checkbox", "page": 3 },
+    { "key": "g_dc_usage_cable_yes", "x": 139, "y": 85, "type": "checkbox", "page": 3 },
+    { "key": "g_dc_usage_cable_in", "x": 167, "y": 85, "type": "text", "page": 3 },
+    
+    { "key": "h_inverter_dc_cable_not_applicable", "x": 119.5, "y": 91, "type": "checkbox", "page": 3 },
+    { "key": "h_inverter_dc_cable_yes", "x": 139, "y": 91, "type": "checkbox", "page": 3 },
+    { "key": "h_inverter_dc_cable_in", "x": 167, "y": 91, "type": "text", "page": 3 },
+    
+    { "key": "i_dc_distribution_box_not_applicable", "x": 119.5, "y": 96.5, "type": "checkbox", "page": 3 },
+    { "key": "i_dc_distribution_box_yes", "x": 139, "y": 96.5, "type": "checkbox", "page": 3 },
+    { "key": "i_dc_distribution_box_in", "x": 167, "y": 96.5, "type": "text", "page": 3 },
+    
+    { "key": "j_other_ac_source_dc_cable_not_applicable", "x": 119.5, "y": 102.6, "type": "checkbox", "page": 3 },
+    { "key": "j_other_ac_source_dc_cable_yes", "x": 139, "y": 102.6, "type": "checkbox", "page": 3 },
+    { "key": "j_other_ac_source_dc_cable_in", "x": 167, "y": 102.6, "type": "text", "page": 3 },
 
     { "key": "connection_power_limited", "x": 41.5, "y": 114.7, "type": "checkbox", "page": 3 },
     { "key": "connection_power_monitored", "x": 73, "y": 114.7, "type": "checkbox", "page": 3 },

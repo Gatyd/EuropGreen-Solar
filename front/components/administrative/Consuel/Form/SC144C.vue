@@ -151,6 +151,52 @@ type sc144cDraft = {
     // (7d) Other battery
     other_battery_description: string
     other_battery_norm_and_installation_commitment: boolean
+    // A. Nombre de chaînes (colonnes 1..5)
+    a_number_of_strings_1: string
+    a_number_of_strings_2: string
+    a_number_of_strings_3: string
+    a_number_of_strings_4: string
+    a_number_of_strings_5: string
+    // B. Type & courant assigné protection sur une chaîne (colonnes 1..5)
+    b_chain_protection_type_in_1: string
+    b_chain_protection_type_in_2: string
+    b_chain_protection_type_in_3: string
+    b_chain_protection_type_in_4: string
+    b_chain_protection_type_in_5: string
+    // C. Type & courant assigné protection de groupes (colonnes 1..5)
+    c_group_protection_type_in_1: string
+    c_group_protection_type_in_2: string
+    c_group_protection_type_in_3: string
+    c_group_protection_type_in_4: string
+    c_group_protection_type_in_5: string
+    // D. Courant assigné protection câble principal PV
+    d_main_pv_cable_not_applicable: boolean
+    d_main_pv_cable_yes: boolean
+    d_main_pv_cable_in: string
+    d_main_pv_cable_assured_by: string
+    // E. Courant assigné protection câble batterie
+    e_battery_cable_in: string
+    e_battery_cable_integrated_enclosure: boolean
+    // F. Courant assigné protection câble régulateur
+    f_regulator_cable_not_applicable: boolean
+    f_regulator_cable_yes: boolean
+    f_regulator_cable_in: string
+    // G. Courant assigné protection câble utilisation DC
+    g_dc_usage_cable_not_applicable: boolean
+    g_dc_usage_cable_yes: boolean
+    g_dc_usage_cable_in: string
+    // H. Courant assigné protection câble DC onduleur
+    h_inverter_dc_cable_not_applicable: boolean
+    h_inverter_dc_cable_yes: boolean
+    h_inverter_dc_cable_in: string
+    // I. Courant assigné protection coffret distribution DC
+    i_dc_distribution_box_not_applicable: boolean
+    i_dc_distribution_box_yes: boolean
+    i_dc_distribution_box_in: string
+    // J. Courant assigné protection câble DC autre source AC
+    j_other_ac_source_dc_cable_not_applicable: boolean
+    j_other_ac_source_dc_cable_yes: boolean
+    j_other_ac_source_dc_cable_in: string
 }
 
 const state = toRef(props, 'draft')
@@ -371,77 +417,7 @@ const formSections = [
                 <AdministrativeConsuelFormSC144CCaracteristiques :state="state" />
             </template>
             <template #tableau_ct>
-                <div class="px-3 md:px-5 pb-4 space-y-4">
-                    <div class="overflow-auto">
-                        <table class="min-w-full border border-gray-300 text-xs">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="border border-gray-300 p-1 text-left w-40">Paramètre</th>
-                                    <th v-for="i in 5" :key="'col-head-' + i"
-                                        class="border border-gray-300 p-1 w-16 text-center">{{ i }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="border border-gray-300 p-1">A. Nombre de chaînes</td>
-                                    <td v-for="i in 5" :key="'a_' + i" class="border border-gray-300 p-0">
-                                        <UInput v-model="(state as any)['a_number_of_strings_' + i]"
-                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 p-1">B. Iscmax module</td>
-                                    <td v-for="i in 5" :key="'b_' + i" class="border border-gray-300 p-0">
-                                        <UInput v-model="(state as any)['b_iscmax_module_' + i]"
-                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 p-1">C. IRM modules</td>
-                                    <td v-for="i in 5" :key="'c_' + i" class="border border-gray-300 p-0">
-                                        <UInput v-model="(state as any)['c_irm_modules_' + i]"
-                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 p-1">D. Courant admissible câble chaîne</td>
-                                    <td v-for="i in 5" :key="'d_' + i" class="border border-gray-300 p-0">
-                                        <UInput v-model="(state as any)['d_courant_admissible_cable_chaine_' + i]"
-                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 p-1">E. Type & courant protection chaîne</td>
-                                    <td v-for="i in 5" :key="'e_' + i" class="border border-gray-300 p-0">
-                                        <UInput v-model="(state as any)['e_type_courant_protection_chaine_' + i]"
-                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 p-1">F. Courant admissible câble groupe</td>
-                                    <td v-for="i in 5" :key="'f_' + i" class="border border-gray-300 p-0">
-                                        <UInput v-model="(state as any)['f_courant_admissible_cable_groupe_' + i]"
-                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 p-1">G. Iscmax groupe</td>
-                                    <td v-for="i in 5" :key="'g_' + i" class="border border-gray-300 p-0">
-                                        <UInput v-model="(state as any)['g_iscmax_groupe_' + i]"
-                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 p-1">H. Type & courant protection groupe</td>
-                                    <td v-for="i in 5" :key="'h_' + i" class="border border-gray-300 p-0">
-                                        <UInput v-model="(state as any)['h_type_courant_protection_groupe_' + i]"
-                                            :ui="{ base: 'rounded-none border-0 focus:ring-0' }" size="sm" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <AdministrativeConsuelFormSC144CTable :state="state" />
             </template>
             <template #ac>
                 <div class="grid grid-cols-12 px-5 pb-4">
