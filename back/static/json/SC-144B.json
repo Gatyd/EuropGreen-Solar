@@ -5,8 +5,8 @@
     { "key": "client_city", "x": 83, "y": 46.5, "type": "text" },
     { "key": "client_phone", "x": 160, "y": 46.5, "type": "text" },
 
-    { "key": "connect_grid_by_consumption_install", "x": 42.5, "y": 58.5, "type": "checkbox" },
-    { "key": "connect_grid_at_delivery_point", "x": 42.5, "y": 53.5, "type": "checkbox" },
+    { "key": "connect_grid_by_consumption_install", "x": 42.5, "y": 53.5, "type": "checkbox" },
+    { "key": "connect_grid_at_delivery_point", "x": 42.5, "y": 58.5, "type": "checkbox" },
 
     { "key": "other_dc_sources_no", "x": 91.5, "y": 66.5, "type": "checkbox" },
     { "key": "other_dc_sources_yes", "x": 106.5, "y": 66.5, "type": "checkbox" },

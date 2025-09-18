@@ -1,14 +1,14 @@
 <script setup lang="ts">
 
 const props = defineProps<{
-    draft: sc144aDraft
+    draft: sc144cDraft
     loading: boolean
 }>()
 const emit = defineEmits<{
     (e: 'submit'): void
 }>()
 
-type sc144aDraft = {
+type sc144cDraft = {
     client_name: string,
     site_address: string,
     // site_address_line2: string,
@@ -17,6 +17,7 @@ type sc144aDraft = {
     client_phone: string,
     connect_grid_by_consumption_install: boolean,
     connect_grid_at_delivery_point: boolean,
+    no_connect_grid: boolean,
     other_dc_sources_no: boolean,
     other_dc_sources_yes: boolean,
     other_dc_sources_details: string,
@@ -97,18 +98,18 @@ const formSections = [
         slot: 'a1_a2_a3'
     },
     {
-        value: 'cote_continu',
-        label: 'COTE CONTINU',
-        slot: 'cote_continu'
+        value: 'caracteristiques_techniques',
+        label: 'CARACTERISTIQUES TECHNIQUES',
+        slot: 'caracteristiques_techniques'
     },
     {
-        value: 'tableau_cc',
+        value: 'tableau_ct',
         label: 'Tableau des caractéristiques de chaque groupe / chaîne PV',
-        slot: 'tableau_cc'
+        slot: 'tableau_ct'
     },
     {
         value: 'ac',
-        label: 'AC',
+        label: 'RACCORDEMENT COTE AC',
         slot: 'ac'
     },
     {
@@ -173,6 +174,8 @@ const formSections = [
                         label="Raccordement au réseau public de distribution par l’installation de consommation" />
                     <UCheckbox v-model="state.connect_grid_at_delivery_point" class="col-span-12"
                         label="Raccordement au réseau public de distribution directement au point de livraison" />
+                    <UCheckbox v-model="state.no_connect_grid" class="col-span-12"
+                        label="Non raccordée au réseau public de distribution (installation autonome)" />
                     <UFormField label="Autres sources d’alimentation DC :"
                         class="col-span-12 md:flex items-center gap-4" required>
                         <div class="grid grid-cols-6 items-center gap-5">
@@ -271,7 +274,7 @@ const formSections = [
                         class="col-span-12 md:col-span-6" />
                 </div>
             </template>
-            <template #cote_continu>
+            <template #caracteristiques_techniques>
                 <div class="grid grid-cols-12 gap-3 px-5 pb-4">
                     <p class="col-span-12 font-bold"><span class="text-sky-500">(1)</span> Module PV :</p>
                     <UFormField label="Nombre de chaines" class="col-span-12 md:col-span-6 flex items-center gap-4">
@@ -332,7 +335,7 @@ const formSections = [
                     </UFormField>
                 </div>
             </template>
-            <template #tableau_cc>
+            <template #tableau_ct>
                 <div class="px-3 md:px-5 pb-4 space-y-4">
                     <div class="overflow-auto">
                         <table class="min-w-full border border-gray-300 text-xs">

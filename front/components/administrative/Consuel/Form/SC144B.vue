@@ -1,14 +1,14 @@
 <script setup lang="ts">
 
 const props = defineProps<{
-    draft: sc144aDraft
+    draft: sc144bDraft
     loading: boolean
 }>()
 const emit = defineEmits<{
     (e: 'submit'): void
 }>()
 
-type sc144aDraft = {
+type sc144bDraft = {
     client_name: string,
     site_address: string,
     // site_address_line2: string,
