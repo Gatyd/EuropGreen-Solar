@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { AdministrativeConsuelFormSC144CCaracteristiques } from '#components';
+
 
 const props = defineProps<{
     draft: sc144cDraft
@@ -94,6 +96,52 @@ type sc144cDraft = {
     installer_signature: any,
     signature_date: string,
     installer_stamp: any
+    // (5b) Inverter-charger
+    inverter_charger_brand_model: string
+    inverter_charger_reference: string
+    battery_converter_subset_reference: string
+    inverter_charger_decoupling_na: boolean
+    inverter_charger_decoupling_external: boolean
+    inverter_charger_decoupling_integrated: boolean
+    // (5c)
+    decoupling_protection_verified_commitment: boolean
+    // (6a) DC distribution indirect contact protection
+    dc_indirect_contact_by_slt: boolean
+    dc_indirect_contact_slt_tt: boolean
+    dc_indirect_contact_slt_it: boolean
+    dc_indirect_contact_slt_commitment_441: boolean
+    dc_indirect_contact_tt_no_galvanic_separation_commitment: boolean
+    dc_indirect_contact_it_with_galvanic_separation_commitment: boolean
+    dc_indirect_contact_cpi_integrated_yes: boolean
+    dc_indirect_contact_cpi_integrated_no: boolean
+    dc_indirect_contact_tbts_tbtp: boolean
+    dc_indirect_contact_tbts_tbtp_galvanic_separation_commitment: boolean
+    dc_indirect_contact_electrical_separation: boolean
+    dc_indirect_contact_electrical_separation_charge_regulator_branch: boolean
+    dc_indirect_contact_electrical_separation_galvanic_on_battery_input: boolean
+    dc_indirect_contact_electrical_separation_galvanic_regulator_commitment: boolean
+    dc_indirect_contact_electrical_separation_article_413_commitment: boolean
+    dc_indirect_contact_intrinsic_microinverter_battery_subset: boolean
+    // (6b) SLT autonomous mode
+    autonomous_mode_slt_description: string
+    autonomous_mode_neutral_contactor_management_commitment: boolean
+    // (7a) DC distribution or battery
+    udc_voltage: string
+    // (7b) Lead battery
+    lead_battery_cxu_le_1000: boolean
+    lead_battery_cxu_gt_1000: boolean
+    lead_battery_ventilation_natural: boolean
+    lead_battery_ventilation_forced: boolean
+    lead_battery_ventilation_none: boolean
+    // (7c) Li-ion battery
+    li_ion_battery_count: string
+    li_ion_battery_room_yes_commitment: boolean
+    li_ion_battery_room_no_commitment: boolean
+    li_ion_battery_outside_room_energy_le_15kwh: boolean
+    li_ion_battery_outside_room_energy_gt_15kwh: boolean
+    // (7d) Other battery
+    other_battery_description: string
+    other_battery_norm_and_installation_commitment: boolean
 }
 
 const state = toRef(props, 'draft')
@@ -299,110 +347,7 @@ const formSections = [
                     </div>
             </template>
             <template #caracteristiques_techniques>
-                <div class="grid grid-cols-12 items-center gap-3 px-5 pb-4">
-                    <p class="col-span-12 font-semibold"><span class="text-sky-500">(1)</span> Module PV :</p>
-                    <UFormField label="Nombre de chaines" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.pv_module_string_count" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField label="U ocmax en V" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.pv_uocmax" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField label="I scmax-générateur (ou optimiseur) PV"
-                        class="col-span-12 flex items-center gap-4">
-                        <UInput v-model="state.pv_iscmax" type="number" class="w-full" />
-                    </UFormField>
-                    <p class="col-span-12 font-semibold"><span class="text-sky-500">(2)</span> Câble principal PV :</p>
-                    <UFormField label="Section (en mm²)" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.pv_main_cable_section" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField label="U" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.pv_main_cable_voltage" type="number" class="w-full">
-                            <template #trailing>
-                                <UKbd variant="outline" value="V (en courant continu)" />
-                            </template>
-                        </UInput>
-                    </UFormField>
-                    <UFormField label="Température admissible sur l’âme (en °C)"
-                        class="col-span-12 flex items-center gap-4">
-                        <UInput v-model="state.pv_main_cable_temp_rating" type="number" class="w-full" />
-                    </UFormField>
-                    <p class="col-span-12 font-semibold"><span class="text-sky-500">(3a)</span> Interrupteur-Sectionneur général D.C. (partie générateur PV) :</p>
-                    <UFormField label="U n (en V)" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.dc_isolator_un" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField label="I n (en A)" class="col-span-12 md:col-span-6 flex items-center gap-4">
-                        <UInput v-model="state.dc_isolator_in" type="number" class="w-full" />
-                    </UFormField>
-                    <UCheckbox v-model="state.dc_isolator_not_applicable" class="col-span-12"
-                        label="Sans objet (ex : onduleur avec sectionneur intégré)" />
-                    <p class="col-span-12 font-semibold"><span class="text-sky-500">(3b)</span> Interrupteur-Sectionneur sur le câble batterie (partie distribution DC) :</p>
-                    <UFormField label="U n (en V)" class="col-span-12 md:col-span-5 flex items-center gap-4">
-                        <UInput v-model="state.dc_battery_isolator_un" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField label="I n (en A)" class="col-span-12 md:col-span-5 flex items-center gap-4">
-                        <UInput v-model="state.dc_battery_isolator_in" type="number" class="w-full" />
-                    </UFormField>
-                    <UCheckbox v-model="state.dc_battery_isolator_not_applicable" class="col-span-12 md:col-span-2"
-                        label="Sans objet" />
-                    <p class="col-span-12 md:col-span-6 font-medium">Intégré à l’enveloppe comprenant la batterie :</p>
-                    <UCheckbox v-model="state.dc_battery_isolator_integrated_yes" class="col-span-6 md:col-span-1"
-                        label="Non" />
-                    <UCheckbox v-model="state.dc_battery_isolator_integrated_no" class="col-span-6 md:col-span-1"
-                        label="Oui" />
-                    <p class="col-span-12 font-semibold"><span class="text-sky-500">(3c)</span> Interrupteur-Sectionneur pour d’autres sources d’alimentation DC :</p>
-                    <UCheckbox v-model="state.dc_other_isolator_no" class="col-span-6 md:col-span-1"
-                        label="Non" />
-                    <UCheckbox v-model="state.dc_other_isolator_yes" class="col-span-6 md:col-span-1"
-                        label="Oui" />
-                    <UFormField v-if="state.dc_other_isolator_yes" label="U n (en V)" class="col-span-6 md:col-span-5 flex items-center gap-4">
-                        <UInput v-model="state.dc_other_isolator_un" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField v-if="state.dc_other_isolator_yes" label="I n (en A)" class="col-span-6 md:col-span-5 flex items-center gap-4">
-                        <UInput v-model="state.dc_other_isolator_in" type="number" class="w-full" />
-                    </UFormField>
-                    <p class="col-span-12 font-semibold"><span class="text-sky-500">(3d)</span> Interrupteur-Sectionneur pour circuits d’utilisation en DC :</p>
-                    <UCheckbox v-model="state.dc_circuit_isolator_no" class="col-span-6 md:col-span-1"
-                        label="Non" />
-                    <UCheckbox v-model="state.dc_circuit_isolator_yes" class="col-span-6 md:col-span-1"
-                        label="Oui" />
-                    <UFormField v-if="state.dc_circuit_isolator_yes" label="U n (en V)" class="col-span-6 md:col-span-5 flex items-center gap-4">
-                        <UInput v-model="state.dc_circuit_isolator_un" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField v-if="state.dc_circuit_isolator_yes" label="I n (en A)" class="col-span-6 md:col-span-5 flex items-center gap-4">
-                        <UInput v-model="state.dc_circuit_isolator_in" type="number" class="w-full" />
-                    </UFormField>
-                    <p class="col-span-12 font-semibold"><span class="text-sky-500">(3e)</span> Interrupteur-Sectionneur pour d’autres sources d’alimentation AC :</p>
-                    <UCheckbox v-model="state.ac_isolator_no" class="col-span-6 md:col-span-1"
-                        label="Non" />
-                    <UCheckbox v-model="state.ac_isolator_yes" class="col-span-6 md:col-span-1"
-                        label="Oui" />
-                    <UFormField v-if="state.ac_isolator_yes" label="U n (en V)" class="col-span-6 md:col-span-5 flex items-center gap-4">
-                        <UInput v-model="state.ac_isolator_un" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField v-if="state.ac_isolator_yes" label="I n (en A)" class="col-span-6 md:col-span-5 flex items-center gap-4">
-                        <UInput v-model="state.ac_isolator_in" type="number" class="w-full" />
-                    </UFormField>
-                    <div class="col-span-12 grid grid-cols-2 md:grid-cols-3 items-center gap-4">
-                        <p class="col-span-2 md:col-span-1 font-semibold"><span class="text-sky-500">(4)</span> Polarité à la terre* :</p>
-                        <UCheckbox v-model="state.dc_polarity_to_earth_no" label="Non" class="w-full" />
-                        <UCheckbox v-model="state.dc_polarity_to_earth_yes" label="Oui" class="w-full" />
-                    </div>
-                    <p class="col-span-12 font-semibold"><span class="text-sky-500">(5a)</span> Onduleur PV :</p>
-                    <UFormField label="Nombre d’onduleurs identiques au(x) générateur(s) PV"
-                        class="col-span-12 flex items-center gap-4">
-                        <UInput v-model="state.inverter_identical_generator_count" type="number" class="w-full" />
-                    </UFormField>
-                    <UFormField label="Marque et modèle" class="col-span-12 flex items-center gap-4">
-                        <UInput v-model="state.inverter_brand_model" class="w-full" />
-                    </UFormField>
-                    <UFormField label="Sys. Découplage" required class="col-span-12 flex items-center gap-4">
-                        <div class="grid grid-cols-2 items-center gap-4">
-                            <UCheckbox v-model="state.inverter_ext_decoupling" label="externe" class="w-full" />
-                            <UCheckbox v-model="state.inverter_int_decoupling" label="intégré à l'onduleur"
-                                class="w-full" />
-                        </div>
-                    </UFormField>
-                </div>
+                <AdministrativeConsuelFormSC144CCaracteristiques :state="state" />
             </template>
             <template #tableau_ct>
                 <div class="px-3 md:px-5 pb-4 space-y-4">
