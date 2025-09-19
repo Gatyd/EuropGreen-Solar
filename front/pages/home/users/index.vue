@@ -44,37 +44,65 @@ async function fetchUsers() {
 }
 
 function getRowItems(row: Row<User>) {
-    return [
+    const items: any[] = [
+        { type: 'label', label: 'Actions' },
+        { type: 'separator' },
         {
-            type: 'label',
-            label: 'Actions'
-        },
-        {
-            type: 'separator'
-        },
-        {
-            label: 'Modifier',
-            icon: 'i-heroicons-pencil-square',
+            label: 'Installations créées',
+            icon: 'i-heroicons-square-2-stack',
             onSelect() {
-                selectedUser.value = row.original
-                formModal.value = true
+                const id = row.original.id as string
+                navigateTo({ path: '/home/installations', query: { created_by: id } })
             }
         },
         {
-            label: row.original.is_active ? 'Désactiver' : 'Réactiver',
-            color: row.original.is_active ? 'error' : 'success',
-            loading: activateLoadig.value,
-            icon: `i-heroicons-${row.original.is_active ? 'x-circle' : 'check-circle'}`,
+            label: 'Installations affectées',
+            icon: 'i-heroicons-user-group',
             onSelect() {
-                selectedUser.value = row.original
-                if (row.original.is_active) {
-                    deactivateModal.value = true
-                } else {
-                    reactivateUser()
-                }
+                const id = row.original.id as string
+                navigateTo({ path: '/home/installations', query: { affected_user: id } })
+            }
+        },
+        {
+            label: 'Documents liés',
+            icon: 'i-heroicons-document-text',
+            onSelect() {
+                const id = row.original.id as string
+                navigateTo({ path: '/home/documents', query: { user: id } })
             }
         }
     ]
+
+    // Pour les non-admins, ajouter les actions de gestion d'accès
+    if (row.original.role !== 'admin') {
+        items.push(
+            { type: 'separator' },
+            {
+                label: 'Modifier',
+                icon: 'i-heroicons-pencil-square',
+                onSelect() {
+                    selectedUser.value = row.original
+                    formModal.value = true
+                }
+            },
+            {
+                label: row.original.is_active ? 'Désactiver' : 'Réactiver',
+                color: row.original.is_active ? 'error' : 'success',
+                loading: activateLoadig.value,
+                icon: `i-heroicons-${row.original.is_active ? 'x-circle' : 'check-circle'}`,
+                onSelect() {
+                    selectedUser.value = row.original
+                    if (row.original.is_active) {
+                        deactivateModal.value = true
+                    } else {
+                        reactivateUser()
+                    }
+                }
+            }
+        )
+    }
+
+    return items
 }
 
 const columns: TableColumn<User>[] = [{
@@ -124,7 +152,7 @@ const columns: TableColumn<User>[] = [{
 }, {
     id: 'actions',
     cell: ({ row }) => {
-        return row.original.role !== 'admin' ? h(
+        return h(
             'div',
             { class: 'text-right' },
             h(
@@ -142,7 +170,7 @@ const columns: TableColumn<User>[] = [{
                         'aria-label': 'Actions dropdown'
                     })
             )
-        ) : null
+        )
     }
 }]
 

@@ -22,6 +22,7 @@ from authentication.permissions import HasInstallationAccess
 from administrative.models import EnedisMandate
 from administrative.serializers import EnedisMandateSerializer
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 
 class FormViewSet(viewsets.ModelViewSet):
@@ -173,17 +174,30 @@ class FormViewSet(viewsets.ModelViewSet):
 		if user.is_superuser:
 			base_qs = qs
 		elif user.is_staff:
-			base_qs = qs.filter(created_by=user)
+			base_qs = qs.filter(Q(created_by=user) | Q(affected_user=user))
 		else:
 			base_qs = qs.filter(client=user)
 
-		# Filtre optionnel par client (UUID) via query params
-		client_param = self.request.query_params.get('client') or self.request.query_params.get('client_id')
+		# Filtres optionnels via query params
+		params = self.request.query_params
+		client_param = params.get('client') or params.get('client_id')
+		created_by_param = params.get('created_by')
+		affected_user_param = params.get('affected_user')
+
+		# Filtre client (ET)
 		if client_param:
 			try:
 				base_qs = base_qs.filter(client_id=client_param)
 			except Exception:
 				pass
+
+		# Filtre créé par / affecté à (OU si les deux sont fournis)
+		if created_by_param and affected_user_param:
+			base_qs = base_qs.filter(Q(created_by_id=created_by_param) | Q(affected_user_id=affected_user_param))
+		elif created_by_param:
+			base_qs = base_qs.filter(created_by_id=created_by_param)
+		elif affected_user_param:
+			base_qs = base_qs.filter(affected_user_id=affected_user_param)
 
 		return base_qs
 

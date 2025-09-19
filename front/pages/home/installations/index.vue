@@ -66,6 +66,10 @@ const fetchAll = async () => {
     const params: Record<string, any> = {}
     const client = (route.query.client as string) || (route.query.client_id as string)
     if (client) params.client = client
+    const created_by = route.query.created_by as string
+    if (created_by) params.created_by = created_by
+    const affected_user = route.query.affected_user as string
+    if (affected_user) params.affected_user = affected_user
     const data = await apiRequest<InstallationForm[]>(
         () => $fetch('/api/installations/forms/', { credentials: 'include', query: params }),
         toast

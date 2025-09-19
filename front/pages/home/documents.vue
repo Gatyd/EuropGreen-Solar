@@ -34,13 +34,17 @@ const sections: { key: keyof DocsPayload; title: string; icon: string }[] = [
 const fetchDocs = async () => {
   loading.value = true
   const clientId = route.query.client as string
-  if (!clientId) {
+  const userId = route.query.user as string
+  if (!clientId && !userId) {
     docs.value = null
     loading.value = false
     return
   }
+  const targetId = clientId || userId
+  // Si on passe un user (non-client attendu), on force mode=created
+  const query = userId ? { mode: 'created' } : undefined
   const data = await apiRequest<DocsPayload>(
-    () => $fetch(`/api/users/${clientId}/documents/`, { credentials: 'include' }),
+    () => $fetch(`/api/users/${targetId}/documents/`, { credentials: 'include', query }),
     toast
   )
   docs.value = data || null

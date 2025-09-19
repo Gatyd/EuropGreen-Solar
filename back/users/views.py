@@ -68,33 +68,44 @@ class AdminUserViewSet(mixins.ListModelMixin,
 
     @extend_schema(
         summary="Documents liés à un utilisateur",
-        description="Retourne les documents (pdf/id) liés aux fiches d'installation du client, groupés par type."
+        description=(
+            "Retourne les documents (pdf/id) groupés par type.\n"
+            "- Si l'utilisateur est un client: documents liés à ses fiches d'installation.\n"
+            "- Sinon (employé/installeur/admin): documents qu'il a créés (created_by).\n"
+            "Possibilité de forcer le comportement via ?mode=client|created."
+        )
     )
     @action(detail=True, methods=['get'], url_path='documents')
     def documents(self, request, pk=None):
         user = self.get_object()
-        # Ne renvoyer que pour les non-staff (clients). Pour d'autres rôles, on peut autoriser admin seulement
+        # Autorisations: l'admin peut tout voir. Un utilisateur peut voir ses propres docs.
         if not request.user.is_staff and request.user.id != user.id:
             return Response({"detail": "Accès refusé."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Récupérer les formulaires d'installation du client
-        forms_qs = InstallationForm.objects.filter(client=user).only('id', 'offer_id')
+        mode = (request.query_params.get('mode') or '').strip().lower()
+        is_client = (user.role == User.UserRoles.CUSTOMER)
+        use_client_mode = (mode == 'client') or (mode == '' and is_client)
 
-        # Quotes liés aux offers de ces forms
-        quotes = Quote.objects.filter(offer__installations_form__client=user, pdf__isnull=False).values('id', 'pdf')
-        # Invoices liés aux forms
-        invoices = Invoice.objects.filter(installation__client=user, pdf__isnull=False).values('id', 'pdf')
-        # CERFA 16702
-        cerfas = Cerfa16702.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
-        # Mandat de représentation (installations)
-        rep_mandates = RepresentationMandate.objects.filter(form__client=user, mandate_pdf__isnull=False).values('id', pdf=F('mandate_pdf'))
-        # Consuels
-        consuels = Consuel.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
-        # Mandat Enedis
-        enedis_mandates = EnedisMandate.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
-        # Rapports
-        tech_reports = TechnicalVisit.objects.filter(form__client=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
-        install_reports = InstallationCompleted.objects.filter(form__client=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
+        if use_client_mode:
+            # Documents liés aux fiches du client
+            quotes = Quote.objects.filter(offer__installations_form__client=user, pdf__isnull=False).values('id', 'pdf')
+            invoices = Invoice.objects.filter(installation__client=user, pdf__isnull=False).values('id', 'pdf')
+            cerfas = Cerfa16702.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
+            rep_mandates = RepresentationMandate.objects.filter(form__client=user, mandate_pdf__isnull=False).values('id', pdf=F('mandate_pdf'))
+            consuels = Consuel.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
+            enedis_mandates = EnedisMandate.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
+            tech_reports = TechnicalVisit.objects.filter(form__client=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
+            install_reports = InstallationCompleted.objects.filter(form__client=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
+        else:
+            # Documents créés par l'utilisateur (non-client, ou mode=created forcé)
+            quotes = Quote.objects.filter(created_by=user, pdf__isnull=False).values('id', 'pdf')
+            invoices = Invoice.objects.filter(created_by=user, pdf__isnull=False).values('id', 'pdf')
+            cerfas = Cerfa16702.objects.filter(created_by=user, pdf__isnull=False).values('id', 'pdf')
+            rep_mandates = RepresentationMandate.objects.filter(created_by=user, mandate_pdf__isnull=False).values('id', pdf=F('mandate_pdf'))
+            consuels = Consuel.objects.filter(created_by=user, pdf__isnull=False).values('id', 'pdf')
+            enedis_mandates = EnedisMandate.objects.filter(created_by=user, pdf__isnull=False).values('id', 'pdf')
+            tech_reports = TechnicalVisit.objects.filter(created_by=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
+            install_reports = InstallationCompleted.objects.filter(created_by=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
 
         # Construction de la réponse minimale (id, pdf path)
         payload = {
