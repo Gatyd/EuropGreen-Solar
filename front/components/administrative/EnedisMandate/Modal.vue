@@ -18,18 +18,23 @@ const draft = reactive({
     // Client
     client_type: 'individual' as ClientType,
     client_civility: '' as Civility,
+    client_name: '',
     client_address: '',
-
     // Société / Collectivité
     client_company_name: '',
     client_company_siret: '',
-    client_company_represented_by: '',
+    client_company_represented_by_name: '',
+    client_company_represented_by_role: '',
 
     // Entreprise en charge
+    contractor_type: 'company' as ClientType,
+    contractor_civility: '' as Civility,
+    contractor_name: '',
+    contractor_address: '',
     contractor_company_name: '',
     contractor_company_siret: '',
-    contractor_represented_by_name: '',
-    contractor_represented_by_role: '',
+    contractor_company_represented_by_name: '',
+    contractor_company_represented_by_role: '',
 
     // Mandat
     mandate_type: 'simple' as MandateType,
@@ -64,12 +69,16 @@ watch(
         draft.client_address = em.client_address || ''
         draft.client_company_name = em.client_company_name || ''
         draft.client_company_siret = em.client_company_siret || ''
-        draft.client_company_represented_by = em.client_company_represented_by || ''
+        draft.client_company_represented_by_name = em.client_company_represented_by_name || ''
+        draft.client_company_represented_by_role = em.client_company_represented_by_role || ''
 
+        draft.contractor_type = em.contractor_type || ''
+        draft.contractor_civility = em.contractor_civility || '' as Civility
+        draft.contractor_address = em.contractor_address || ''
         draft.contractor_company_name = em.contractor_company_name || ''
         draft.contractor_company_siret = em.contractor_company_siret || ''
-        draft.contractor_represented_by_name = em.contractor_represented_by_name || ''
-        draft.contractor_represented_by_role = em.contractor_represented_by_role || ''
+        draft.contractor_company_represented_by_name = em.contractor_company_represented_by_name || ''
+        draft.contractor_company_represented_by_role = em.contractor_company_represented_by_role || ''
 
         draft.mandate_type = em.mandate_type || 'simple'
         draft.authorize_signature = em.authorize_signature || false
@@ -96,6 +105,11 @@ watch(
     { immediate: true }
 )
 
+watch(() => props.form, (f) => {
+    if (!f) return
+    if (!draft.client_name) draft.client_name = `${f.client_last_name ?? ''} ${f.client_first_name ?? ''}`.trim() || ''
+}, { immediate: true })
+
 // Si la fiche change (pré-remplissage adresse client)
 watch(() => props.representationMandate, (rm) => {
     if (!rm) return
@@ -103,8 +117,8 @@ watch(() => props.representationMandate, (rm) => {
     if (!draft.client_address) draft.client_address = rm.client_address || ''
     if (!draft.contractor_company_name) draft.contractor_company_name = rm.company_name || ''
     if (!draft.contractor_company_siret) draft.contractor_company_siret = rm.company_siret || ''
-    if (!draft.contractor_represented_by_name) draft.contractor_represented_by_name = rm.represented_by || ''
-    if (!draft.contractor_represented_by_role) draft.contractor_represented_by_role = rm.representative_role || ''
+    if (!draft.contractor_company_represented_by_name) draft.contractor_company_represented_by_name = rm.represented_by || ''
+    if (!draft.contractor_company_represented_by_role) draft.contractor_company_represented_by_role = rm.representative_role || ''
 }, { immediate: true })
 
 const onSubmit = () => {
@@ -118,12 +132,13 @@ const onSubmit = () => {
         :title="action === 'signature' ? 'Signature – Mandat Enedis' : action === 'full' ? 'Mandat Enedis' : 'Aperçu - Mandat Enedis'"
         :fullscreen="action !== 'preview'" :ui="{ content: action !== 'preview' ? 'max-w-screen' : 'max-w-5xl' }">
         <template #body>
-            <div :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4' : ''">
-                <AdministrativeEnedisMandateForm v-if="action !== 'preview'" class="xl:basis-1/2" :draft="draft"
-                    :enedis-mandate="props.enedisMandate" :form-id="props.formId" :action="props.action ?? 'full'"
-                    @submit="onSubmit" />
-                <AdministrativeEnedisMandatePreview :form="form" mode="edit"
-                    :class="action !== 'preview' ? 'xl:basis-1/2 shadow-md rounded-lg' : ''" :draft="draft" />
+            <div :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4 h-full overflow-hidden' : ''">
+                <AdministrativeEnedisMandateForm v-if="action !== 'preview'" class="xl:basis-1/2 min-h-0 overflow-auto"
+                    :draft="draft" :enedis-mandate="props.enedisMandate" :form-id="props.formId"
+                    :action="props.action ?? 'full'" @submit="onSubmit" />
+                <div class="min-h-0 overflow-auto" :class="action !== 'preview' ? 'xl:basis-1/2' : ''">
+                    <AdministrativeEnedisMandatePreview :form="form" mode="edit" :draft="draft" />
+                </div>
             </div>
         </template>
     </UModal>

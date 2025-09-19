@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.generics import GenericAPIView
 from django.db import transaction
 from django.core.files.base import ContentFile
 from EuropGreenSolar.utils.helpers import get_client_ip
@@ -11,6 +12,7 @@ from .models import Cerfa16702, ElectricalDiagram, Consuel
 from installations.models import AdministrativeValidation
 from .serializers import Cerfa16702Serializer, ElectricalDiagramSerializer
 from .serializers import ConsuelSerializer
+from .serializers import EnedisMandatePreviewSerializer
 from installations.models import Form, Signature
 import os
 from rest_framework.decorators import api_view, permission_classes
@@ -21,7 +23,7 @@ from datetime import datetime
 from django.http import HttpResponse
 from .pdf import CERFA_FIELD_MAPPING
 from .pdf import render_cerfa16702_attachments_pdf
-from .consuel_views import _draw_overlay
+from .consuel_views import _draw_overlay, _filter_items_for_page
 import io
 try:
     from pdfrw import PdfReader, PdfWriter, PageMerge
@@ -297,3 +299,67 @@ class ElectricalDiagramViewSet(GenericViewSet):
 
 
 ## ConsuelViewSet déplacé dans consuel_views.py
+
+
+class EnedisMandatePreviewAPIView(GenericAPIView):
+    """Aperçu PDF du Mandat ENEDIS (Enedis-FOR-RAC_02E.pdf) via overlay pdfrw.
+
+    Corps tolérant validé par EnedisMandatePreviewSerializer.
+    Réponse: application/pdf (inline).
+    """
+    permission_classes = [HasAdministrativeAccess]
+
+    def post(self, request, *args, **kwargs):
+        if PdfReader is None or PdfWriter is None or PageMerge is None:
+            return Response({"status": "error", "message": "pdfrw non disponible"}, status=500)
+
+        ser = EnedisMandatePreviewSerializer(data=request.data)
+        if not ser.is_valid():
+            print(ser.errors)
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Construire les items overlay
+        items = ser.get_items()
+        y_offset_mm = ser.validated_data.get("y_offset_mm", 8.0)
+
+        # Charger le template du mandat ENEDIS
+        input_pdf = os.path.join(settings.BASE_DIR, "static", "pdf", "Enedis-FOR-RAC_02E.pdf")
+        try:
+            reader = PdfReader(input_pdf)
+        except Exception as e:
+            return Response({"status": "error", "message": f"Template introuvable: {e}"}, status=500)
+
+        writer = PdfWriter()
+        for i, pg in enumerate(reader.pages, 1):
+            try:
+                m = pg.MediaBox
+                width = float(m[2]) - float(m[0])
+                height = float(m[3]) - float(m[1])
+            except Exception:
+                # fallback: dimensions lettre si non trouvées
+                from reportlab.lib.pagesizes import letter as _letter
+                width, height = _letter
+
+            page_items = _filter_items_for_page(items, i, height)
+            if not page_items:
+                writer.addpage(pg)
+                continue
+
+            overlay_buf = _draw_overlay(width, height, page_items, y_offset_mm)
+            try:
+                ov_reader = PdfReader(overlay_buf)
+                ov_pages = getattr(ov_reader, "pages", []) or []
+                if len(ov_pages) == 0:
+                    writer.addpage(pg)
+                    continue
+                PageMerge(pg).add(ov_pages[0]).render()
+                writer.addpage(pg)
+            except Exception:
+                writer.addpage(pg)
+
+        out_buf = io.BytesIO()
+        writer.write(out_buf)
+        out_buf.seek(0)
+        resp = HttpResponse(out_buf.read(), content_type="application/pdf")
+        resp["Content-Disposition"] = "inline; filename=enedis_mandate_preview.pdf"
+        return resp

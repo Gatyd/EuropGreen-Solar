@@ -59,6 +59,12 @@ def _draw_overlay(width: float, height: float, items: List[Dict[str, Any]], y_of
 				x0, y0 = x - size/2, y - size/2
 				c.line(x0, y0, x0+size, y0+size)
 				c.line(x0, y0+size, x0+size, y0)
+		elif t == "radio":
+			# Bouton radio: rond plein si True
+			if val:
+				radius_mm = float(it.get("r", 1.5))
+				r = radius_mm * mm
+				c.circle(x, y, r, stroke=0, fill=1)
 		elif t == "image":
 			# N'afficher l'image que si fournie; pas de placeholder pour l'aperçu
 			if val:
@@ -281,18 +287,6 @@ def generate_consuel_pdf(raw_payload: Dict[str, Any], template: str = "144a") ->
 	writer.write(out_buf)
 	out_buf.seek(0)
 	return out_buf.getvalue()
-
-def preview_sc144a_pdf(request):
-	"""Conservé pour compatibilité éventuelle: utilise le générateur partagé."""
-	try:
-		pdf_bytes = generate_consuel_pdf(request.data, template="144a")
-		resp = HttpResponse(pdf_bytes, content_type="application/pdf")
-		resp["Content-Disposition"] = "inline; filename=SC-144A_preview.pdf"
-		return resp
-	except ValueError as e:
-		return Response({"status": "error", "message": str(e)}, status=400)
-	except Exception as e:
-		return Response({"status": "error", "message": str(e)}, status=500)
 
 
 def _normalize_template(value: str | None) -> str:

@@ -7,6 +7,7 @@ type Civility = '' | 'Madame' | 'Monsieur'
 
 type MandateDraft = {
     // Mandant (client)
+    client_name: string
     client_type: ClientType
     client_civility: Civility | string
     client_address: string
@@ -15,6 +16,7 @@ type MandateDraft = {
     client_company_represented_by_name: string
     client_company_represented_by_role: string
     // Entreprise en charge
+    contractor_name: string
     contractor_type: ClientType
     contractor_civility: Civility | string
     contractor_address: string
@@ -132,12 +134,14 @@ async function onSubmit() {
         const s = state.value
         // JSON simple si pas de fichier signature à la création
         const payload: any = {
+            client_name: s.client_name,
             client_type: s.client_type,
             client_civility: s.client_civility,
             client_address: s.client_address,
             client_company_name: s.client_company_name,
             client_company_siret: s.client_company_siret,
             client_company_represented_by_name: s.client_company_represented_by_name,
+            contractor_name: s.contractor_name,
             contractor_type: s.contractor_type,
             contractor_civility: s.contractor_civility,
             contractor_address: s.contractor_address,
@@ -191,7 +195,7 @@ async function onSubmit() {
 </script>
 
 <template>
-    <UForm :state="state" :validate="validate" class="space-y-4 px-3" @submit.prevent="onSubmit">
+    <UForm :state="state" :validate="validate" class="space-y-4 p-3" @submit.prevent="onSubmit">
         <div v-if="action === 'full'" class="space-y-3">
             <UCard>
                 <template #header>
@@ -203,9 +207,12 @@ async function onSubmit() {
                             placeholder="Sélectionnez" />
                     </UFormField>
                 </div>
-                <div v-if="state.client_type === 'individual'" class="mt-3 grid grid-cols-1 gap-3">
+                <div v-if="state.client_type === 'individual'" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                     <UFormField label="Civilité" name="client_civility" required>
                         <URadioGroup v-model="state.client_civility" :items="civilityItems" orientation="horizontal" />
+                    </UFormField>
+                    <UFormField label="Nom et Prénom" name="client_name" required>
+                        <UInput v-model="state.client_name" class="w-full" placeholder="Nom et prénom du client" />
                     </UFormField>
                     <UFormField class="md:col-span-2" label="Adresse complète" name="client_address" required>
                         <UTextarea v-model="state.client_address" class="w-full" :rows="2"
@@ -241,9 +248,12 @@ async function onSubmit() {
                             placeholder="Sélectionnez" />
                     </UFormField>
                 </div>
-                <div v-if="state.contractor_type === 'individual'" class="mt-3 grid grid-cols-1 gap-3">
+                <div v-if="state.contractor_type === 'individual'" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                     <UFormField label="Civilité" name="contractor_civility" required>
                         <URadioGroup v-model="state.contractor_civility" :items="civilityItems" orientation="horizontal" />
+                    </UFormField>
+                    <UFormField label="Nom et Prénom" name="contractor_name" required>
+                        <UInput v-model="state.contractor_name" class="w-full" placeholder="Nom et prénom de l'entrepreneur" />
                     </UFormField>
                     <UFormField class="md:col-span-2" label="Adresse complète" name="contractor_address" required>
                         <UTextarea v-model="state.contractor_address" class="w-full" :rows="2"
