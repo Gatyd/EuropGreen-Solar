@@ -9,18 +9,22 @@ definePageMeta({
 })
 
 const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
 const q = ref("")
 const toast = useToast()
 const loading = ref(true)
 const users = ref<User[] | undefined>([])
 const table = useTemplateRef('table')
+const router = useRouter()
 
 const attributLabels: { [key: string]: string } = {
 	first_name: 'Prénom',
 	last_name: 'Nom',
 	email: 'Email',
-	role: 'Rôle',
-	is_active: 'Compte'
+	is_active: 'Compte',
+	status: 'Statut',
+	actions: 'Actions'
 }
 
 async function fetchUsers() {
@@ -48,19 +52,6 @@ const columns: TableColumn<User>[] = [{
 	header: 'Email',
 	cell: ({ row }) => row.original.email
 }, {
-	accessorKey: 'role',
-	header: 'Rôle',
-	cell: ({ row }) => {
-		const roleLabels: Record<string, string> = {
-			admin: 'Administrateur',
-			employee: 'Employé',
-			installer: 'Installateur',
-			secretary: 'Secrétaire',
-			customer: 'Client'
-		}
-		return roleLabels[row.original.role] || 'Utilisateur'
-	}
-}, {
 	accessorKey: 'is_active',
 	header: 'Compte',
 	cell: ({ row }) => {
@@ -69,6 +60,50 @@ const columns: TableColumn<User>[] = [{
 			label: !row.original.accept_invitation ? 'En attente' : row.original.is_active ? 'Actif' : 'Inactif',
 			variant: 'subtle'
 		})
+	}
+}, {
+	accessorKey: 'status',
+	header: 'Etape',
+	cell: ({ row }) => {
+		const status = row.original.last_installation?.status
+		const labels: Record<string, string> = {
+			technical_visit: 'Visite technique',
+			representation_mandate: 'Mandat de représentation',
+			administrative_validation: 'Validation administrative',
+			installation_completed: 'Installation effectuée',
+			consuel_visit: 'Visite CONSUEL',
+			enedis_connection: 'Raccordement ENEDIS',
+			commissioning: 'Mise en service'
+		}
+		return status ? labels[status] || status : '—'
+	}
+}, {
+	id: 'actions',
+	header: 'Actions',
+	cell: ({ row }) => {
+		const items = [
+			{
+				label: 'Installations',
+				icon: 'i-heroicons-wrench-screwdriver',
+				onSelect() {
+					const count = row.original.installations_count || 0
+					if (count === 1 && row.original.last_installation?.id) {
+						router.push({ path: `/home/installations/${row.original.last_installation.id}` })
+					} else {
+						router.push({ path: '/home/installations', query: { client: row.original.id } })
+					}
+				}
+			},
+			{
+				label: 'Documents liés',
+				icon: 'i-heroicons-document-text'
+			}
+		]
+		return h('div', { class: 'text-center' },
+			h(UDropdownMenu, { items, 'aria-label': 'Actions dropdown' }, () =>
+				h(UButton, { icon: 'i-lucide-ellipsis-vertical', color: 'neutral', variant: 'ghost', class: 'ml-auto', 'aria-label': 'Actions dropdown' })
+			)
+		)
 	}
 }]
 

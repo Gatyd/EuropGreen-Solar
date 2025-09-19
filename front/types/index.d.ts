@@ -1,3 +1,4 @@
+import type { InstallationStatus } from './installations'
 
 export type UserRoles = "employee" | "installer" | "secretary" | "customer" | "admin";
 
@@ -29,4 +30,7 @@ export interface User{
     is_staff: boolean;
     is_superuser: boolean;
 	useraccess?: UserAccess;
+    // Champs calculés (clients uniquement)
+    installations_count?: number;
+    last_installation?: { id: string; status: InstallationStatus } | null;
 }

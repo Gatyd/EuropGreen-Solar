@@ -20,6 +20,7 @@ const columns: { key: InstallationStatus; title: string }[] = [
 
 const loading = ref(true)
 const allItems = ref<InstallationForm[]>([])
+const route = useRoute()
 
 const filteredItems = computed<InstallationForm[]>(() => {
     const term = (search.value || '').trim().toLowerCase()
@@ -62,8 +63,11 @@ const totalCount = computed(() => filteredItems.value.length)
 
 const fetchAll = async () => {
     loading.value = true
+    const params: Record<string, any> = {}
+    const client = (route.query.client as string) || (route.query.client_id as string)
+    if (client) params.client = client
     const data = await apiRequest<InstallationForm[]>(
-        () => $fetch('/api/installations/forms/', { credentials: 'include' }),
+        () => $fetch('/api/installations/forms/', { credentials: 'include', query: params }),
         toast
     )
     if (data) allItems.value = data

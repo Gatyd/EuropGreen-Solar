@@ -10,6 +10,11 @@ export type InstallationStatus =
   | 'enedis_connection'
   | 'commissioning'
 
+export interface InstallationSummary {
+  id: string
+  status: InstallationStatus
+}
+
 export interface Signature {
   id: string
   signer_name?: string

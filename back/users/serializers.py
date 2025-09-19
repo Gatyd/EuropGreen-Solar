@@ -7,6 +7,7 @@ import requests
 import secrets
 import string
 from .models import User, UserAccess
+from installations.models import Form as InstallationForm
 
 
 class UserAccessSerializer(serializers.ModelSerializer):
@@ -27,12 +28,39 @@ class UserSerializer(serializers.ModelSerializer):
 class AdminUserSerializer(serializers.ModelSerializer):
     """Serializer l'administration des utilisateurs"""
     useraccess = UserAccessSerializer()
+    installations_count = serializers.SerializerMethodField(read_only=True)
+    last_installation = serializers.SerializerMethodField(read_only=True)
     # password = serializers.CharField(write_only=True, required=False)
     
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'accept_invitation', 'is_active', 'is_staff', 'is_superuser', 'useraccess']
+        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'accept_invitation', 'is_active', 'is_staff', 'is_superuser', 'useraccess', 'installations_count', 'last_installation']
         read_only_fields = ['id', 'accept_invitation', 'is_staff', 'is_superuser']
+
+    def get_installations_count(self, obj: User):
+        """Nombre d'installations du client (uniquement pour les non-staff)."""
+        try:
+            if obj.is_staff:
+                return 0
+            return InstallationForm.objects.filter(client=obj).count()
+        except Exception:
+            return 0
+
+    def get_last_installation(self, obj: User):
+        """Dernière installation (id, status) pour les non-staff."""
+        try:
+            if obj.is_staff:
+                return None
+            last = (
+                InstallationForm.objects
+                .filter(client=obj)
+                .order_by('-created_at')
+                .values('id', 'status')
+                .first()
+            )
+            return last if last else None
+        except Exception:
+            return None
         
     def _set_user_permissions(self, user):
         """Définit les permissions selon le rôle"""

@@ -168,11 +168,23 @@ class FormViewSet(viewsets.ModelViewSet):
 		user = getattr(self.request, 'user', None)
 		if not user or not user.is_authenticated:
 			return qs.none()
+		# Base permissions
 		if user.is_superuser:
-			return qs
-		if user.is_staff:
-			return qs.filter(created_by=user)
-		return qs.filter(client=user)
+			base_qs = qs
+		elif user.is_staff:
+			base_qs = qs.filter(created_by=user)
+		else:
+			base_qs = qs.filter(client=user)
+
+		# Filtre optionnel par client (UUID) via query params
+		client_param = self.request.query_params.get('client') or self.request.query_params.get('client_id')
+		if client_param:
+			try:
+				base_qs = base_qs.filter(client_id=client_param)
+			except Exception:
+				pass
+
+		return base_qs
 
 	def get_permissions(self):
 		if getattr(self, 'action', None) == 'retrieve':

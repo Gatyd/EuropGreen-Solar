@@ -130,9 +130,6 @@ const columns: TableColumn<User>[] = [{
             h(
                 UDropdownMenu,
                 {
-                    content: {
-                        align: 'end'
-                    },
                     items: getRowItems(row),
                     'aria-label': 'Actions dropdown'
                 },
