@@ -171,7 +171,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
             if not pdf_bytes:
                 return
             safe_number = re.sub(r"[^A-Za-z0-9_-]", "_", invoice.number or str(invoice.id))
-            filename = f"invoice-{safe_number}.pdf"
+            filename = f"{safe_number}.pdf"
             invoice.pdf.save(filename, ContentFile(pdf_bytes), save=False)
             invoice.refresh_status()  # statut peut dépendre de la présence du PDF
             invoice.save(update_fields=["pdf", "status", "updated_at"])

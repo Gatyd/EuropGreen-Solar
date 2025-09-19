@@ -5,8 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from authentication.permissions import IsAdmin
-from .models import User, UserAccess
+from .models import User
 from .serializers import UserSerializer, AdminUserSerializer, ChangePasswordSerializer
+from installations.models import Form as InstallationForm, TechnicalVisit, InstallationCompleted, RepresentationMandate
+from billing.models import Quote
+from invoices.models import Invoice
+from administrative.models import Cerfa16702, EnedisMandate, Consuel
+from django.db.models import F
 
 @extend_schema_view(
     list=extend_schema(
@@ -60,6 +65,49 @@ class AdminUserViewSet(mixins.ListModelMixin,
             queryset = queryset.filter(is_staff=is_staff.lower() == 'true')
 
         return queryset
+
+    @extend_schema(
+        summary="Documents liés à un utilisateur",
+        description="Retourne les documents (pdf/id) liés aux fiches d'installation du client, groupés par type."
+    )
+    @action(detail=True, methods=['get'], url_path='documents')
+    def documents(self, request, pk=None):
+        user = self.get_object()
+        # Ne renvoyer que pour les non-staff (clients). Pour d'autres rôles, on peut autoriser admin seulement
+        if not request.user.is_staff and request.user.id != user.id:
+            return Response({"detail": "Accès refusé."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Récupérer les formulaires d'installation du client
+        forms_qs = InstallationForm.objects.filter(client=user).only('id', 'offer_id')
+
+        # Quotes liés aux offers de ces forms
+        quotes = Quote.objects.filter(offer__installations_form__client=user, pdf__isnull=False).values('id', 'pdf')
+        # Invoices liés aux forms
+        invoices = Invoice.objects.filter(installation__client=user, pdf__isnull=False).values('id', 'pdf')
+        # CERFA 16702
+        cerfas = Cerfa16702.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
+        # Mandat de représentation (installations)
+        rep_mandates = RepresentationMandate.objects.filter(form__client=user, mandate_pdf__isnull=False).values('id', pdf=F('mandate_pdf'))
+        # Consuels
+        consuels = Consuel.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
+        # Mandat Enedis
+        enedis_mandates = EnedisMandate.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
+        # Rapports
+        tech_reports = TechnicalVisit.objects.filter(form__client=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
+        install_reports = InstallationCompleted.objects.filter(form__client=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
+
+        # Construction de la réponse minimale (id, pdf path)
+        payload = {
+            'quotes': list(quotes),
+            'invoices': list(invoices),
+            'cerfa16702': list(cerfas),
+            'representation_mandates': list(rep_mandates),
+            'consuels': list(consuels),
+            'enedis_mandates': list(enedis_mandates),
+            'technical_visit_reports': list(tech_reports),
+            'installation_reports': list(install_reports),
+        }
+        return Response(payload, status=status.HTTP_200_OK)
     
     @extend_schema(
         summary="Désactiver un utilisateur",

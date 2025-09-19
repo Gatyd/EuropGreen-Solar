@@ -96,7 +96,10 @@ const columns: TableColumn<User>[] = [{
 			},
 			{
 				label: 'Documents liés',
-				icon: 'i-heroicons-document-text'
+				icon: 'i-heroicons-document-text',
+				onSelect() {
+					router.push({ path: '/home/documents', query: { client: row.original.id } })
+				}
 			}
 		]
 		return h('div', { class: 'text-center' },
