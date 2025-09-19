@@ -156,27 +156,29 @@ class EnedisMandate(models.Model):
         COMPANY = "company", "La société"
         COLLECTIVITY = "collectivity", "Collectivité"
 
-    client_type = models.CharField(max_length=20, choices=ClientType.choices, default=ClientType.INDIVIDUAL)
-
     class Civility(models.TextChoices):
         MR = "mr", "Monsieur"
         MME = "mme", "Madame"
 
+    client_name = models.CharField(max_length=255, blank=True)
+    client_type = models.CharField(max_length=20, choices=ClientType.choices, default=ClientType.INDIVIDUAL)
     client_civility = models.CharField(max_length=5, choices=Civility.choices, null=True, blank=True)
-
-    # Adresse complète du client
-    client_address = models.TextField(blank=True)  # pré-remplie depuis le mandat de représentation
-
+    client_address = models.TextField(blank=True)
     # Si Société/Collectivité
     client_company_name = models.CharField(max_length=255, blank=True)
     client_company_siret = models.CharField(max_length=20, blank=True)
-    client_company_represented_by = models.CharField(max_length=255, blank=True)
+    client_company_represented_by_name = models.CharField(max_length=255, blank=True)
+    client_company_represented_by_role = models.CharField(max_length=255, blank=True)
 
     # Entreprise qui prend en charge
+    contractor_name = models.CharField(max_length=255, blank=True)
+    contractor_type = models.CharField(max_length=20, choices=ClientType.choices, default=ClientType.INDIVIDUAL)
+    contractor_civility = models.CharField(max_length=5, choices=Civility.choices, null=True, blank=True)
+    contractor_address = models.TextField(blank=True)
     contractor_company_name = models.CharField(max_length=255, blank=True)
     contractor_company_siret = models.CharField(max_length=20, blank=True)
-    contractor_represented_by_name = models.CharField(max_length=255, blank=True)
-    contractor_represented_by_role = models.CharField(max_length=255, blank=True)
+    contractor_company_represented_by_name = models.CharField(max_length=255, blank=True)
+    contractor_company_represented_by_role = models.CharField(max_length=255, blank=True)
 
     # 2. Le mandat
     class MandateType(models.TextChoices):

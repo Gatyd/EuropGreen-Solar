@@ -270,20 +270,22 @@ export interface EnedisMandate {
   id: string
   client_type: ClientType
   client_civility?: Civility | null
-
-  // Adresse complète du client
   client_address?: string
 
   // Société / Collectivité
   client_company_name?: string
   client_company_siret?: string
-  client_company_represented_by?: string
+  client_company_represented_by_name?: string
+  client_company_represented_by_role?: string
 
   // Entreprise en charge
+  client_type: ClientType
+  client_civility?: Civility | null
+  client_address?: string
   contractor_company_name?: string
   contractor_company_siret?: string
-  contractor_represented_by_name?: string
-  contractor_represented_by_role?: string
+  contractor_company_represented_by_name?: string
+  contractor_company_represented_by_role?: string
 
   // Mandat
   mandate_type: MandateType

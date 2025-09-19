@@ -12,12 +12,16 @@ type MandateDraft = {
     client_address: string
     client_company_name: string
     client_company_siret: string
-    client_company_represented_by: string
+    client_company_represented_by_name: string
+    client_company_represented_by_role: string
     // Entreprise en charge
+    contractor_type: ClientType
+    contractor_civility: Civility | string
+    contractor_address: string
     contractor_company_name: string
     contractor_company_siret: string
-    contractor_represented_by_name: string
-    contractor_represented_by_role: string
+    contractor_company_represented_by_name: string
+    contractor_company_represented_by_role: string
     //Mandat
     mandate_type: MandateType
     authorize_signature: boolean
@@ -69,18 +73,24 @@ const connectionNatureItems = [
 // Validation minimale (on ne bloque pas les signatures en mode full pour rester flexible)
 const validate = (s: MandateDraft) => {
     const errors: { name: string; message: string }[] = []
-    if (!s.client_type) errors.push({ name: 'client_type', message: 'Type de client requis.' })
-    if (!s.client_civility) errors.push({ name: 'client_civility', message: 'Civilité requise.' })
-    if (!s.client_address.trim()) errors.push({ name: 'client_address', message: 'Adresse requise.' })
-    if (s.client_type === 'company') {
+    if (s.client_type === 'individual') {
+        if (!s.client_type) errors.push({ name: 'client_type', message: 'Type de client requis.' })
+        if (!s.client_civility) errors.push({ name: 'client_civility', message: 'Civilité requise.' })
+        if (!s.client_address.trim()) errors.push({ name: 'client_address', message: 'Adresse requise.' })
+    } else {
         if (!s.client_company_name.trim()) errors.push({ name: 'client_company_name', message: 'Nom de la société requis.' })
         if (!s.client_company_siret.trim()) errors.push({ name: 'client_company_siret', message: 'Numéro SIRET requis.' })
-        if (!s.client_company_represented_by.trim()) errors.push({ name: 'client_company_represented_by', message: 'Représentant requis.' })
+        if (!s.client_company_represented_by_name.trim()) errors.push({ name: 'client_company_represented_by_name', message: 'Représentant requis.' })
     }
-    if (!s.contractor_company_name.trim()) errors.push({ name: 'contractor_company_name', message: 'Nom de la société requis.' })
-    if (!s.contractor_company_siret.trim()) errors.push({ name: 'contractor_company_siret', message: 'Numéro SIRET requis.' })
-    if (!s.contractor_represented_by_name.trim()) errors.push({ name: 'contractor_represented_by_name', message: 'Représentant requis.' })
-    if (!s.contractor_represented_by_role.trim()) errors.push({ name: 'contractor_represented_by_role', message: 'Fonction requise.' })
+    if (s.contractor_type === 'individual') {
+        if (!s.contractor_type) errors.push({ name: 'contractor_type', message: 'Type de client requis.' })
+        if (!s.contractor_civility) errors.push({ name: 'contractor_civility', message: 'Civilité requise.' })
+        if (!s.contractor_address.trim()) errors.push({ name: 'contractor_address', message: 'Adresse requise.' })
+    } else {
+        if (!s.contractor_company_name.trim()) errors.push({ name: 'contractor_company_name', message: 'Nom de la société requis.' })
+        if (!s.contractor_company_siret.trim()) errors.push({ name: 'contractor_company_siret', message: 'Numéro SIRET requis.' })
+        if (!s.contractor_company_represented_by_name.trim()) errors.push({ name: 'contractor_company_represented_by_name', message: 'Représentant requis.' })
+    }
     if (!s.mandate_type) errors.push({ name: 'mandate_type', message: 'Type de mandat requis.' })
     if (!s.geographic_area.trim()) errors.push({ name: 'geographic_area', message: 'Zone géographique requise.' })
     if (!s.connection_nature) errors.push({ name: 'connection_nature', message: 'Nature du raccordement requis.' })
@@ -127,11 +137,14 @@ async function onSubmit() {
             client_address: s.client_address,
             client_company_name: s.client_company_name,
             client_company_siret: s.client_company_siret,
-            client_company_represented_by: s.client_company_represented_by,
+            client_company_represented_by_name: s.client_company_represented_by_name,
+            contractor_type: s.contractor_type,
+            contractor_civility: s.contractor_civility,
+            contractor_address: s.contractor_address,
             contractor_company_name: s.contractor_company_name,
             contractor_company_siret: s.contractor_company_siret,
-            contractor_represented_by_name: s.contractor_represented_by_name,
-            contractor_represented_by_role: s.contractor_represented_by_role,
+            contractor_company_represented_by_name: s.contractor_company_represented_by_name,
+            contractor_company_represented_by_role: s.contractor_company_represented_by_role,
             mandate_type: s.mandate_type,
             authorize_signature: s.authorize_signature,
             authorize_payment: s.authorize_payment,
@@ -178,17 +191,19 @@ async function onSubmit() {
 </script>
 
 <template>
-    <UForm :state="state" :validate="validate" class="space-y-4" @submit.prevent="onSubmit">
+    <UForm :state="state" :validate="validate" class="space-y-4 px-3" @submit.prevent="onSubmit">
         <div v-if="action === 'full'" class="space-y-3">
             <UCard>
                 <template #header>
                     <div class="font-medium">Informations du client</div>
                 </template>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
                     <UFormField label="Type de client" name="client_type" required>
                         <USelect v-model="state.client_type" class="w-full" :items="clientTypeItems"
                             placeholder="Sélectionnez" />
                     </UFormField>
+                </div>
+                <div v-if="state.client_type === 'individual'" class="mt-3 grid grid-cols-1 gap-3">
                     <UFormField label="Civilité" name="client_civility" required>
                         <URadioGroup v-model="state.client_civility" :items="civilityItems" orientation="horizontal" />
                     </UFormField>
@@ -197,7 +212,7 @@ async function onSubmit() {
                             placeholder="Adresse complète du client" />
                     </UFormField>
                 </div>
-                <div v-if="state.client_type !== 'individual'" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div v-else class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                     <UFormField label="Nom de l'entreprise" name="client_company_name" required>
                         <UInput v-model="state.client_company_name" class="w-full" placeholder="Nom de l'entreprise" />
                     </UFormField>
@@ -205,10 +220,13 @@ async function onSubmit() {
                         <UInput v-model="state.client_company_siret" class="w-full"
                             placeholder="N° SIRET l'entreprise" />
                     </UFormField>
-                    <UFormField class="md:col-span-2" label="Représenté par" name="client_company_represented_by"
-                        required>
-                        <UInput v-model="state.client_company_represented_by" class="w-full"
-                            placeholder="Représentant de l'entreprise" />
+                    <UFormField label="Représenté par" name="client_company_represented_by_name" required>
+                        <UInput v-model="state.client_company_represented_by_name" class="w-full"
+                            placeholder="Nom et prénom du représentant" />
+                    </UFormField>
+                    <UFormField label="En qualité de" name="client_company_represented_by_role" required>
+                        <UInput v-model="state.client_company_represented_by_role" class="w-full"
+                            placeholder="Fonction du représentant" />
                     </UFormField>
                 </div>
             </UCard>
@@ -217,7 +235,22 @@ async function onSubmit() {
                 <template #header>
                     <div class="font-medium">Entreprise qui prend en charge</div>
                 </template>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <UFormField label="Type" name="contractor_type" required>
+                        <USelect v-model="state.contractor_type" class="w-full" :items="clientTypeItems"
+                            placeholder="Sélectionnez" />
+                    </UFormField>
+                </div>
+                <div v-if="state.contractor_type === 'individual'" class="mt-3 grid grid-cols-1 gap-3">
+                    <UFormField label="Civilité" name="contractor_civility" required>
+                        <URadioGroup v-model="state.contractor_civility" :items="civilityItems" orientation="horizontal" />
+                    </UFormField>
+                    <UFormField class="md:col-span-2" label="Adresse complète" name="contractor_address" required>
+                        <UTextarea v-model="state.contractor_address" class="w-full" :rows="2"
+                            placeholder="Adresse complète de l'entreprise" />
+                    </UFormField>
+                </div>
+                <div v-else class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                     <UFormField label="Nom de la société" name="contractor_company_name" required>
                         <UInput v-model="state.contractor_company_name" class="w-full"
                             placeholder="Nom de la société" />
@@ -227,12 +260,12 @@ async function onSubmit() {
                             placeholder="Ex: 123 456 789 00012" />
                     </UFormField>
                     <div class="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <UFormField label="Représenté par" name="contractor_represented_by_name" required>
-                            <UInput v-model="state.contractor_represented_by_name" class="w-full"
+                        <UFormField label="Représenté par" name="contractor_company_represented_by_name" required>
+                            <UInput v-model="state.contractor_company_represented_by_name" class="w-full"
                                 placeholder="Nom et prénom" />
                         </UFormField>
-                        <UFormField label="En qualité de" name="contractor_represented_by_role" required>
-                            <UInput v-model="state.contractor_represented_by_role" class="w-full" />
+                        <UFormField label="En qualité de" name="contractor_company_represented_by_role" required>
+                            <UInput v-model="state.contractor_company_represented_by_role" class="w-full" />
                         </UFormField>
                     </div>
                 </div>
