@@ -220,6 +220,7 @@ class EnedisMandate(models.Model):
         blank=True,
         related_name="enedis_mandate_client",
     )
+    client_location = models.CharField(max_length=100, blank=True)
     installer_signature = models.OneToOneField(
         "installations.Signature",
         on_delete=models.SET_NULL,
@@ -227,6 +228,7 @@ class EnedisMandate(models.Model):
         blank=True,
         related_name="enedis_mandate_installer",
     )
+    installer_location = models.CharField(max_length=100, blank=True)
 
     # PDF
     pdf = models.FileField(upload_to="administrative/enedis_mandate/pdfs/", null=True, blank=True)

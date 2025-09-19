@@ -300,7 +300,9 @@ export interface EnedisMandate {
 
   // Signatures
   client_signature?: Signature | null
+  client_location?: string
   installer_signature?: Signature | null
+  installer_location?: string
 
   // PDF
   pdf?: string | null

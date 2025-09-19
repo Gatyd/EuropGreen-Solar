@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Cerfa16702, ElectricalDiagram, EnedisMandate, Consuel
 from installations.models import Signature
 from typing import Any, Dict, List
+from django.utils import timezone
 
 class SignatureSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -75,10 +76,12 @@ class EnedisMandatePreviewSerializer(serializers.Serializer):
     client_signature_signer_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     client_signature = serializers.ImageField(required=False, allow_null=True)
     client_signature_data_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    client_location = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     installer_signature_signer_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     installer_signature = serializers.ImageField(required=False, allow_null=True)
     installer_signature_data_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    installer_location = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     # Ajustement layout optionnel
     y_offset_mm = serializers.FloatField(required=False, default=8.0)
@@ -166,9 +169,13 @@ class EnedisMandatePreviewSerializer(serializers.Serializer):
         text(66, 1027, connection_nature)
 
         # 9) Signatures (images si fournies)
+        text(35, 1244, v.get("client_signature_signer_name") or "")
+        text(110, 1244, v.get("installer_signature_signer_name") or "")
+        text(35, 1253, v.get("client_location") or "")
+        text(110, 1253, f"{v.get("installer_location")} le {timezone.now().strftime("%d/%m/%Y")}" or "")
         client_sig_val = v.get("client_signature") or v.get("client_signature_data_url")
         if client_sig_val:
-            image(35, 1200, client_sig_val, w=30, h=15)
+            image(35, 1260, client_sig_val, w=30, h=15)
         installer_sig_val = v.get("installer_signature") or v.get("installer_signature_data_url")
         if installer_sig_val:
             image(110, 1260, installer_sig_val, w=80, h=35)

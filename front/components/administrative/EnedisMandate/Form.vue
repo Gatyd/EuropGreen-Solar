@@ -35,7 +35,9 @@ type MandateDraft = {
     connection_nature: ConnectionNature
     // Signatures
     client_signature: { signer_name: string; method: 'draw' | 'upload'; dataUrl: string; file: File | null }
+    client_location?: string
     installer_signature: { signer_name: string; method: 'draw' | 'upload'; dataUrl: string; file: File | null }
+    installer_location?: string
 }
 
 const props = defineProps<{
@@ -322,9 +324,15 @@ async function onSubmit() {
             </template>
             <div class="space-y-6">
                 <div v-if="auth.user?.is_staff">
+                    <UFormField label="Lieu" name="installer_location" required>
+                        <UInput v-model="state.installer_location" class="w-full mb-3" />
+                    </UFormField>
                     <SignatureField v-model="state.installer_signature" :required="true" label="Nom du signataire" />
                 </div>
                 <div v-else>
+                    <UFormField label="Lieu" name="client_location" required>
+                        <UInput v-model="state.client_location" class="w-full mb-3" />
+                    </UFormField>
                     <SignatureField v-model="state.client_signature" :required="true" label="Nom du signataire" />
                 </div>
             </div>

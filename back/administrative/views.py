@@ -1,4 +1,4 @@
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -307,7 +307,15 @@ class EnedisMandatePreviewAPIView(GenericAPIView):
     Corps tolérant validé par EnedisMandatePreviewSerializer.
     Réponse: application/pdf (inline).
     """
-    permission_classes = [HasAdministrativeAccess]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        user = getattr(self.request, 'user', None)
+        if user and user.is_authenticated and user.is_staff:
+            permission_classes = [HasAdministrativeAccess]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [p() for p in permission_classes]
 
     def post(self, request, *args, **kwargs):
         if PdfReader is None or PdfWriter is None or PageMerge is None:
