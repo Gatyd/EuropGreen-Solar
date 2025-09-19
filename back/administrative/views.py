@@ -24,6 +24,7 @@ from django.http import HttpResponse
 from .pdf import CERFA_FIELD_MAPPING
 from .pdf import render_cerfa16702_attachments_pdf
 from .consuel_views import _draw_overlay, _filter_items_for_page
+import base64, mimetypes
 import io
 try:
     from pdfrw import PdfReader, PdfWriter, PageMerge
@@ -321,7 +322,78 @@ class EnedisMandatePreviewAPIView(GenericAPIView):
         if PdfReader is None or PdfWriter is None or PageMerge is None:
             return Response({"status": "error", "message": "pdfrw non disponible"}, status=500)
 
-        ser = EnedisMandatePreviewSerializer(data=request.data)
+        # Construire payload mutable
+        try:
+            payload = dict(request.data)
+        except Exception:
+            payload = {k: request.data.get(k) for k in request.data.keys()}  # type: ignore
+
+        # Si un form_id est passé, enrichir avec les données/signes persistés absents du payload
+        form_id = payload.get('form_id') or payload.get('formId')
+        if form_id:
+            try:
+                f = Form.objects.select_related('enedis_mandate', 'enedis_mandate__client_signature', 'enedis_mandate__installer_signature').get(pk=form_id)
+                em = getattr(f, 'enedis_mandate', None)
+                if em:
+                    field_list = ['client_type', 'client_civility', 'client_address', 'client_company_name', 'client_company_siret', 'client_company_represented_by',
+                                  'contractor_company_name', 'contractor_company_siret', 'contractor_represented_by_name', 'contractor_represented_by_role', 'mandate_type',
+                                  'authorize_signature', 'authorize_payment', 'authorize_l342', 'authorize_network_access', 'geographic_area', 'connection_nature']
+                    for fld in field_list:
+                        if payload.get(fld) in (None, ""):
+                            payload[fld] = getattr(em, fld, None)
+
+                    def _file_to_data_url(dj_file) -> str | None:
+                        try:
+                            if not dj_file:
+                                return None
+                            fobj = dj_file
+                            try:
+                                fobj.open('rb')
+                            except Exception:
+                                pass
+                            data = fobj.read()
+                            if not data:
+                                return None
+                            ctype, _ = mimetypes.guess_type(getattr(fobj, 'name', '') or '')
+                            if not ctype:
+                                ctype = 'image/png'
+                            b64 = base64.b64encode(data).decode('ascii')
+                            return f"data:{ctype};base64,{b64}"
+                        except Exception:
+                            return None
+
+                    if not payload.get('client_signature_data_url'):
+                        cs = getattr(em, 'client_signature', None)
+                        img = getattr(cs, 'signature_image', None) if cs else None
+                        du = _file_to_data_url(img)
+                        if du:
+                            payload['client_signature_data_url'] = du
+                            if not payload.get('client_signature_signer_name') and cs and getattr(cs, 'signer_name', None):
+                                payload['client_signature_signer_name'] = cs.signer_name
+                            # Date de signature réelle (JJ/MM/AAAA)
+                            try:
+                                if not payload.get('client_signature_date') and cs and getattr(cs, 'signed_at', None):
+                                    payload['client_signature_date'] = cs.signed_at.strftime('%d/%m/%Y')
+                            except Exception:
+                                pass
+                    if not payload.get('installer_signature_data_url'):
+                        isg = getattr(em, 'installer_signature', None)
+                        img2 = getattr(isg, 'signature_image', None) if isg else None
+                        du2 = _file_to_data_url(img2)
+                        if du2:
+                            payload['installer_signature_data_url'] = du2
+                            if not payload.get('installer_signature_signer_name') and isg and getattr(isg, 'signer_name', None):
+                                payload['installer_signature_signer_name'] = isg.signer_name
+                            # Date de signature réelle (JJ/MM/AAAA)
+                            try:
+                                if not payload.get('installer_signature_date') and isg and getattr(isg, 'signed_at', None):
+                                    payload['installer_signature_date'] = isg.signed_at.strftime('%d/%m/%Y')
+                            except Exception:
+                                pass
+            except Form.DoesNotExist:
+                pass
+
+        ser = EnedisMandatePreviewSerializer(data=payload)
         if not ser.is_valid():
             print(ser.errors)
             return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)

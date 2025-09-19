@@ -449,9 +449,9 @@ class FormViewSet(viewsets.ModelViewSet):
 			em = form.enedis_mandate  # type: ignore
 
 		# Mapping simple des champs
-		field_list = ['client_type', 'client_civility', 'client_address', 'client_company_name', 'client_company_siret', 'client_company_represented_by',
-			'contractor_company_name', 'contractor_company_siret', 'contractor_represented_by_name', 'contractor_represented_by_role', 'mandate_type',
-			'authorize_signature', 'authorize_payment', 'authorize_l342', 'authorize_network_access', 'geographic_area', 'connection_nature'
+		field_list = ['client_name', 'client_type', 'client_civility', 'client_address', 'client_company_name', 'client_company_siret', 'client_company_represented_by_name', 'client_company_represented_by_role',
+			'contractor_name', 'contractor_type', 'contractor_civility', 'contractor_address', 'contractor_company_name', 'contractor_company_siret', 'contractor_company_represented_by_name', 'contractor_company_represented_by_role',
+			'mandate_type', 'authorize_signature', 'authorize_payment', 'authorize_l342', 'authorize_network_access', 'geographic_area', 'connection_nature', 'client_location', 'installer_location'
 		]
 		self._map_fields(em, payload, field_list)
 		# Éventuelle signature installateur à la création

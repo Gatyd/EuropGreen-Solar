@@ -137,7 +137,7 @@ const onSubmit = () => {
                     :draft="draft" :enedis-mandate="props.enedisMandate" :form-id="props.formId"
                     :action="props.action ?? 'full'" @submit="onSubmit" />
                 <div class="min-h-0 overflow-auto" :class="action !== 'preview' ? 'xl:basis-1/2' : ''">
-                    <AdministrativeEnedisMandatePreview :form="form" mode="edit" :draft="draft" />
+                    <AdministrativeEnedisMandatePreview :form="form" :mode="action !== 'preview' ? 'edit' : 'preview'" :draft="draft" />
                 </div>
             </div>
         </template>

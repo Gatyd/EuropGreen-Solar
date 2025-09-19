@@ -4,7 +4,7 @@ import { onMounted, onBeforeUnmount, ref, watch, nextTick, markRaw } from 'vue'
 
 type EnedisMandateDraft = Record<string, any>
 
-const props = defineProps<{ draft: EnedisMandateDraft, mode: 'edit' | 'preview' }>()
+const props = defineProps<{ draft: EnedisMandateDraft, mode: 'edit' | 'preview', formId?: string | number }>()
 const emit = defineEmits<{ (e: 'refresh-requested'): void }>()
 
 const loading = ref(false)
@@ -51,6 +51,7 @@ async function fetchPreview(immediate = false) {
         const payload: Record<string, any> = {}
         for (const k of Object.keys(d)) {
             if (k === 'client_signature' || k === 'installer_signature') continue
+                if (props.formId != null) payload.form_id = String(props.formId)
             payload[k] = d[k]
         }
         if (d.client_signature?.dataUrl) payload.client_signature_data_url = d.client_signature.dataUrl

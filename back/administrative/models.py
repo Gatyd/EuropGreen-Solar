@@ -250,8 +250,8 @@ class EnedisMandate(models.Model):
                 errors["client_company_name"] = "Nom de l'entreprise requis."
             if not self.client_company_siret:
                 errors["client_company_siret"] = "SIRET requis."
-            if not self.client_company_represented_by:
-                errors["client_company_represented_by"] = "Représentant requis."
+            if not self.client_company_represented_by_name:
+                errors["client_company_represented_by_name"] = "Représentant requis."
         if errors:
             raise ValidationError(errors)
 

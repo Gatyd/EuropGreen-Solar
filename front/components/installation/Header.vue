@@ -102,11 +102,28 @@ const signEnedisMandate = () => {
 // Affichage conditionnel de la section "Documents administratifs"
 const showAdminDocs = computed(() => !!(auth.user?.is_superuser || (auth.user?.is_staff && auth.user?.useraccess?.administrative_procedures) || !auth.user?.is_staff))
 
-onMounted(() => {
+onMounted(async () => {
+    // conservé pour compatibilité, le watch ci-dessous gère surtout l'arrivée asynchrone des données
     if (route.query.action === 'sign-enedis-mandate' && props.item?.enedis_mandate) {
         signEnedisMandate()
     }
 })
+
+// Ouvrir automatiquement la modale de signature ENEDIS quand l'action est demandée dans l'URL
+// mais que les données arrivent après le montage (fetch parent asynchrone)
+const hasAutoOpenedEnedis = ref(false)
+const actionParam = computed(() => Array.isArray(route.query.action) ? route.query.action?.[0] : route.query.action)
+const maybeAutoOpenEnedis = () => {
+    if (hasAutoOpenedEnedis.value) return
+    if (actionParam.value === 'sign-enedis-mandate' && props.item?.enedis_mandate) {
+        hasAutoOpenedEnedis.value = true
+        signEnedisMandate()
+    }
+}
+
+watch([actionParam, () => props.item, () => props.item?.enedis_mandate], () => {
+    maybeAutoOpenEnedis()
+}, { immediate: true })
 </script>
 <template>
     <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form-id="item?.id" @submit="emit('submit')" />

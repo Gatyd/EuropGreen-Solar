@@ -82,6 +82,9 @@ class EnedisMandatePreviewSerializer(serializers.Serializer):
     installer_signature = serializers.ImageField(required=False, allow_null=True)
     installer_signature_data_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     installer_location = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    # Dates de signature (texte JJ/MM/AAAA) — si non fournie, on peut en déduire une valeur en amont
+    client_signature_date = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    installer_signature_date = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     # Ajustement layout optionnel
     y_offset_mm = serializers.FloatField(required=False, default=8.0)
@@ -171,8 +174,15 @@ class EnedisMandatePreviewSerializer(serializers.Serializer):
         # 9) Signatures (images si fournies)
         text(35, 1244, v.get("client_signature_signer_name") or "")
         text(110, 1244, v.get("installer_signature_signer_name") or "")
-        text(35, 1253, v.get("client_location") or "")
-        text(110, 1253, f"{v.get("installer_location")} le {timezone.now().strftime("%d/%m/%Y")}" or "")
+        # Lieu + date (client)
+        _client_loc = v.get("client_location") or ""
+        _client_date = (v.get("client_signature_date") or "").strip()
+        text(35, 1253, f"{_client_loc} le {_client_date}".strip() if _client_date or _client_loc else "")
+
+        # Lieu + date (installateur)
+        _inst_loc = v.get("installer_location") or ""
+        _inst_date = (v.get("installer_signature_date") or "").strip()
+        text(110, 1253, f"{_inst_loc} le {_inst_date}".strip() if _inst_date else f"{_inst_loc} le {timezone.now().strftime('%d/%m/%Y')}".strip())
         client_sig_val = v.get("client_signature") or v.get("client_signature_data_url")
         if client_sig_val:
             image(35, 1260, client_sig_val, w=30, h=15)
