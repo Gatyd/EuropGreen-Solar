@@ -94,7 +94,7 @@ const columns: TableColumn<User>[] = [{
 	header: 'Actions',
 	cell: ({ row }) => {
 		return h('div', { class: 'space-x-2' }, [
-			h(UTooltip, { text: 'Voir les installations' }, () =>
+			h(UTooltip, { text: 'Voir les installations', delayDuration: 0 }, () =>
 				h(UButton, {
 					icon: 'i-heroicons-wrench-screwdriver', color: 'neutral', variant: 'ghost',
 					onClick() {
@@ -107,7 +107,7 @@ const columns: TableColumn<User>[] = [{
 					}
 				})
 			),
-			h(UTooltip, { text: 'Voir les documents' }, () =>
+			h(UTooltip, { text: 'Voir les documents', delayDuration: 0 }, () =>
 				h(UButton, {
 					icon: 'i-heroicons-document', color: 'neutral', variant: 'ghost',
 					onClick() {

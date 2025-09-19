@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/store/auth';
+import apiRequest from '~/utils/apiRequest'
 
 useSeoMeta({
     title: "Europ'Green Solar Application",
@@ -116,7 +117,7 @@ const accessLink = links.map((link: any) => {
     }
     if (!user.value?.is_superuser && user.value?.is_staff) {
         const useraccess = user.value?.useraccess;
-    //     if (link.id === "home") return null
+        //     if (link.id === "home") return null
 
         if ((link.id === "requests") && !useraccess?.requests) return null
         if ((link.id === "offers") && !useraccess?.offers) return null
@@ -135,10 +136,12 @@ const logout = async () => {
     navigateTo('/login', { replace: true });
 };
 
+// SAV (Service Après Vente)
+const savOpen = ref(false)
+
 </script>
 
 <template>
-
     <UDashboardGroup>
         <UDashboardSidebar collapsible resizable :min-size="14" :default-size="17.5" :max-size="21" :ui="{
             footer: 'block',
@@ -180,6 +183,17 @@ const logout = async () => {
 
         <div class="relative bg-white dark:bg-slate-900 min-h-screen w-full overflow-auto">
             <slot />
+
+            <UTooltip v-if="!user?.is_staff" text="Service après vente" :delay-duration="0" :ui="{ content: 'px-2 py-1 text-base' }">
+                <button type="button" @click="savOpen = true" aria-label="Ouvrir le support SAV" class="fixed bottom-5 right-5 h-14 w-14 rounded-full grid place-items-center shadow-xl
+                bg-gradient-to-br from-(--ui-primary) to-(--ui-primary)/90 text-white hover:brightness-95 transition-all duration-200
+                focus:outline-none focus:ring-4 ring-(--ui-primary)/30">
+                    <span
+                        class="absolute inset-0 rounded-full animate-[ping_2s_linear_infinite] bg-(--ui-primary)/20"></span>
+                    <UIcon name="i-heroicons-lifebuoy" class="relative text-2xl" />
+                </button>
+            </UTooltip>
         </div>
+        <SAVModal v-model="savOpen" />
     </UDashboardGroup>
 </template>

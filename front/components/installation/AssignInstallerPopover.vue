@@ -34,7 +34,7 @@ const assign = async () => {
 </script>
 
 <template>
-    <UPopover v-model:open="open" :content="{ side: 'right', align: 'start' }" :ui="{ content: 'p-4 w-80' }">
+    <UPopover v-model:open="open" :delay-duration="0" :content="{ side: 'right', align: 'start' }" :ui="{ content: 'p-4 w-80' }">
         <UTooltip text="Assigner un installateur">
             <UButton icon="i-heroicons-user-plus" color="neutral" variant="ghost" aria-label="Assigner un installateur" />
         </UTooltip>

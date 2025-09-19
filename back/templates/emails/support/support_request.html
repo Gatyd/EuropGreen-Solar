@@ -1,0 +1,24 @@
+{% extends 'emails/base.html' %}
+{% block content %}
+  <h2 style="margin:0 0 12px 0; font-size:18px;">Nouvelle demande SAV</h2>
+  <p style="margin:0 0 12px 0;">Vous avez reçu une nouvelle demande de support.</p>
+  <table style="width:100%; margin:12px 0; border-collapse:collapse;">
+    <tr>
+      <td style="padding:8px; color:#555;">Client</td>
+      <td style="padding:8px; font-weight:600;">{{ user.first_name }} {{ user.last_name }}</td>
+    </tr>
+    <tr>
+      <td style="padding:8px; color:#555;">Email</td>
+      <td style="padding:8px;">
+        <a href="mailto:{{ user_email }}" style="color:#2563eb; text-decoration:none;">{{ user_email }}</a>
+      </td>
+    </tr>
+  </table>
+  <div style="background:#f7f7f7; padding:12px; border-radius:6px;">
+    <div style="font-weight:600; margin-bottom:6px;">Message</div>
+    <div style="white-space:pre-wrap; line-height:1.5;">{{ message }}</div>
+  </div>
+  <div style="margin-top:16px;">
+    <a href="mailto:{{ user_email }}" style="display:inline-block; background:#2563eb; color:#fff; padding:10px 14px; border-radius:6px; text-decoration:none;">Répondre</a>
+  </div>
+{% endblock %}

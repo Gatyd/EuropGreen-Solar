@@ -12,6 +12,8 @@ from billing.models import Quote
 from invoices.models import Invoice
 from administrative.models import Cerfa16702, EnedisMandate, Consuel
 from django.db.models import F
+from django.conf import settings
+from EuropGreenSolar.email_utils import send_mail
 
 @extend_schema_view(
     list=extend_schema(
@@ -256,3 +258,38 @@ class CurrentUserView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+class SupportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Envoyer une demande SAV",
+        description="Permet à l'utilisateur connecté d'envoyer une demande SAV. Envoie un email à l'adresse configurée (SAV_EMAIL)",
+        request=dict,
+        responses={200: {"description": "Demande envoyée"}}
+    )
+    def post(self, request):
+        message = (request.data.get('message') or '').strip()
+        if not message:
+            return Response({ 'message': 'Ce champ est requis.' }, status=status.HTTP_400_BAD_REQUEST)
+
+        to_email = getattr(settings, 'SAV_EMAIL', None)
+        if not to_email:
+            return Response({ 'detail': 'Configuration SAV_EMAIL manquante.' }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        user: User = request.user
+        context = {
+            'user': user,
+            'user_email': user.email,
+            'message': message,
+        }
+        try:
+            send_mail(
+                template='emails/support/support_request.html',
+                context=context,
+                subject='[SAV] Nouvelle demande client',
+                to=to_email,
+            )
+        except Exception:
+            return Response({ 'detail': "Échec d'envoi de l'email" }, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({ 'status': 'ok' }, status=status.HTTP_200_OK)
