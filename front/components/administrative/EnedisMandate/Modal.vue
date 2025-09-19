@@ -46,6 +46,8 @@ const draft = reactive({
     // Localisation
     geographic_area: '',
     connection_nature: '' as ConnectionNature,
+    client_location: '',
+    installer_location: '',
 
     // Signatures
     client_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
@@ -88,6 +90,8 @@ watch(
 
         draft.geographic_area = em.geographic_area || ''
         draft.connection_nature = em.connection_nature || '' as ConnectionNature
+        draft.client_location = em.client_location || ''
+        draft.installer_location = em.installer_location || ''
 
         const cs = em.client_signature
         if (cs) {
@@ -132,12 +136,12 @@ const onSubmit = () => {
         :title="action === 'signature' ? 'Signature – Mandat Enedis' : action === 'full' ? 'Mandat Enedis' : 'Aperçu - Mandat Enedis'"
         :fullscreen="action !== 'preview'" :ui="{ content: action !== 'preview' ? 'max-w-screen' : 'max-w-5xl' }">
         <template #body>
-            <div :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4 h-full overflow-hidden' : ''">
-                <AdministrativeEnedisMandateForm v-if="action !== 'preview'" class="xl:basis-1/2 min-h-0 overflow-auto"
+            <div :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4 h-full xl:overflow-hidden' : ''">
+                <AdministrativeEnedisMandateForm v-if="action !== 'preview'" class="xl:basis-1/2 xl:min-h-0 xl:overflow-auto"
                     :draft="draft" :enedis-mandate="props.enedisMandate" :form-id="props.formId"
                     :action="props.action ?? 'full'" @submit="onSubmit" />
-                <div class="min-h-0 overflow-auto" :class="action !== 'preview' ? 'xl:basis-1/2' : ''">
-                    <AdministrativeEnedisMandatePreview :form="form" :mode="action !== 'preview' ? 'edit' : 'preview'" :draft="draft" />
+                <div class="xl:min-h-0 xl:overflow-auto" :class="action !== 'preview' ? 'xl:basis-1/2' : ''">
+                    <AdministrativeEnedisMandatePreview :form="form" :form-id="formId" :mode="action !== 'preview' ? 'edit' : 'preview'" :draft="draft" />
                 </div>
             </div>
         </template>

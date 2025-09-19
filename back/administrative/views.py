@@ -335,9 +335,9 @@ class EnedisMandatePreviewAPIView(GenericAPIView):
                 f = Form.objects.select_related('enedis_mandate', 'enedis_mandate__client_signature', 'enedis_mandate__installer_signature').get(pk=form_id)
                 em = getattr(f, 'enedis_mandate', None)
                 if em:
-                    field_list = ['client_type', 'client_civility', 'client_address', 'client_company_name', 'client_company_siret', 'client_company_represented_by',
-                                  'contractor_company_name', 'contractor_company_siret', 'contractor_represented_by_name', 'contractor_represented_by_role', 'mandate_type',
-                                  'authorize_signature', 'authorize_payment', 'authorize_l342', 'authorize_network_access', 'geographic_area', 'connection_nature']
+                    field_list = ['client_type', 'client_civility', 'client_address', 'client_company_name', 'client_company_siret', 'client_company_represented_by_name', 'client_company_represented_by_role',
+                                  'contractor_type', 'contractor_civility', 'contractor_address', 'contractor_company_name', 'contractor_company_siret', 'contractor_company_represented_by_name', 'contractor_company_represented_by_role',
+                                  'mandate_type', 'authorize_signature', 'authorize_payment', 'authorize_l342', 'authorize_network_access', 'geographic_area', 'connection_nature', 'client_location', 'installer_location']
                     for fld in field_list:
                         if payload.get(fld) in (None, ""):
                             payload[fld] = getattr(em, fld, None)

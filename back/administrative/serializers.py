@@ -172,12 +172,12 @@ class EnedisMandatePreviewSerializer(serializers.Serializer):
         text(66, 1027, connection_nature)
 
         # 9) Signatures (images si fournies)
-        text(35, 1244, v.get("client_signature_signer_name") or "")
+        text(18, 1244, v.get("client_signature_signer_name") or "")
         text(110, 1244, v.get("installer_signature_signer_name") or "")
         # Lieu + date (client)
         _client_loc = v.get("client_location") or ""
         _client_date = (v.get("client_signature_date") or "").strip()
-        text(35, 1253, f"{_client_loc} le {_client_date}".strip() if _client_date or _client_loc else "")
+        text(18, 1253, f"{_client_loc} le {_client_date}".strip() if _client_date else f"{_client_loc} le {timezone.now().strftime('%d/%m/%Y')}".strip())
 
         # Lieu + date (installateur)
         _inst_loc = v.get("installer_location") or ""
@@ -185,7 +185,7 @@ class EnedisMandatePreviewSerializer(serializers.Serializer):
         text(110, 1253, f"{_inst_loc} le {_inst_date}".strip() if _inst_date else f"{_inst_loc} le {timezone.now().strftime('%d/%m/%Y')}".strip())
         client_sig_val = v.get("client_signature") or v.get("client_signature_data_url")
         if client_sig_val:
-            image(35, 1260, client_sig_val, w=30, h=15)
+            image(18, 1260, client_sig_val, w=80, h=35)
         installer_sig_val = v.get("installer_signature") or v.get("installer_signature_data_url")
         if installer_sig_val:
             image(110, 1260, installer_sig_val, w=80, h=35)
