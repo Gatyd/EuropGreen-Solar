@@ -32,5 +32,5 @@ export interface User{
 	useraccess?: UserAccess;
     // Champs calculés (clients uniquement)
     installations_count?: number;
-    last_installation?: { id: string; status: InstallationStatus } | null;
+    last_installation?: { id: string; status: InstallationStatus; installer?: { id: string; first_name: string; last_name: string } } | null;
 }

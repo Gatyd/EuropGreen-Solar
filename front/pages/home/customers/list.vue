@@ -11,6 +11,10 @@ definePageMeta({
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
+const UTooltip = resolveComponent('UTooltip')
+const AssignInstallerPopover = resolveComponent('InstallationAssignInstallerPopover')
+// Etat d’ouverture par ligne (clé: id utilisateur)
+const openAssignFor = ref<Record<string, boolean>>({})
 const q = ref("")
 const toast = useToast()
 const loading = ref(true)
@@ -24,6 +28,7 @@ const attributLabels: { [key: string]: string } = {
 	email: 'Email',
 	is_active: 'Compte',
 	status: 'Statut',
+	installer: 'Installateur',
 	actions: 'Actions'
 }
 
@@ -78,35 +83,46 @@ const columns: TableColumn<User>[] = [{
 		return status ? labels[status] || status : '—'
 	}
 }, {
+	accessorKey: 'installer',
+	header: 'Installateur affecté',
+	cell: ({ row }) => {
+		const inst = row.original.last_installation?.installer
+		return inst ? `${inst.first_name} ${inst.last_name}` : '—'
+	}
+}, {
 	id: 'actions',
 	header: 'Actions',
 	cell: ({ row }) => {
-		const items = [
-			{
-				label: 'Installations',
-				icon: 'i-heroicons-wrench-screwdriver',
-				onSelect() {
-					const count = row.original.installations_count || 0
-					if (count === 1 && row.original.last_installation?.id) {
-						router.push({ path: `/home/installations/${row.original.last_installation.id}` })
-					} else {
-						router.push({ path: '/home/installations', query: { client: row.original.id } })
+		return h('div', { class: 'space-x-2' }, [
+			h(UTooltip, { text: 'Voir les installations' }, () =>
+				h(UButton, {
+					icon: 'i-heroicons-wrench-screwdriver', color: 'neutral', variant: 'ghost',
+					onClick() {
+						const count = row.original.installations_count || 0
+						if (count === 1 && row.original.last_installation?.id) {
+							router.push({ path: `/home/installations/${row.original.last_installation.id}` })
+						} else {
+							router.push({ path: '/home/installations', query: { client: row.original.id } })
+						}
 					}
+				})
+			),
+			h(UTooltip, { text: 'Voir les documents' }, () =>
+				h(UButton, {
+					icon: 'i-heroicons-document', color: 'neutral', variant: 'ghost',
+					onClick() {
+						router.push({ path: '/home/documents', query: { client: row.original.id } })
+					}
+				})
+			),
+			h(AssignInstallerPopover as any, {
+				formId: row.original.last_installation?.id || '',
+				'v-model:open': openAssignFor.value[row.original.id] || false,
+				onAssigned: async () => {
+					await fetchUsers()
 				}
-			},
-			{
-				label: 'Documents liés',
-				icon: 'i-heroicons-document-text',
-				onSelect() {
-					router.push({ path: '/home/documents', query: { client: row.original.id } })
-				}
-			}
-		]
-		return h('div', { class: 'text-center' },
-			h(UDropdownMenu, { items, 'aria-label': 'Actions dropdown' }, () =>
-				h(UButton, { icon: 'i-lucide-ellipsis-vertical', color: 'neutral', variant: 'ghost', class: 'ml-auto', 'aria-label': 'Actions dropdown' })
-			)
-		)
+			})
+		])
 	}
 }]
 
@@ -120,48 +136,51 @@ onMounted(fetchUsers)
 </script>
 
 <template>
-	<UDashboardToolbar>
-		<template #left>
-			<SearchInput v-model="q" />
-		</template>
+	<div>
+		<UDashboardToolbar>
+			<template #left>
+				<SearchInput v-model="q" />
+			</template>
 
-		<template #right>
-			<UDropdownMenu :items="table?.tableApi
-				?.getAllColumns()
-				.filter((column) => column.getCanHide())
-				.map((column) => ({
-					label: attributLabels[column.id] || 'Inconnu',
-					type: 'checkbox' as const,
-					checked: column.getIsVisible(),
-					onUpdateChecked(checked: boolean) {
-						table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-					},
-					onSelect(e?: Event) {
-						e?.preventDefault()
-					}
-				}))
-				" :content="{ align: 'end' }">
-				<UButton label="Afficher" color="neutral" variant="outline" trailing-icon="i-lucide-chevron-down" />
-			</UDropdownMenu>
-		</template>
-	</UDashboardToolbar>
+			<template #right>
+				<UDropdownMenu :items="table?.tableApi
+					?.getAllColumns()
+					.filter((column) => column.getCanHide())
+					.map((column) => ({
+						label: attributLabels[column.id] || 'Inconnu',
+						type: 'checkbox' as const,
+						checked: column.getIsVisible(),
+						onUpdateChecked(checked: boolean) {
+							table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
+						},
+						onSelect(e?: Event) {
+							e?.preventDefault()
+						}
+					}))
+					" :content="{ align: 'end' }">
+					<UButton label="Afficher" color="neutral" variant="outline" trailing-icon="i-lucide-chevron-down" />
+				</UDropdownMenu>
+			</template>
+		</UDashboardToolbar>
 
-	<div class="w-full px-2 sm:px-6 space-y-4 pb-4">
-		<UTable ref="table" :data="users" :columns="columns" v-model:global-filter="q"
-			:ui="{ tr: 'data-[expanded=true]:bg-(--ui-bg-elevated)/50' }" class="flex-1" :loading="loading"
-			:pagination-options="{ getPaginationRowModel: getPaginationRowModel() }" v-model:pagination="pagination">
-		</UTable>
+		<div class="w-full px-2 sm:px-6 space-y-4 pb-4">
+			<UTable ref="table" :data="users" :columns="columns" v-model:global-filter="q"
+				:ui="{ tr: 'data-[expanded=true]:bg-(--ui-bg-elevated)/50' }" class="flex-1" :loading="loading"
+				:pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
+				v-model:pagination="pagination">
+			</UTable>
 
-		<div
-			class="flex flex-col md:flex-row justify-center gap-4 md:gap-0 items-center md:justify-between border-t border-(--ui-border) pt-4">
-			<UFormField :ui="{ root: 'flex items-center' }" label="Lignes par page : ">
-				<USelectMenu class="w-20 ms-3" :search-input="false" :items="[10, 20, 30, 40, 50]"
-					v-model="pagination.pageSize" @update:model-value="(p) => table?.tableApi?.setPageSize(p)" />
-			</UFormField>
-			<UPagination :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
-				:items-per-page="table?.tableApi?.getState().pagination.pageSize"
-				:total="table?.tableApi?.getFilteredRowModel().rows.length"
-				@update:page="(p) => table?.tableApi?.setPageIndex(p - 1)" />
+			<div
+				class="flex flex-col md:flex-row justify-center gap-4 md:gap-0 items-center md:justify-between border-t border-(--ui-border) pt-4">
+				<UFormField :ui="{ root: 'flex items-center' }" label="Lignes par page : ">
+					<USelectMenu class="w-20 ms-3" :search-input="false" :items="[10, 20, 30, 40, 50]"
+						v-model="pagination.pageSize" @update:model-value="(p) => table?.tableApi?.setPageSize(p)" />
+				</UFormField>
+				<UPagination :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+					:items-per-page="table?.tableApi?.getState().pagination.pageSize"
+					:total="table?.tableApi?.getFilteredRowModel().rows.length"
+					@update:page="(p) => table?.tableApi?.setPageIndex(p - 1)" />
+			</div>
 		</div>
 	</div>
 </template>

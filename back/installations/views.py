@@ -21,6 +21,7 @@ from django.utils import timezone
 from authentication.permissions import HasInstallationAccess
 from administrative.models import EnedisMandate
 from administrative.serializers import EnedisMandateSerializer
+from django.shortcuts import get_object_or_404
 
 
 class FormViewSet(viewsets.ModelViewSet):
@@ -270,6 +271,37 @@ class FormViewSet(viewsets.ModelViewSet):
 			)
 		headers = self.get_success_headers(self.get_serializer(form).data)
 		return Response(self.get_serializer(form).data, status=status.HTTP_201_CREATED, headers=headers)
+
+	@action(detail=True, methods=['post'], url_path='assign-installer')
+	def assign_installer(self, request, pk=None):
+		"""Affecte un installateur (affected_user) à la fiche et notifie par email."""
+		form = self.get_object()
+		installer_id = request.data.get('installer_id')
+		if not installer_id:
+			return Response({'installer_id': 'Ce champ est requis.'}, status=status.HTTP_400_BAD_REQUEST)
+		installer = get_object_or_404(User, pk=installer_id)
+		# Optionnel: restreindre aux rôles autorisés
+		if installer.role not in [User.UserRoles.INSTALLER, User.UserRoles.EMPLOYEE]:
+			return Response({'detail': "L'utilisateur sélectionné n'est pas un installateur valide."}, status=status.HTTP_400_BAD_REQUEST)
+		form.affected_user = installer
+		form.save(update_fields=['affected_user', 'updated_at'])
+		# Envoi de l'email à l'installateur
+		context = {
+			'installer': installer,
+			'form': form,
+			'client_name': self._get_client_name(form),
+			'link_installation': f"/home/installations/{form.id}",
+		}
+		try:
+			send_mail(
+				template='emails/installation/installer_assigned.html',
+				context=context,
+				subject="Nouvelle installation assignée",
+				to=installer.email,
+			)
+		except Exception:
+			pass
+		return Response({'status': 'assigned', 'installer_id': str(installer.id)}, status=status.HTTP_200_OK)
 
 	def retrieve(self, request, *args, **kwargs):
 		instance = self.get_object()

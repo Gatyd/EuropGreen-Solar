@@ -47,18 +47,27 @@ class AdminUserSerializer(serializers.ModelSerializer):
             return 0
 
     def get_last_installation(self, obj: User):
-        """Dernière installation (id, status) pour les non-staff."""
+        """Dernière installation (id, status, installer) pour les non-staff."""
         try:
             if obj.is_staff:
                 return None
-            last = (
+            last_qs = (
                 InstallationForm.objects
+                .select_related('affected_user')
                 .filter(client=obj)
                 .order_by('-created_at')
-                .values('id', 'status')
-                .first()
             )
-            return last if last else None
+            last = last_qs.first()
+            if not last:
+                return None
+            payload = { 'id': str(last.id), 'status': last.status }
+            if last.affected_user_id and last.affected_user:
+                payload['installer'] = {
+                    'id': str(last.affected_user.id),
+                    'first_name': last.affected_user.first_name,
+                    'last_name': last.affected_user.last_name,
+                }
+            return payload
         except Exception:
             return None
         

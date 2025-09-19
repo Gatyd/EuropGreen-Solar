@@ -1,0 +1,10 @@
+{% extends 'emails/base.html' %}
+{% block content %}
+  <p>Bonjour {{ installer.first_name }} {{ installer.last_name }},</p>
+  <p>Vous avez été affecté à une nouvelle installation pour {{ client_name }}.</p>
+  <p>
+    <a href="{{ frontend_url }}{{ link_installation }}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;">Ouvrir la fiche d'installation</a>
+  </p>
+  <p>Merci,</p>
+  <p>Europ'Green Solar</p>
+{% endblock %}
