@@ -51,7 +51,7 @@ async function fetchPreview(immediate = false) {
         const payload: Record<string, any> = {}
         for (const k of Object.keys(d)) {
             if (k === 'client_signature' || k === 'installer_signature') continue
-                if (props.formId != null) payload.form_id = String(props.formId)
+            if (props.formId != null) payload.form_id = String(props.formId)
             payload[k] = d[k]
         }
         if (d.client_signature?.dataUrl) payload.client_signature_data_url = d.client_signature.dataUrl
@@ -93,7 +93,7 @@ onMounted(async () => {
         GlobalWorkerOptionsObj = core.GlobalWorkerOptions
         const worker: any = await import('pdfjs-dist/build/pdf.worker.mjs?url')
         if (GlobalWorkerOptionsObj && worker?.default) GlobalWorkerOptionsObj.workerSrc = worker.default
-    } catch {}
+    } catch { }
     nowInterval = setInterval(() => { nowTS.value = Date.now() }, 1000)
     await fetchPreview(true)
     await nextTick()
@@ -111,17 +111,17 @@ onMounted(async () => {
     }
 })
 onBeforeUnmount(() => {
-    if (abortController) { try { abortController.abort() } catch {} }
+    if (abortController) { try { abortController.abort() } catch { } }
     if (nowInterval) { clearInterval(nowInterval); nowInterval = null }
     if (resizeObserver && viewerRef.value) {
-        try { resizeObserver.unobserve(viewerRef.value) } catch {}
-        try { resizeObserver.disconnect() } catch {}
+        try { resizeObserver.unobserve(viewerRef.value) } catch { }
+        try { resizeObserver.disconnect() } catch { }
     }
-    if (pdfDoc.value) { try { pdfDoc.value.destroy?.() } catch {}; try { pdfDoc.value.cleanup?.() } catch {}; pdfDoc.value = null }
+    if (pdfDoc.value) { try { pdfDoc.value.destroy?.() } catch { }; try { pdfDoc.value.cleanup?.() } catch { }; pdfDoc.value = null }
 })
 
 async function loadPdf(data: ArrayBuffer) {
-    if (pdfDoc.value) { try { await pdfDoc.value.destroy?.() } catch {}; try { pdfDoc.value.cleanup?.() } catch {}; pdfDoc.value = null }
+    if (pdfDoc.value) { try { await pdfDoc.value.destroy?.() } catch { }; try { pdfDoc.value.cleanup?.() } catch { }; pdfDoc.value = null }
     if (!getDocumentFn) throw new Error('PDF.js non chargé')
     const task = getDocumentFn({ data })
     const doc = await ((task as any).promise ?? (task as unknown as Promise<any>))
@@ -149,7 +149,7 @@ async function renderSinglePage(pageNumber: number) {
     const renderTask: any = page.render({ canvasContext: ctx, viewport, intent: 'display' })
     await (renderTask?.promise ?? renderTask)
     if (layerDiv) {
-        try { layerDiv.innerHTML = ''; layerDiv.style.position = 'absolute'; layerDiv.style.top = '0'; layerDiv.style.left = '0'; layerDiv.style.width = `${Math.floor(viewport.width)}px`; layerDiv.style.height = `${Math.floor(viewport.height)}px` } catch {}
+        try { layerDiv.innerHTML = ''; layerDiv.style.position = 'absolute'; layerDiv.style.top = '0'; layerDiv.style.left = '0'; layerDiv.style.width = `${Math.floor(viewport.width)}px`; layerDiv.style.height = `${Math.floor(viewport.height)}px` } catch { }
     }
 }
 </script>
@@ -177,8 +177,9 @@ async function renderSinglePage(pageNumber: number) {
             </div>
         </div>
         <div v-if="mode === 'edit'"
-        class="absolute bottom-2 left-5 right-8 z-20 flex items-center justify-between text-xs text-gray-600 pointer-events-none">
-            <UButton class="pointer-events-auto" size="xs" color="neutral" icon="i-heroicons-arrow-path" @click="manualRefresh">Actualiser</UButton>
+            class="absolute bottom-2 left-5 right-8 z-20 flex items-center justify-between text-xs text-gray-600 pointer-events-none">
+            <UButton class="pointer-events-auto" size="xs" color="neutral" icon="i-heroicons-arrow-path"
+                :loading="loading" @click="manualRefresh">Actualiser</UButton>
             <div>Actualisé il y a {{ timeSince(lastUpdated) }}</div>
         </div>
     </div>

@@ -277,7 +277,7 @@ async function renderSinglePage(pageNumber: number) {
         <div
             class="absolute bottom-2 left-5 right-8 z-20 flex items-center justify-between text-xs text-gray-600 pointer-events-none">
             <UButton class="pointer-events-auto" size="xs" color="neutral" icon="i-heroicons-arrow-path"
-                @click="manualRefresh">
+                :loading="loading" @click="manualRefresh">
                 Actualiser
             </UButton>
             <div>
