@@ -14,6 +14,7 @@ from administrative.models import Cerfa16702, EnedisMandate, Consuel
 from django.db.models import F
 from django.conf import settings
 from EuropGreenSolar.email_utils import send_mail
+from django.core.files.storage import default_storage
 
 @extend_schema_view(
     list=extend_schema(
@@ -109,16 +110,38 @@ class AdminUserViewSet(mixins.ListModelMixin,
             tech_reports = TechnicalVisit.objects.filter(created_by=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
             install_reports = InstallationCompleted.objects.filter(created_by=user, report_pdf__isnull=False).values('id', pdf=F('report_pdf'))
 
-        # Construction de la réponse minimale (id, pdf path)
+        # Helper: transforme les chemins de fichiers en URLs absolues incluant le host
+        def with_absolute_pdf(items):
+            result = []
+            for d in list(items):
+                # d est un dict {'id': ..., 'pdf': 'path/in/media.ext'}
+                name = d.get('pdf')
+                if name:
+                    try:
+                        # Respecte le backend de stockage (local/S3…)
+                        url = default_storage.url(name)
+                    except Exception:
+                        # Fallback simple si le storage ne fournit pas d'URL
+                        url = f"{getattr(settings, 'MEDIA_URL', '/media/')}{name}"
+
+                    if isinstance(url, str) and (url.startswith('http://') or url.startswith('https://')):
+                        abs_url = url
+                    else:
+                        abs_url = request.build_absolute_uri(url)
+                    d['pdf'] = abs_url
+                result.append(d)
+            return result
+
+        # Construction de la réponse minimale (id, pdf url absolue)
         payload = {
-            'quotes': list(quotes),
-            'invoices': list(invoices),
-            'cerfa16702': list(cerfas),
-            'representation_mandates': list(rep_mandates),
-            'consuels': list(consuels),
-            'enedis_mandates': list(enedis_mandates),
-            'technical_visit_reports': list(tech_reports),
-            'installation_reports': list(install_reports),
+            'quotes': with_absolute_pdf(quotes),
+            'invoices': with_absolute_pdf(invoices),
+            'cerfa16702': with_absolute_pdf(cerfas),
+            'representation_mandates': with_absolute_pdf(rep_mandates),
+            'consuels': with_absolute_pdf(consuels),
+            'enedis_mandates': with_absolute_pdf(enedis_mandates),
+            'technical_visit_reports': with_absolute_pdf(tech_reports),
+            'installation_reports': with_absolute_pdf(install_reports),
         }
         return Response(payload, status=status.HTTP_200_OK)
     
