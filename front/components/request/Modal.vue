@@ -11,7 +11,7 @@ const onSubmit = (form: FormData) => {
 
 <template>
 	<UModal :open="modelValue" @update:open="v => emit('update:modelValue', v)"
-		:title="props.payload ? 'Nouvelle demande' : 'Modifier demande'"
+		:title="props.payload ? 'Modifier demande' : 'Nouvelle demande'"
 		:ui="{ title: 'text-xl', content: 'max-w-2xl' }">
 		<template #body>
 			<RequestForm :model-value="props.payload ?? null" @submit="onSubmit" />
