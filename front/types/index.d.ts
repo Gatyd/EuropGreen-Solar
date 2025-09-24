@@ -1,6 +1,6 @@
 import type { InstallationStatus } from './installations'
 
-export type UserRoles = "employee" | "installer" | "secretary" | "customer" | "admin";
+export type UserRoles = "employee" | "installer" | "secretary" | "regional_manager" | "customer" | "admin";
 
 export interface Item {
     value: string;

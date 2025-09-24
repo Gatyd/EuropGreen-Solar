@@ -27,6 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         EMPLOYEE = "employee", "Employee"
         INSTALLER = "installer", "Installer"
         SECRETARY = "secretary", "Secretary"
+        REGIONAL_MANAGER = "regional_manager", "Regional Manager"
         CUSTOMER = "customer", "Customer"
         ADMIN = "admin", "Administrateur"
 
@@ -38,7 +39,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     accept_invitation = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    role = models.CharField(max_length=10, choices=UserRoles.choices, default=UserRoles.EMPLOYEE)
+    role = models.CharField(max_length=17, choices=UserRoles.choices, default=UserRoles.EMPLOYEE)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
