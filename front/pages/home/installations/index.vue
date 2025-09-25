@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth'
 import type { InstallationForm, InstallationStatus } from '~/types/installations'
 import apiRequest from '~/utils/apiRequest'
 
 definePageMeta({ layout: 'default' })
 
+const auth = useAuthStore()
 const toast = useToast()
 const search = ref('')
 const dateRange = ref<{ start?: string | null, end?: string | null }>({ start: null, end: null })
@@ -74,7 +76,14 @@ const fetchAll = async () => {
         () => $fetch('/api/installations/forms/', { credentials: 'include', query: params }),
         toast
     )
-    if (data) allItems.value = data
+    if (data) {
+        if (data.length === 1 && !auth.user?.is_staff){
+            // Si un seul résultat et pas un staff, redirige direct sur l'installation
+            navigateTo(`/home/installations/${data[0].id}`, { replace: true })
+            await new Promise(resolve => setTimeout(resolve, 500))
+        }
+        allItems.value = data
+    }
     loading.value = false
 }
 
@@ -83,35 +92,44 @@ onMounted(fetchAll)
 
 <template>
     <div>
-        <div class="sticky top-0 z-50 bg-white">
-            <UDashboardNavbar title="Installations" class="lg:text-2xl font-semibold"
-                :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">
-                <template #trailing>
-                    <UBadge variant="subtle">{{ totalCount }}</UBadge>
-                </template>
-            </UDashboardNavbar>
-        </div>
-
-        <UCard class="mb-4">
-            <div class="flex flex-wrap items-end gap-3">
-                <UFormField label="Recherche" class="w-full md:w-max lg:w-64">
-                    <UInput v-model="search" class="w-full" placeholder="Nom, adresse..." />
-                </UFormField>
-                <UFormField label="Du">
-                    <UInput v-model="dateRange.start" type="date" />
-                </UFormField>
-                <UFormField label="Au">
-                    <UInput v-model="dateRange.end" type="date" />
-                </UFormField>
-                <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchAll">Rafraîchir</UButton>
+        <div v-if="loading" class="flex items-center justify-center min-h-[40vh]">
+            <div class="flex items-center gap-3 text-gray-600">
+                <span
+                    class="inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                <span>Chargement…</span>
             </div>
-        </UCard>
+        </div>
+        <div v-else>
+            <div class="sticky top-0 z-50 bg-white">
+                <UDashboardNavbar title="Installations" class="lg:text-2xl font-semibold"
+                    :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">
+                    <template #trailing>
+                        <UBadge variant="subtle">{{ totalCount }}</UBadge>
+                    </template>
+                </UDashboardNavbar>
+            </div>
 
-        <div class="flex gap-4 overflow-x-auto p-4">
-            <div v-for="col in columns" :key="col.key">
-                <USkeleton v-if="loading" class="h-48 w-[340px]" />
-                <InstallationColumn v-else :title="col.title" :status="col.key" :items="items[col.key]"
-                    :count="items[col.key].length" />
+            <UCard class="mb-4">
+                <div class="flex flex-wrap items-end gap-3">
+                    <UFormField label="Recherche" class="w-full md:w-max lg:w-64">
+                        <UInput v-model="search" class="w-full" placeholder="Nom, adresse..." />
+                    </UFormField>
+                    <UFormField label="Du">
+                        <UInput v-model="dateRange.start" type="date" />
+                    </UFormField>
+                    <UFormField label="Au">
+                        <UInput v-model="dateRange.end" type="date" />
+                    </UFormField>
+                    <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchAll">Rafraîchir</UButton>
+                </div>
+            </UCard>
+
+            <div class="flex gap-4 overflow-x-auto p-4">
+                <div v-for="col in columns" :key="col.key">
+                    <USkeleton v-if="loading" class="h-48 w-[340px]" />
+                    <InstallationColumn v-else :title="col.title" :status="col.key" :items="items[col.key]"
+                        :count="items[col.key].length" />
+                </div>
             </div>
         </div>
     </div>
