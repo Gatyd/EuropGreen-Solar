@@ -69,6 +69,7 @@ const links = [
         id: "customers",
         label: "Prospects / Clients",
         icon: "i-heroicons-user-group",
+        defaultOpen: true,
         children: [
             {
                 icon: 'i-heroicons-user-plus',
@@ -113,11 +114,9 @@ const accessLink = links.map((link: any) => {
         if (link.id === "users") return null
         if (link.id === "products") return null
         if (link.id === "home") return null
-        if (link.id === "customers") return null
     }
     if (!user.value?.is_superuser && user.value?.is_staff) {
         const useraccess = user.value?.useraccess;
-        //     if (link.id === "home") return null
 
         if ((link.id === "requests") && !useraccess?.requests) return null
         if ((link.id === "offers") && !useraccess?.offers) return null
@@ -143,7 +142,7 @@ const savOpen = ref(false)
 
 <template>
     <UDashboardGroup>
-        <UDashboardSidebar collapsible resizable :min-size="14" :default-size="17.5" :max-size="21" :ui="{
+        <UDashboardSidebar collapsible resizable :min-size="15" :default-size="17.5" :max-size="20" :ui="{
             footer: 'block',
             header: 'h-auto lg:pt-2',
         }" toggle-side="right">

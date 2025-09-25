@@ -10,6 +10,21 @@ class IsAdmin(permissions.BasePermission):
         if not user.is_authenticated:
             return False
         return user.is_superuser
+    
+class IsAdminOrStaffReadOnly(permissions.BasePermission):
+    """
+    Permission personnalisée pour vérifier que l'utilisateur est un administrateur ou un membre du personnel avec accès en lecture seule.
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+        if user.is_staff and request.method in permissions.SAFE_METHODS:
+            return True
+        return False
 
 class HasRequestsAccess(permissions.BasePermission):
     """

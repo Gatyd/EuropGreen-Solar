@@ -4,10 +4,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from authentication.permissions import IsAdmin
+from authentication.permissions import IsAdminOrStaffReadOnly
 from .models import User
 from .serializers import UserSerializer, AdminUserSerializer, ChangePasswordSerializer
-from installations.models import Form as InstallationForm, TechnicalVisit, InstallationCompleted, RepresentationMandate
+from installations.models import TechnicalVisit, InstallationCompleted, RepresentationMandate
 from billing.models import Quote
 from invoices.models import Invoice
 from administrative.models import Cerfa16702, EnedisMandate, Consuel
@@ -50,12 +50,28 @@ class AdminUserViewSet(mixins.ListModelMixin,
     """
     queryset = User.objects.all()
     serializer_class = AdminUserSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdminOrStaffReadOnly]
     http_method_names = ['get', 'post', 'patch']
     
     def get_queryset(self):
         """Filtre les utilisateurs selon les besoins"""
-        queryset = User.objects.select_related('useraccess')
+        user = self.request.user
+        base_qs = User.objects.select_related('useraccess')
+
+        # Logique d'accès selon le rôle
+        if user.is_superuser:
+            queryset = base_qs
+        elif user.is_staff:
+            # Pour un staff/installeur: ne voir que ses clients
+            queryset = (
+                base_qs
+                .filter(installations__affected_user=user)
+                .filter(role=User.UserRoles.CUSTOMER)
+                .distinct()
+            )
+        else:
+            # Par défaut, pas d'accès (le permission_class devrait déjà bloquer ces cas)
+            queryset = base_qs.none()
 
         # Filtrage par statut actif/inactif
         is_active = self.request.query_params.get('is_active', None)
@@ -63,9 +79,9 @@ class AdminUserViewSet(mixins.ListModelMixin,
             queryset = queryset.filter(is_active=is_active.lower() == 'true')
             
         # Filtrage par rôle
-        is_staff = self.request.query_params.get('is_staff', None)
-        if is_staff is not None:
-            queryset = queryset.filter(is_staff=is_staff.lower() == 'true')
+        is_staff_param = self.request.query_params.get('is_staff', None)
+        if is_staff_param is not None:
+            queryset = queryset.filter(is_staff=is_staff_param.lower() == 'true')
 
         return queryset
 

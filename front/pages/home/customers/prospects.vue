@@ -6,8 +6,6 @@ import apiRequest from '~/utils/apiRequest'
 import type { ProspectRequest, ProspectStatus } from '~/types/requests'
 import { useAuthStore } from '~/store/auth'
 
-definePageMeta({ middleware: 'admin' })
-
 const auth = useAuthStore()
 const toast = useToast()
 const q = ref('')
@@ -88,7 +86,7 @@ const columns: TableColumn<any>[] = [
 		}
 	}
 ]
-if (auth.user?.role === 'admin') {
+if (auth.user?.is_superuser) {
 	columns.push({
 		accessorKey: 'assigned_to', header: "Chargé d'affaire",
 		cell: ({ row }) => row.original.assigned_to ? `${row.original.assigned_to.first_name} ${row.original.assigned_to.last_name}` : 'Non assigné'

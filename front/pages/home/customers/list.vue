@@ -3,10 +3,7 @@ import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { User } from '~/types'
 import { getPaginationRowModel } from '@tanstack/vue-table'
-
-definePageMeta({
-	middleware: 'admin'
-})
+import { useAuthStore } from '~/store/auth'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
@@ -21,6 +18,7 @@ const loading = ref(true)
 const users = ref<User[] | undefined>([])
 const table = useTemplateRef('table')
 const router = useRouter()
+const auth = useAuthStore()
 
 const attributLabels: { [key: string]: string } = {
 	first_name: 'Prénom',
@@ -83,17 +81,10 @@ const columns: TableColumn<User>[] = [{
 		return status ? labels[status] || status : '—'
 	}
 }, {
-	accessorKey: 'installer',
-	header: 'Installateur affecté',
-	cell: ({ row }) => {
-		const inst = row.original.last_installation?.installer
-		return inst ? `${inst.first_name} ${inst.last_name}` : '—'
-	}
-}, {
 	id: 'actions',
 	header: 'Actions',
 	cell: ({ row }) => {
-		return h('div', { class: 'space-x-2' }, [
+		let defaultActions = [
 			h(UTooltip, { text: 'Voir les installations', delayDuration: 0 }, () =>
 				h(UButton, {
 					icon: 'i-heroicons-wrench-screwdriver', color: 'neutral', variant: 'ghost',
@@ -114,17 +105,37 @@ const columns: TableColumn<User>[] = [{
 						router.push({ path: '/home/documents', query: { client: row.original.id } })
 					}
 				})
-			),
-			h(AssignInstallerPopover as any, {
-				formId: row.original.last_installation?.id || '',
-				'v-model:open': openAssignFor.value[row.original.id] || false,
-				onAssigned: async () => {
-					await fetchUsers()
-				}
-			})
-		])
+			)
+		]
+		if (auth.user?.is_superuser) {
+			defaultActions.push(
+				h(AssignInstallerPopover as any, {
+					formId: row.original.last_installation?.id || '',
+					'v-model:open': openAssignFor.value[row.original.id] || false,
+					onAssigned: async () => {
+						await fetchUsers()
+					}
+				})
+			)
+		}
+		return h('div', { class: 'space-x-2' }, defaultActions)
 	}
 }]
+
+// Colonne 'installer' ajoutée uniquement pour les superadmins, juste après 'status'
+if (auth.user?.is_superuser) {
+	const installerColumn: TableColumn<User> = {
+		accessorKey: 'installer',
+		header: 'Installateur affecté',
+		cell: ({ row }) => {
+			const inst = row.original.last_installation?.installer
+			return inst ? `${inst.first_name} ${inst.last_name}` : '—'
+		}
+	}
+	const statusIndex = columns.findIndex(c => (c as any).accessorKey === 'status' || (c as any).id === 'status')
+	const insertIndex = statusIndex >= 0 ? statusIndex + 1 : columns.length - 1
+	columns.splice(Math.min(Math.max(insertIndex, 0), columns.length), 0, installerColumn)
+}
 
 const pagination = ref({
 	pageIndex: 0,
