@@ -14,6 +14,7 @@ const state = reactive({
     last_name: '',
     first_name: '',
     email: '',
+    phone_number: '',
     role: '' as UserRoles,
     useraccess: [] as string[]
 })
@@ -72,6 +73,7 @@ const formatAccess = (selectedAccess: string[]) => {
 const formatDataForAPI = () => {
     const data = {
         email: state.email,
+        phone_number: state.phone_number,
         first_name: state.first_name,
         last_name: state.last_name,
         role: state.role,
@@ -85,6 +87,7 @@ const resetForm = () => {
     state.last_name = ''
     state.first_name = ''
     state.email = ''
+    state.phone_number = ''
     state.role = '' as UserRoles
     state.useraccess = []
 }
@@ -94,6 +97,7 @@ watch(() => props.user, (newUser) => {
         state.last_name = newUser.last_name || ''
         state.first_name = newUser.first_name || ''
         state.email = newUser.email || ''
+        state.phone_number = newUser.phone_number || ''
         state.role = newUser.role || ''
         state.useraccess = Object.entries(newUser.useraccess || {})
             .filter(([_, value]) => value)
@@ -160,27 +164,31 @@ const trySubmit = async () => {
         :ui="{ title: 'text-xl', content: 'max-w-2xl' }" @close="closeModal">
         <template #body>
             <UForm ref="formRef" :state="state" :validate="validate" class="w-full">
-                <div class="grid grid-cols-2 gap-6 mb-10">
-                    <UFormField label="Nom" name="last_name" required>
+                <div class="grid grid-cols-12 gap-6 mb-10">
+                    <UFormField class="col-span-12 md:col-span-6" label="Nom" name="last_name" required>
                         <UInput v-model="state.last_name" class="w-full" type="text" placeholder="Entrez le nom" />
                     </UFormField>
-                    <UFormField label="Prénom" name="first_name" required>
+                    <UFormField class="col-span-12 md:col-span-6" label="Prénom" name="first_name" required>
                         <UInput v-model="state.first_name" class="w-full" type="text" placeholder="Entrez le prénom" />
                     </UFormField>
-                    <UFormField label="Email" name="email" help="L'invitation sera envoyée à cette adresse email"
+                    <UFormField class="col-span-12 md:col-span-6" label="Email" name="email" help="L'invitation sera envoyée à cette adresse email"
                         required>
                         <UInput v-model="state.email" type="email" class="w-full"
                             placeholder="Entrez l'adresse email" />
                     </UFormField>
-                    <UFormField label="Rôle" name="role" required>
+                    <UFormField class="col-span-12 md:col-span-6" label="Numéro de téléphone" name="phone_number">
+                        <UInput v-model="state.phone_number" class="w-full"
+                            placeholder="Entrez le numéro de téléphone" />
+                    </UFormField>
+                    <UFormField class="col-span-12 md:col-span-4" label="Rôle" name="role" required>
                         <USelectMenu v-model="state.role" class="w-full" :items="roles" value-key="value"
                             label-key="label" placeholder="Sélectionnez un rôle" @update:model-value="updateAccess" />
                     </UFormField>
-                    <UFormField v-if="state.role !== 'admin'" class="col-span-2" label="Accès" name="useraccess">
+                    <UFormField v-if="state.role !== 'admin'" class="col-span-12 md:col-span-8" label="Accès" name="useraccess">
                         <USelectMenu v-model="state.useraccess" class="w-full" :items="allAccess" value-key="value"
                             label-key="label" placeholder="Sélectionnez les accès" multiple />
                     </UFormField>
-                    <UAlert v-else class="col-span-2" title="Accès administrateur" variant="subtle"
+                    <UAlert v-else class="col-span-12" title="Accès administrateur" variant="subtle"
                         description="En invitant un administrateur, il aura un accès complet à tous les modules et fonctionnalités, y compris la gestion des utilisateurs et des configurations."
                         icon="i-heroicons-shield-check" :ui="{
                             icon: 'size-11'

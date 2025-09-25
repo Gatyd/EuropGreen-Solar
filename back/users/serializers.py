@@ -22,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'is_active', 'is_staff', 'is_superuser', 'useraccess']
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'role', 'is_active', 'is_staff', 'is_superuser', 'useraccess']
         read_only_fields = ['id', 'is_staff', 'is_superuser', 'role']
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -34,7 +34,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'role', 'accept_invitation', 'is_active', 'is_staff', 'is_superuser', 'useraccess', 'installations_count', 'last_installation']
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'role', 'accept_invitation', 'is_active', 'is_staff', 'is_superuser', 'useraccess', 'installations_count', 'last_installation']
         read_only_fields = ['id', 'accept_invitation', 'is_staff', 'is_superuser']
 
     def get_installations_count(self, obj: User):

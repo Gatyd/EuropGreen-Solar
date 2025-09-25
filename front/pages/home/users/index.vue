@@ -118,6 +118,10 @@ const columns: TableColumn<User>[] = [{
     header: 'Email',
     cell: ({ row }) => row.original.email
 }, {
+    accessorKey: 'phone_number',
+    header: 'Numéro de téléphone',
+    cell: ({ row }) => row.original.phone_number || '—'
+}, {
     accessorKey: 'role',
     header: 'Rôle',
     cell: ({ row }) => {
@@ -126,6 +130,7 @@ const columns: TableColumn<User>[] = [{
             employee: 'Employé',
             installer: 'Installateur',
             secretary: 'Secrétaire',
+            regional_manager: 'Responsable régional',
             customer: 'Client',
         }
         return roleLabels[row.original.role] || 'Utilisateur'
