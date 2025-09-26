@@ -13,6 +13,12 @@
         <a href="mailto:{{ user_email }}" style="color:#2563eb; text-decoration:none;">{{ user_email }}</a>
       </td>
     </tr>
+    {% if category %}
+    <tr>
+      <td style="padding:8px; color:#555;">Catégorie</td>
+      <td style="padding:8px; font-weight:600;">{{ category }}</td>
+    </tr>
+    {% endif %}
   </table>
   <div style="background:#f7f7f7; padding:12px; border-radius:6px;">
     <div style="font-weight:600; margin-bottom:6px;">Message</div>

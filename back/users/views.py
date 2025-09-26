@@ -303,6 +303,7 @@ class SupportView(APIView):
     )
     def post(self, request):
         message = (request.data.get('message') or '').strip()
+        category = (request.data.get('category') or '').strip() or None
         if not message:
             return Response({ 'message': 'Ce champ est requis.' }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -316,6 +317,8 @@ class SupportView(APIView):
             'user_email': user.email,
             'message': message,
         }
+        if category:
+            context['category'] = category
         try:
             send_mail(
                 template='emails/support/support_request.html',

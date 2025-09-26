@@ -87,6 +87,15 @@ const links = [
         },
     },
     {
+        id: "sav",
+        label: "Service après vente",
+        icon: "i-heroicons-lifebuoy",
+        to: "/home/sav",
+        tooltip: {
+            text: "Service après vente",
+        },
+    },
+    {
         id: "settings",
         label: "Paramètres",
         defaultOpen: true,
@@ -122,8 +131,11 @@ const accessLink = links.map((link: any) => {
         if ((link.id === "offers") && !useraccess?.offers) return null
         if ((link.id === "installations") && !useraccess?.installation) return null
     }
+    if (user.value?.is_staff){
+        if (link.id === "sav") return null
+    }
     if (!user.value?.is_staff && !user.value?.is_superuser) {
-        if (link.id !== "settings" && link.id !== "installations") return null
+        if (!["settings", "installations", "sav"].includes(link.id)) return null
     }
 
     return link;
@@ -135,8 +147,7 @@ const logout = async () => {
     navigateTo('/login', { replace: true });
 };
 
-// SAV (Service Après Vente)
-const savOpen = ref(false)
+// Suppression du modal SAV (désormais page dédiée /home/sav)
 
 </script>
 
@@ -183,16 +194,6 @@ const savOpen = ref(false)
         <div class="relative bg-white dark:bg-slate-900 min-h-screen w-full overflow-auto">
             <slot />
 
-            <UTooltip v-if="!user?.is_staff" text="Service après vente" :delay-duration="0" :ui="{ content: 'px-2 py-1 text-base' }">
-                <button type="button" @click="savOpen = true" aria-label="Ouvrir le support SAV" class="fixed bottom-5 right-5 h-14 w-14 rounded-full grid place-items-center shadow-xl
-                bg-gradient-to-br from-(--ui-primary) to-(--ui-primary)/90 text-white hover:brightness-95 transition-all duration-200
-                focus:outline-none focus:ring-4 ring-(--ui-primary)/30">
-                    <span
-                        class="absolute inset-0 rounded-full animate-[ping_2s_linear_infinite] bg-(--ui-primary)/20"></span>
-                    <UIcon name="i-heroicons-lifebuoy" class="relative text-2xl" />
-                </button>
-            </UTooltip>
         </div>
-        <SAVModal v-model="savOpen" />
     </UDashboardGroup>
 </template>
