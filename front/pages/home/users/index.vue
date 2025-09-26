@@ -15,6 +15,7 @@ const UBadge = resolveComponent('UBadge')
 const q = ref("")
 const formModal = ref(false)
 const deactivateModal = ref(false)
+const deleteModal = ref(false)
 const selectedUser = ref<User | undefined>(undefined)
 const toast = useToast()
 const loading = ref(true)
@@ -87,7 +88,7 @@ function getRowItems(row: Row<User>) {
             },
             {
                 label: row.original.is_active ? 'Désactiver' : 'Réactiver',
-                color: row.original.is_active ? 'error' : 'success',
+                color: row.original.is_active ? 'warning' : 'success',
                 loading: activateLoadig.value,
                 icon: `i-heroicons-${row.original.is_active ? 'x-circle' : 'check-circle'}`,
                 onSelect() {
@@ -97,6 +98,15 @@ function getRowItems(row: Row<User>) {
                     } else {
                         reactivateUser()
                     }
+                }
+            },
+            {
+                label: 'Supprimer',
+                icon: 'i-heroicons-trash',
+                color: 'error',
+                onSelect() {
+                    selectedUser.value = row.original
+                    deleteModal.value = true
                 }
             }
         )
@@ -216,6 +226,7 @@ onMounted(fetchUsers)
 <template>
     <UserModal v-model="formModal" :user="selectedUser" @submit="fetchUsers" />
     <UserDeactivateModal v-model="deactivateModal" v-if="selectedUser" :user="selectedUser" @deactivate="fetchUsers" />
+    <UserDeleteModal v-model="deleteModal" v-if="selectedUser" :user="selectedUser" @delete="fetchUsers" />
     <div class="sticky top-0 z-50 bg-white">
         <UDashboardNavbar title="Utilisateurs" class="lg:text-2xl font-semibold"
             :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">

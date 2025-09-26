@@ -34,11 +34,7 @@ from django.core.files.storage import default_storage
         description="Met à jour partiellement les informations d'un utilisateur et ses droits d'accès"
     )
 )
-class AdminUserViewSet(mixins.ListModelMixin,
-                  mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  viewsets.GenericViewSet):
+class AdminUserViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour la gestion des utilisateurs.
     
@@ -51,7 +47,6 @@ class AdminUserViewSet(mixins.ListModelMixin,
     queryset = User.objects.all()
     serializer_class = AdminUserSerializer
     permission_classes = [IsAdminOrStaffReadOnly]
-    http_method_names = ['get', 'post', 'patch']
     
     def get_queryset(self):
         """Filtre les utilisateurs selon les besoins"""

@@ -4,12 +4,12 @@
             <div class="p-3">
                 <!-- En-tête du modal -->
                 <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 bg-warning-100 dark:bg-warning-900/30 rounded-lg flex items-center justify-center">
-                        <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-warning-600 dark:text-warning-400" />
+                    <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                        <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-600 dark:text-red-400" />
                     </div>
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            Désactiver l'utilisateur {{ `${user.first_name.split(" ")[0]} ${user.last_name.split(" ")[0]}` }}
+                            Supprimer l'utilisateur {{ `${user.first_name.split(" ")[0]} ${user.last_name.split(" ")[0]}` }}
                         </h3>
                     </div>
                 </div>
@@ -18,20 +18,21 @@
                 <div class="mb-3">
                     <div class="space-y-3">
                         <p class="text-sm text-gray-700 dark:text-gray-300">
-                            Vous êtes sur le point de <strong>désactiver temporairement</strong> ou <strong>définitivement</strong> ce compte.
+                            Vous êtes sur le point de <strong>supprimer définitivement</strong> ce compte.
                         </p>
 
                         <!-- Risques de la suppression -->
                         <div class="mt-4">
                             <div
-                                class="p-4 border border-warning-200 dark:border-warning-800 rounded-lg bg-warning-50 dark:bg-warning-950/20">
-                                <h4 class="font-medium text-warning-800 dark:text-warning-200 mb-2 flex items-center gap-2">
+                                class="p-4 border border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-950/20">
+                                <h4 class="font-medium text-red-800 dark:text-red-200 mb-2 flex items-center gap-2">
                                     <UIcon name="i-heroicons-x-circle" class="w-4 h-4" />
-                                    Conséquences de la désactivation
+                                    Conséquences de la suppression
                                 </h4>
-                                <ul class="text-sm text-warning-700 dark:text-warning-300 space-y-1">
+                                <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
                                     <li>• L'utilisateur ne pourra plus se connecter sur la plateforme</li>
-                                    <li>• Les projets en cours de cet utilisateur ne pourront plus être suivis par ce dernier jusqu'à réactivation de son compte</li>
+                                    <li>• Les projets en cours de cet utilisateur ne serront plus liés à ce dernier</li>
+                                    <li>• Cette action est irréversible</li>
                                 </ul>
                             </div>
                         </div>
@@ -45,9 +46,9 @@
                         Annuler
                     </UButton>
 
-                    <UButton type="button" color="warning" size="lg" :loading="loading" icon="i-heroicons-x-circle"
+                    <UButton type="button" color="error" size="lg" :loading="loading" icon="i-heroicons-trash"
                         class="sm:order-2 w-full sm:w-auto" @click="deactivateUser" :disabled="loading">
-                        Désactiver l'utilisateur
+                        Supprimer l'utilisateur
                     </UButton>
                 </div>
             </div>
@@ -67,7 +68,7 @@ const props = defineProps<{
     user: User
 }>()
 
-const emit = defineEmits(['deactivate'])
+const emit = defineEmits(['delete'])
 const loading = ref(false)
 const toast = useToast()
 
@@ -77,21 +78,21 @@ const deactivateUser = async () => {
     loading.value = true
 
     const result = await apiRequest(
-        () => $fetch(`/api/users/${props.user!.id}/deactivate/`, {
-            method: 'PATCH'
+        () => $fetch(`/api/users/${props.user!.id}/`, {
+            method: 'DELETE'
         }),
         toast
     )
 
     if (result !== null) {
         toast.add({
-            title: 'Utilisateur désactivé',
-            description: `Le compte de ${props.user.first_name.split(" ")[0]} ${props.user.last_name.split(" ")[0]} a été désactivé avec succès.`,
-            icon: 'i-heroicons-x-circle',
+            title: 'Utilisateur supprimé',
+            description: `Le compte de ${props.user.first_name.split(" ")[0]} ${props.user.last_name.split(" ")[0]} a été supprimé avec succès.`,
+            icon: 'i-heroicons-trash',
             color: 'success'
         })
         model.value = false
-        emit('deactivate', props.user)
+        emit('delete', props.user)
     }
 
     loading.value = false
