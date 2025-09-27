@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Cerfa16702, ElectricalDiagram, EnedisMandate, Consuel
+from .models import Cerfa16702, ElectricalDiagram, EnedisMandate, Consuel, Cerfa16702Attachment
 from installations.models import Signature
 from typing import Any, Dict, List
 from django.utils import timezone
@@ -11,12 +11,61 @@ class SignatureSerializer(serializers.ModelSerializer):
 			'id', 'signer_name', 'ip_address', 'user_agent', 'signed_at', 'signature_image', 'created_at'
 		]
 
+class Cerfa16702AttachmentSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cerfa16702Attachment
+        fields = [
+            'id', 'dpc_key', 'ordering', 'created_at', 'url', 'name'
+        ]
+        read_only_fields = fields
+
+    def get_url(self, obj: Cerfa16702Attachment):
+        request = self.context.get('request')
+        try:
+            if not obj.file:
+                return None
+            url = obj.file.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        except Exception:
+            return None
+
+    def get_name(self, obj: Cerfa16702Attachment):
+        try:
+            return obj.file.name.split('/')[-1]
+        except Exception:
+            return None
+
+
 class Cerfa16702Serializer(serializers.ModelSerializer):
     declarant_signature = SignatureSerializer(read_only=True)
+    attachments_grouped = serializers.SerializerMethodField()
+
     class Meta:
         model = Cerfa16702
         fields = '__all__'
         read_only_fields = ('id', 'form', 'created_by', 'created_at', 'updated_at')
+
+    def get_attachments_grouped(self, obj: Cerfa16702):
+        """Retourne un dict { dpc1: [...], dpc2: [...], ... } avec les attachments existants.
+
+        Laisse les anciens champs FileField intacts pour compat actuelle.
+        """
+        qs = getattr(obj, 'attachments', None)
+        if qs is None:
+            return {}
+        grouped = {k: [] for k, _ in Cerfa16702Attachment.DPC_KEYS}
+        ser = Cerfa16702AttachmentSerializer(qs.all(), many=True, context=self.context)
+        for att in ser.data:
+            key = att.get('dpc_key')
+            if key in grouped:
+                grouped[key].append(att)
+        # Supprimer les clés vides pour réponse plus compacte
+        return {k: v for k, v in grouped.items() if v}
 
 class ElectricalDiagramSerializer(serializers.ModelSerializer):
     class Meta:

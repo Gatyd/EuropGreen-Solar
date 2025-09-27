@@ -8,7 +8,7 @@ from django.core.files.base import ContentFile
 from EuropGreenSolar.utils.helpers import get_client_ip
 from EuropGreenSolar.utils.helpers import decode_data_url_image
 from authentication.permissions import HasAdministrativeAccess
-from .models import Cerfa16702, ElectricalDiagram, Consuel
+from .models import Cerfa16702, ElectricalDiagram, Consuel, Cerfa16702Attachment
 from installations.models import AdministrativeValidation
 from .serializers import Cerfa16702Serializer, ElectricalDiagramSerializer
 from .serializers import ConsuelSerializer
@@ -235,25 +235,62 @@ class Cerfa16702ViewSet(GenericViewSet):
 
     @action(detail=True, methods=['post'], url_path='attachments')
     def update_attachments(self, request, pk=None):
-        """Met à jour les pièces jointes DPC1..DPC8, DPC11 d'un CERFA par son id, puis génère le PDF des pièces jointes."""
+        """Upload multi-fichiers pour DPC1..DPC8, DPC11.
+
+        Acceptation:
+        - FormData avec clés répétées dpc1, dpc2 ... (getlist)
+        - Param ?replace=true pour remplacer les fichiers existants de chaque clé fournie
+        - Champ optionnel dpc11_notice_materiaux
+
+        Réponse: Cerfa16702Serializer (incluant attachments_grouped)
+        """
         try:
             cerfa = Cerfa16702.objects.get(pk=pk)
         except Cerfa16702.DoesNotExist:
             return Response({'detail': 'CERFA introuvable.'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Mise à jour des fichiers
-        for i in range(1, 9):
-            field_name = f'dpc{i}'
-            if field_name in request.FILES:
-                setattr(cerfa, field_name, request.FILES[field_name])
-        if 'dpc11' in request.FILES:
-            cerfa.dpc11 = request.FILES['dpc11']
+        replace = str(request.query_params.get('replace', 'false')).lower() in {'1','true','yes','on'}
+
+        # Déterminer les clés DPC présentes dans la requête
+        dpc_keys = [f'dpc{i}' for i in range(1,9)] + ['dpc11']
+        provided_keys = [k for k in dpc_keys if k in request.FILES]
+
+        for key in provided_keys:
+            file_list = request.FILES.getlist(key)
+            if not file_list:
+                continue
+            # Option replace: supprimer les attachments existants pour cette clé
+            if replace:
+                Cerfa16702Attachment.objects.filter(cerfa=cerfa, dpc_key=key).delete()
+            # Calcul de l'offset ordering courant
+            existing_count = Cerfa16702Attachment.objects.filter(cerfa=cerfa, dpc_key=key).count()
+            ordering_start = existing_count + 1
+            for idx, f in enumerate(file_list, start=ordering_start):
+                Cerfa16702Attachment.objects.create(
+                    cerfa=cerfa,
+                    dpc_key=key,
+                    file=f,
+                    ordering=idx,
+                )
+            # Compat legacy: si replace true, on écrase aussi le champ legacy par le premier
+            if replace and file_list:
+                try:
+                    setattr(cerfa, key, file_list[0])
+                except Exception:
+                    pass
+            elif not getattr(cerfa, key, None):
+                # si champ vide, mettre le premier pour conserver anciens usages
+                try:
+                    setattr(cerfa, key, file_list[0])
+                except Exception:
+                    pass
+
         if 'dpc11_notice_materiaux' in request.data:
             cerfa.dpc11_notice_materiaux = request.data.get('dpc11_notice_materiaux') or ''
 
         cerfa.save()
 
-        # Générer le PDF des pièces jointes via la page print front
+        # Générer le PDF des pièces jointes via la page print front (option best-effort)
         try:
             form_id = str(cerfa.form_id)
             pdf_bytes = render_cerfa16702_attachments_pdf(form_id, request=request)

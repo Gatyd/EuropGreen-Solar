@@ -125,6 +125,47 @@ class Cerfa16702(models.Model):
         verbose_name_plural = "CERFA 16702"
 
 
+class Cerfa16702Attachment(models.Model):
+    """Pièce jointe multiple pour un CERFA 16702 (remplace dpc1..dpc8, dpc11 en mode multi-fichiers).
+
+    Transition: les anciens champs FileField sur Cerfa16702 coexistent jusqu'au nettoyage.
+    """
+
+    DPC_KEYS = [
+        ("dpc1", "DPC1"),
+        ("dpc2", "DPC2"),
+        ("dpc3", "DPC3"),
+        ("dpc4", "DPC4"),
+        ("dpc5", "DPC5"),
+        ("dpc6", "DPC6"),
+        ("dpc7", "DPC7"),
+        ("dpc8", "DPC8"),
+        ("dpc11", "DPC11"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cerfa = models.ForeignKey(Cerfa16702, on_delete=models.CASCADE, related_name="attachments")
+    dpc_key = models.CharField(max_length=10, choices=DPC_KEYS)
+    file = models.FileField(upload_to="administrative/cerfa16702/attachments/%Y/%m/%d/")
+    ordering = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "administrative_cerfa16702_attachment"
+        ordering = ["cerfa", "dpc_key", "ordering", "created_at"]
+        indexes = [
+            models.Index(fields=["cerfa", "dpc_key", "ordering"]),
+        ]
+        verbose_name = "Pièce jointe CERFA 16702"
+        verbose_name_plural = "Pièces jointes CERFA 16702"
+        constraints = [
+            models.UniqueConstraint(fields=["cerfa", "dpc_key", "ordering"], name="uniq_cerfa_dpc_ordering"),
+        ]
+
+    def __str__(self) -> str:  # pragma: no cover - simple
+        return f"Attachment {self.dpc_key} #{self.ordering} for {self.cerfa_id}"
+
+
 class ElectricalDiagram(models.Model):
     """Document n°2 : Schéma électrique (import PDF ou image)."""
 
