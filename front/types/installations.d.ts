@@ -247,12 +247,24 @@ export interface Cerfa16702 {
   dpc11?: string | null
   dpc11_notice_materiaux?: string
 
+  // Nouveau: pièces jointes multiples groupées (clé DPC -> liste attachments)
+  attachments_grouped?: Record<string, Cerfa16702Attachment[]> | null
+
   // PDF généré
   pdf?: string | null
   attachements_pdf?: string | null
 
   created_at?: string
   updated_at?: string
+}
+
+export interface Cerfa16702Attachment {
+  id: string
+  dpc_key: string
+  ordering: number
+  created_at: string
+  url?: string | null
+  name?: string | null
 }
 
 export interface ElectricalDiagram {

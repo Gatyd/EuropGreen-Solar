@@ -98,16 +98,7 @@ class Cerfa16702(models.Model):
         related_name="cerfa16702_declarant",
     )
 
-    # Pièces Jointes (DPC)
-    dpc1 = models.FileField(upload_to="administrative/cerfa16702/dpc1/", null=True, blank=True)
-    dpc2 = models.FileField(upload_to="administrative/cerfa16702/dpc2/", null=True, blank=True)
-    dpc3 = models.FileField(upload_to="administrative/cerfa16702/dpc3/", null=True, blank=True)
-    dpc4 = models.FileField(upload_to="administrative/cerfa16702/dpc4/", null=True, blank=True)
-    dpc5 = models.FileField(upload_to="administrative/cerfa16702/dpc5/", null=True, blank=True)
-    dpc6 = models.FileField(upload_to="administrative/cerfa16702/dpc6/", null=True, blank=True)
-    dpc7 = models.FileField(upload_to="administrative/cerfa16702/dpc7/", null=True, blank=True)
-    dpc8 = models.FileField(upload_to="administrative/cerfa16702/dpc8/", null=True, blank=True)
-    dpc11 = models.FileField(upload_to="administrative/cerfa16702/dpc11/", null=True, blank=True)
+    # Pièces Jointes (multi désormais via Cerfa16702Attachment)
     dpc11_notice_materiaux = models.TextField(blank=True, null=True)
 
     # PDF généré
