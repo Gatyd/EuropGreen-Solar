@@ -91,6 +91,7 @@ interface AttachmentViewItem {
     indexWithinKey: number
     dpcIndex: number
     isTextNotice?: boolean
+    totalForKey: number
 }
 
 // Construit la pagination par DPC: chaque DPC occupe des pages consécutives, max 2 images/page.
@@ -119,13 +120,14 @@ const logicalPages = computed<AttachmentViewItem[][]>(() => {
             const legacyUrl = getAttachmentUrl(key)
             if (legacyUrl) sources.push(legacyUrl)
         }
-        const noticeFirst = (key === 'dpc11' && props.draft.dpc11_notice_materiaux)
+            const noticeFirst = (key === 'dpc11' && props.draft.dpc11_notice_materiaux)
         if (noticeFirst) {
             pages.push([
-                { key, title: label.name, source: '', ordering: 0, indexWithinKey: -1, dpcIndex, isTextNotice: true }
+                    { key, title: label.name, source: '', ordering: 0, indexWithinKey: -1, dpcIndex, isTextNotice: true, totalForKey: sources.length }
             ])
         }
         // Découpage en segments de 2 images
+            const totalForKey = sources.length
         for (let i = 0; i < sources.length; i += 2) {
             const slice = sources.slice(i, i + 2)
             const pageItems: AttachmentViewItem[] = slice.map((src, idx) => ({
@@ -135,6 +137,7 @@ const logicalPages = computed<AttachmentViewItem[][]>(() => {
                 ordering: i + idx + 1,
                 indexWithinKey: i + idx,
                 dpcIndex,
+                    totalForKey,
             }))
             pages.push(pageItems)
         }
@@ -190,7 +193,8 @@ const projectAddress = computed(() => {
             <div v-else class="grid grid-cols-1 gap-6">
                 <div v-for="item in page" :key="item.key + '-' + item.ordering" class="flex flex-col">
                     <div class="text-xs font-semibold text-zinc-600 mb-2 uppercase break-words">
-                        {{ item.title }} <span class="text-[10px]" v-if="page.length>1">(Doc {{ item.indexWithinKey + 1 }})</span>
+                        {{ item.title }}
+                        <span class="text-[10px]" v-if="item.totalForKey > 1 && item.indexWithinKey >= 0">(Doc {{ item.indexWithinKey + 1 }})</span>
                     </div>
                     <div class="rounded-md bg-white flex items-center justify-center max-h-[240mm] overflow-hidden" :class="{'min-h-[110mm]': page.length > 1, 'min-h-[220mm]': page.length === 1 }">
                         <img v-if="item.source" :src="item.source" :alt="item.title" class="max-w-full max-h-[235mm] h-auto w-auto" />

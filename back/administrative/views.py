@@ -259,36 +259,28 @@ class Cerfa16702ViewSet(GenericViewSet):
             file_list = request.FILES.getlist(key)
             if not file_list:
                 continue
-            # Option replace: supprimer les attachments existants pour cette clé
+            qs_existing = Cerfa16702Attachment.objects.filter(cerfa=cerfa, dpc_key=key).only('id', 'ordering')
             if replace:
-                Cerfa16702Attachment.objects.filter(cerfa=cerfa, dpc_key=key).delete()
-            # Calcul de l'offset ordering courant
-            existing_count = Cerfa16702Attachment.objects.filter(cerfa=cerfa, dpc_key=key).count()
+                qs_existing.delete()
+                existing_count = 0
+            else:
+                existing_count = qs_existing.count()
             ordering_start = existing_count + 1
-            for idx, f in enumerate(file_list, start=ordering_start):
-                Cerfa16702Attachment.objects.create(
+            new_objs = [
+                Cerfa16702Attachment(
                     cerfa=cerfa,
                     dpc_key=key,
                     file=f,
-                    ordering=idx,
-                )
-            # Compat legacy: si replace true, on écrase aussi le champ legacy par le premier
-            if replace and file_list:
-                try:
-                    setattr(cerfa, key, file_list[0])
-                except Exception:
-                    pass
-            elif not getattr(cerfa, key, None):
-                # si champ vide, mettre le premier pour conserver anciens usages
-                try:
-                    setattr(cerfa, key, file_list[0])
-                except Exception:
-                    pass
+                    ordering=ordering_start + i,
+                ) for i, f in enumerate(file_list)
+            ]
+            Cerfa16702Attachment.objects.bulk_create(new_objs, batch_size=50)
 
         if 'dpc11_notice_materiaux' in request.data:
             cerfa.dpc11_notice_materiaux = request.data.get('dpc11_notice_materiaux') or ''
 
-        cerfa.save()
+        if 'dpc11_notice_materiaux' in request.data:
+            cerfa.save(update_fields=['dpc11_notice_materiaux'])
 
         # Générer le PDF des pièces jointes via la page print front (option best-effort)
         try:
