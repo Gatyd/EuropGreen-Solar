@@ -2,33 +2,30 @@
 import type { InstallationForm } from '~/types/installations'
 
 type Cerfa16702Draft = {
-    dpc1: File | null
-    dpc2: File | null
-    dpc3: File | null
-    dpc4: File | null
-    dpc5: File | null
-    dpc6: File | null
-    dpc7: File | null
-    dpc8: File | null
-    dpc11: File | null
+    dpc1: File[]
+    dpc2: File[]
+    dpc3: File[]
+    dpc4: File[]
+    dpc5: File[]
+    dpc6: File[]
+    dpc7: File[]
+    dpc8: File[]
+    dpc11: File[]
     dpc11_notice_materiaux: string
+    // legacy single url fields kept for backwards print usage
+    dpc1_url?: string | null
+    dpc2_url?: string | null
+    dpc3_url?: string | null
+    dpc4_url?: string | null
+    dpc5_url?: string | null
+    dpc6_url?: string | null
+    dpc7_url?: string | null
+    dpc8_url?: string | null
+    dpc11_url?: string | null
 }
 
 const props = defineProps<{
-    draft: Cerfa16702Draft & {
-        generated_at?: string
-        declarant_signature_image_url?: string | null
-        declarant_signature_signed_at?: string | null
-        dpc1_url?: string | null
-        dpc2_url?: string | null
-        dpc3_url?: string | null
-        dpc4_url?: string | null
-        dpc5_url?: string | null
-        dpc6_url?: string | null
-        dpc7_url?: string | null
-        dpc8_url?: string | null
-        dpc11_url?: string | null
-    }
+    draft: Cerfa16702Draft & { generated_at?: string }
     cerfa16702?: InstallationForm['cerfa16702'] | null
     mode?: 'print' | 'edit'
 }>()
@@ -83,18 +80,68 @@ onBeforeUnmount(() => {
     objectUrlCache.clear()
 })
 
-// Source d'image: priorité URL, sinon fichier sélectionné (en mode edit ou si pas d'URL)
-const getAttachmentSrc = (key: string): string | undefined => {
-    const url = getAttachmentUrl(key)
-    if (url) return url
-    const file = getAttachmentFile(key)
-    if (!file) return undefined
-    if (!isEdit.value && url) return undefined
-    if (objectUrlCache.has(key)) return objectUrlCache.get(key)
-    const obj = URL.createObjectURL(file)
-    objectUrlCache.set(key, obj)
-    return obj
+// Multi pièces: on agrège d'abord sources distantes via attachments_grouped
+const grouped = computed(() => props.cerfa16702?.attachments_grouped || {})
+
+interface AttachmentViewItem {
+    key: string
+    title: string
+    source: string
+    ordering: number
+    indexWithinKey: number
+    dpcIndex: number
+    isTextNotice?: boolean
 }
+
+// Construit la pagination par DPC: chaque DPC occupe des pages consécutives, max 2 images/page.
+// Si un DPC a 3 images: page1 (2 images), page2 (1 image) et le DPC suivant repart sur une nouvelle page entière.
+const logicalPages = computed<AttachmentViewItem[][]>(() => {
+    const pages: AttachmentViewItem[][] = []
+    let dpcIndex = 0
+    for (const label of dpcLabels) {
+        const key = label.key
+        const remoteList = (grouped.value?.[key] || []) as any[]
+        const localFiles: File[] = (props.draft as any)[key] || []
+        const sources: string[] = []
+        // URLs distantes ordonnées
+        remoteList
+            .slice()
+            .sort((a: any, b: any) => (a.ordering || 1) - (b.ordering || 1))
+            .forEach((att: any) => { if (att.url) sources.push(att.url) })
+        // Fichiers locaux
+        localFiles.forEach((f, i) => {
+            const cacheKey = `${key}_local_${i}`
+            if (!objectUrlCache.has(cacheKey)) objectUrlCache.set(cacheKey, URL.createObjectURL(f))
+            sources.push(objectUrlCache.get(cacheKey)!)
+        })
+        // Fallback legacy single url
+        if (!sources.length) {
+            const legacyUrl = getAttachmentUrl(key)
+            if (legacyUrl) sources.push(legacyUrl)
+        }
+        const noticeFirst = (key === 'dpc11' && props.draft.dpc11_notice_materiaux)
+        if (noticeFirst) {
+            pages.push([
+                { key, title: label.name, source: '', ordering: 0, indexWithinKey: -1, dpcIndex, isTextNotice: true }
+            ])
+        }
+        // Découpage en segments de 2 images
+        for (let i = 0; i < sources.length; i += 2) {
+            const slice = sources.slice(i, i + 2)
+            const pageItems: AttachmentViewItem[] = slice.map((src, idx) => ({
+                key,
+                title: label.name,
+                source: src,
+                ordering: i + idx + 1,
+                indexWithinKey: i + idx,
+                dpcIndex,
+            }))
+            pages.push(pageItems)
+        }
+        dpcIndex++
+    }
+    return pages
+})
 
 // Infos en-tête
 const fullName = computed(() => {
@@ -118,8 +165,8 @@ const projectAddress = computed(() => {
 
 <template>
     <div :class="isPrint ? 'cerfa-print-root' : 'p-6'">
-        <section v-for="(label, idx) in dpcLabels" :key="label.key" class="cerfa-page">
-            <!-- En-tête Demandeur / Adresse du projet -->
+        <section v-for="(page, pageIndex) in logicalPages" :key="pageIndex" class="cerfa-page">
+            <!-- En-tête -->
             <div class="text-[14px] flex items-start justify-between mb-4">
                 <div class="min-w-0">
                     <div class="text-zinc-600 font-semibold leading-tight">Demandeur</div>
@@ -131,26 +178,25 @@ const projectAddress = computed(() => {
                 </div>
             </div>
 
-            <!-- Titre de la pièce jointe -->
-            <div class="text-lg font-bold text-zinc-800 tracking-tight uppercase mb-3">
-                {{ label.name }}
-            </div>
-            <template v-if="label.key === 'dpc11' && props.draft.dpc11_notice_materiaux">
-                <div class="prose max-w-none text-gray-500 whitespace-pre-line px-6">
-                    <p>{{ props.draft.dpc11_notice_materiaux }}</p>
+            <!-- Corps: 1 (notice) ou 2 images -->
+            <div v-if="page.length === 1 && page[0].isTextNotice" class="w-full">
+                <div class="text-lg font-bold text-zinc-800 tracking-tight uppercase mb-3">
+                    {{ page[0].title }} (NOTICE)
                 </div>
-            </template>
-
-            <!-- Contenu image pleine page -->
-            <div
-                class="rounded-md bg-white flex items-center justify-center min-h-[220mm] max-h-[240mm] overflow-hidden">
-                <template v-if="getAttachmentSrc(label.key)">
-                    <img :src="getAttachmentSrc(label.key)" :alt="label.name"
-                        class="max-w-full max-h-[235mm] h-auto w-auto" />
-                </template>
-                <template v-else>
-                    <div class="text-gray-500 text-sm">Aucun document fourni</div>
-                </template>
+                <div class="prose max-w-none text-gray-500 whitespace-pre-line px-2">
+                    <p>{{ draft.dpc11_notice_materiaux }}</p>
+                </div>
+            </div>
+            <div v-else class="grid grid-cols-1 gap-6">
+                <div v-for="item in page" :key="item.key + '-' + item.ordering" class="flex flex-col">
+                    <div class="text-xs font-semibold text-zinc-600 mb-2 uppercase break-words">
+                        {{ item.title }} <span class="text-[10px]" v-if="page.length>1">(Doc {{ item.indexWithinKey + 1 }})</span>
+                    </div>
+                    <div class="rounded-md bg-white flex items-center justify-center max-h-[240mm] overflow-hidden" :class="{'min-h-[110mm]': page.length > 1, 'min-h-[220mm]': page.length === 1 }">
+                        <img v-if="item.source" :src="item.source" :alt="item.title" class="max-w-full max-h-[235mm] h-auto w-auto" />
+                        <div v-else class="text-gray-500 text-sm">Aucun document</div>
+                    </div>
+                </div>
             </div>
         </section>
     </div>

@@ -29,27 +29,18 @@ onMounted(async () => {
 })
 
 const draft = computed(() => {
-  const cf = form.value?.cerfa16702
+  const cf: any = form.value?.cerfa16702
   if (!cf) return null
   return {
-    dpc1: null,
-    dpc1_url: cf.dpc1 || null,
-    dpc2: null,
-    dpc2_url: cf.dpc2 || null,
-    dpc3: null,
-    dpc3_url: cf.dpc3 || null,
-    dpc4: null,
-    dpc4_url: cf.dpc4 || null,
-    dpc5: null,
-    dpc5_url: cf.dpc5 || null,
-    dpc6: null,
-    dpc6_url: cf.dpc6 || null,
-    dpc7: null,
-    dpc7_url: cf.dpc7 || null,
-    dpc8: null,
-    dpc8_url: cf.dpc8 || null,
-    dpc11: null,
-    dpc11_url: cf.dpc11 || null,
+    dpc1: [], dpc1_url: cf.dpc1 || null,
+    dpc2: [], dpc2_url: cf.dpc2 || null,
+    dpc3: [], dpc3_url: cf.dpc3 || null,
+    dpc4: [], dpc4_url: cf.dpc4 || null,
+    dpc5: [], dpc5_url: cf.dpc5 || null,
+    dpc6: [], dpc6_url: cf.dpc6 || null,
+    dpc7: [], dpc7_url: cf.dpc7 || null,
+    dpc8: [], dpc8_url: cf.dpc8 || null,
+    dpc11: [], dpc11_url: cf.dpc11 || null,
     dpc11_notice_materiaux: cf.dpc11_notice_materiaux || '',
   }
 })
