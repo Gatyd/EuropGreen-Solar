@@ -109,6 +109,29 @@ async function returnToRequest(status: ProspectStatus) {
 	}
 	returningLoadings.value[status] = false
 }
+
+// --- Détails projet (texte potentiellement long) ---
+const PROJECT_DETAILS_MAX = 15 // nb max de caractères visibles avant popover
+const hasProjectDetails = computed(() => !!props.item.project_details && props.item.project_details.trim().length > 0)
+const truncatedProjectDetails = computed(() => {
+	if (!hasProjectDetails.value) return '—'
+	const full = props.item.project_details!.trim()
+	if (full.length <= PROJECT_DETAILS_MAX) return full
+	return full.slice(0, PROJECT_DETAILS_MAX) + '…'
+})
+
+// Notes modals state
+const showNotesChronology = ref(false)
+const showAddNote = ref(false)
+
+async function refreshOfferNotes() {
+	// Refetch offer detail (public endpoint retrieve) then update local item.notes
+	try {
+		const data = await $fetch(`/api/offers/${props.item.id}/`, { credentials: 'include' }) as Offer
+		// @ts-ignore mutate prop object (Card is ephemeral UI container)
+		props.item.notes = data.notes || []
+	} catch (e) { /* ignore */ }
+}
 </script>
 
 <template>
@@ -125,6 +148,10 @@ async function returnToRequest(status: ProspectStatus) {
 				</div>
 			</template>
 		</UModal>
+		<OfferNoteChronologyModal v-if="showNotesChronology" v-model="showNotesChronology" :offer="item"
+			@add-note="() => { showAddNote = true }" />
+		<OfferNoteFormModal v-if="showAddNote" v-model="showAddNote" :offer="item"
+			@created="() => { refreshOfferNotes(); showNotesChronology = true }" />
 	</Teleport>
 	<UCard :ui="{ body: 'p-3 sm:p-4' }" class="cursor-grab">
 		<UPopover v-if="item.status !== 'quote_signed'" :content="{
@@ -137,27 +164,50 @@ async function returnToRequest(status: ProspectStatus) {
 
 			<template #content>
 				<div class="flex flex-col gap-3 p-2">
-					<UButton
-						v-for="opt in requestItems"
-						:key="opt.value"
-						:label="opt.title"
-						size="sm"
-						variant="subtle"
-						color="neutral"
-						:loading="returningLoadings[opt.value]"
-						@click.stop="returnToRequest(opt.value)"
-					/>
+					<UButton v-for="opt in requestItems" :key="opt.value" :label="opt.title" size="sm" variant="subtle"
+						color="neutral" :loading="returningLoadings[opt.value]"
+						@click.stop="returnToRequest(opt.value)" />
 				</div>
 			</template>
 		</UPopover>
-		<div class="font-medium">
-			{{ item.last_name }} {{ item.first_name }}
-		</div>
-		<div class="text-sm text-gray-500">
-			{{ item.phone }} • {{ item.email }}
-		</div>
-		<div class="text-xs text-gray-400 truncate">
-			{{ item.address }}
+		<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+			<div class="space-y-1">
+				<div class="font-medium">
+					{{ item.last_name }} {{ item.first_name }}
+				</div>
+				<div class="text-sm text-gray-500">
+					{{ item.phone }} • {{ item.email }}
+				</div>
+				<div class="flex gap-2 text-sm text-gray-400 truncate">
+					<p>{{ item.address }}</p>
+					<span>•</span>
+					<!-- Détails projet (popover si tronqué) -->
+					<div v-if="hasProjectDetails" class="">
+						<UPopover v-if="item.project_details && item.project_details.length > PROJECT_DETAILS_MAX"
+							mode="hover">
+							<button class="block w-full group" @click.stop="">
+								<p
+									class="text-sm text-gray-700 dark:text-gray-200 leading-snug line-clamp-4 group-hover:underline group-hover:decoration-dotted group-hover:underline-offset-2">
+									{{ truncatedProjectDetails }}
+								</p>
+							</button>
+							<template #content>
+								<div class="max-w-sm whitespace-pre-wrap text-sm p-2">
+									{{ item.project_details }}
+								</div>
+							</template>
+						</UPopover>
+						<p v-else class="text-sm text-gray-500">{{ item.project_details }}</p>
+					</div>
+				</div>
+				<div class="flex gap-2">
+					<UButton color="neutral" variant="ghost" size="xs"
+						:label="`#${item.notes && item.notes.length ? item.notes.length : 0} note enregistrée${item.notes && item.notes.length > 1 ? 's' : ''}`"
+						@click.stop="showNotesChronology = true" />
+					<UButton variant="subtle" size="xs" label="Ajouter une note" icon="i-heroicons-plus"
+						@click.stop="showAddNote = true" />
+				</div>
+			</div>
 		</div>
 		<div class="border rounded-md p-2 mt-2 bg-gray-50 dark:bg-gray-800/50">
 			<div class="flex items-center justify-between mb-2">
@@ -211,8 +261,10 @@ async function returnToRequest(status: ProspectStatus) {
 						label="Modifier le brouillon" @click.stop="editQuote" />
 					<UButton v-if="item.last_quote.status === 'draft'" :loading="quoteLoading" color="primary" size="sm"
 						label="Envoyer le devis" @click.stop="sendQuote" />
-					<UButton v-else-if="item.last_quote.status === 'pending' || item.last_quote.status === 'sent'" color="secondary" size="sm"
-						:label="`Modifier le devis${item.last_quote.status === 'sent' ? '' : ' (négociation)'}`" @click.stop="editQuote" />
+					<UButton v-else-if="item.last_quote.status === 'pending' || item.last_quote.status === 'sent'"
+						color="secondary" size="sm"
+						:label="`Modifier le devis${item.last_quote.status === 'sent' ? '' : ' (négociation)'}`"
+						@click.stop="editQuote" />
 				</template>
 			</div>
 		</div>

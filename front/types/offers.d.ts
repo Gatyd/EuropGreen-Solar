@@ -16,6 +16,7 @@ export interface Offer {
 	address: string
 	housing_type?: string
 	project_details?: string
+	notes?: Array<{ date: string; note: string }>
 	status: OfferStatus
 	created_at: string
 	updated_at: string

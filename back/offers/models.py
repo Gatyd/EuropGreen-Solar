@@ -26,6 +26,10 @@ class Offer(models.Model):
 	# Détails projet (placeholder libre pour le moment)
 	project_details = models.TextField(blank=True)
 
+	# Historique de notes (liste d'objets {date, note})
+	from django.db.models import JSONField as _JSONField  # compat alias si besoin
+	notes = _JSONField(default=list, blank=True)
+
 	status = models.CharField(max_length=20, choices=Status.choices, default=Status.TO_CONTACT)
 
 	# Date/heure à laquelle l'offre a été déplacée vers les installations

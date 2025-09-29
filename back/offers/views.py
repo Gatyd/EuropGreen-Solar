@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db.models import Q
 from .models import Offer
-from .serializers import OfferSerializer, OfferReturnToRequestSerializer
+from .serializers import OfferSerializer, OfferReturnToRequestSerializer, OfferAddNoteSerializer
 from authentication.permissions import HasOfferAccess
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -81,4 +81,30 @@ class OfferViewSet(
 		prospect_request.save(update_fields=["converted_to_offer_at", "status", "updated_at"])
 
 		return Response({"detail": "Offre retournée vers les demandes"}, status=status.HTTP_200_OK)
+
+	@action(detail=True, methods=['post'], url_path='add_note')
+	def add_note(self, request, pk=None):
+		"""Ajoute une note (objet {date, note}) dans la liste JSON notes de l'offre.
+
+		Payload attendu:
+		- note: texte de la note
+		"""
+		serializer = OfferAddNoteSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		note_text = serializer.validated_data['note'].strip()
+		if not note_text:
+			return Response({"detail": "Note vide"}, status=status.HTTP_400_BAD_REQUEST)
+
+		try:
+			offer: Offer = self.get_object()
+		except Offer.DoesNotExist:
+			return Response({"detail": "Offre introuvable"}, status=status.HTTP_404_NOT_FOUND)
+
+		notes_list = list(offer.notes or [])
+		entry = {"date": timezone.now().isoformat(), "note": note_text}
+		notes_list.append(entry)
+		offer.notes = notes_list
+		offer.save(update_fields=["notes", "updated_at"])
+
+		return Response(entry, status=status.HTTP_201_CREATED)
 		

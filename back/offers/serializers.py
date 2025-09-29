@@ -13,11 +13,12 @@ class OfferBaseSerializer(serializers.ModelSerializer):
 
 class OfferSerializer(serializers.ModelSerializer):
 	last_quote = serializers.SerializerMethodField()
+	notes = serializers.ListField(child=serializers.DictField(), read_only=True)
 	class Meta:
 		model = Offer
 		fields = [
 			'id', 'request', 'last_name', 'first_name', 'email', 'phone', 'address',
-			'project_details', 'status', 'created_at', 'updated_at', 'last_quote'
+			'project_details', 'notes', 'status', 'created_at', 'updated_at', 'last_quote'
 		]
 		read_only_fields = ['id', 'request', 'created_at', 'updated_at']
 
@@ -36,3 +37,7 @@ class OfferReturnToRequestSerializer(serializers.Serializer):
 	- request_status: nouveau statut de la demande (parmi ProspectRequest.Status)
 	"""
 	request_status = serializers.ChoiceField(choices=ProspectRequest.Status.choices)
+
+
+class OfferAddNoteSerializer(serializers.Serializer):
+	note = serializers.CharField(allow_blank=False, max_length=5000)
