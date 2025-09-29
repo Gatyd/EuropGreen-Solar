@@ -24,6 +24,7 @@ class ProspectRequestSerializer(serializers.ModelSerializer):
         fields = [
             "id", "last_name", "first_name", "email", "phone", "address", "housing_type",
             "electricity_bill", "status", "source", "assigned_to", "assigned_to_id", # "notes",
+            "converted_decision",
             "created_at", "updated_at", "created_by", "appointment_date", "offer"
         ]
         read_only_fields = ["id", "created_at", "updated_at", "assigned_to", "created_by"]
@@ -40,3 +41,12 @@ class ProspectRequestSerializer(serializers.ModelSerializer):
             return {"id": str(offer.id), "status": offer.status}
         except Offer.DoesNotExist:
             return None
+
+    def update(self, instance: ProspectRequest, validated_data):
+        # Si on change de statut et que l'ancien était 'closed' et le nouveau ne l'est plus -> reset converted_decision
+        old_status = instance.status
+        new_status = validated_data.get('status', old_status)
+        if old_status == 'closed' and new_status != 'closed':
+            # remettre à None si une décision existait
+            instance.converted_decision = None
+        return super().update(instance, validated_data)

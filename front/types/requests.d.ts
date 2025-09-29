@@ -28,6 +28,10 @@ export interface ProspectRequest {
     email: string;
     role: string;
   } | null;
+  // Décision finale après clôture : true = converti, false = abandonné, null/undefined = non décidé
+  converted_decision?: boolean | null;
+  // Info minimale de l'offre liée (backend SerializerMethodField)
+  offer?: { id: string; status: string } | null;
 //   notes?: string;
   created_at: string;
   updated_at: string;

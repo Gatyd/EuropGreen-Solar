@@ -27,6 +27,11 @@ class ProspectRequest(models.Model):
 	source = models.CharField(max_length=20, choices=Source.choices, default=Source.WEB_FORM)
 	appointment_date = models.DateTimeField(null=True)
 	converted_to_offer_at = models.DateTimeField(null=True, blank=True)
+	# Indique la décision finale lorsque le statut est clôturé:
+	#   True  -> prospect validé (converti potentiellement)
+	#   False -> prospect abandonné
+	#   None  -> décision non encore prise (afficher boutons choix)
+	converted_decision = models.BooleanField(null=True, blank=True)
 	created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="created_requests")
 	assigned_to = models.ForeignKey(
 		settings.AUTH_USER_MODEL,

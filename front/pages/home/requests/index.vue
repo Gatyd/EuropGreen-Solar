@@ -76,6 +76,10 @@ const onDrop = async (payload: { to: ProspectStatus, item: ProspectRequest }) =>
     const prev = card.status
     // Si le statut ne change pas, ne rien faire
     if (to === prev) return
+    // Si on quitte la colonne 'closed', on reset localement l'indicateur (le backend le fera aussi)
+    if (prev === 'closed' && to !== 'closed' && 'converted_decision' in card) {
+        card.converted_decision = null as any
+    }
     card.status = to
     const res = await apiRequest<ProspectRequest>(
         () => $fetch(`/api/requests/${card.id}/`, { method: 'PATCH', body: { status: to }, credentials: 'include' }),
