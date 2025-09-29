@@ -1,13 +1,15 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/store/auth';
 import type { InstallationForm } from '~/types/installations'
 
 const props = defineProps<{ item: InstallationForm }>()
+const auth = useAuthStore()
 </script>
 
 <template>
 	<UCard :ui="{ body: 'p-3 sm:p-4' }" class="cursor-pointer">
-		<div class="font-medium">
-			{{ item.client_last_name }} {{ item.client_first_name }}
+		<div v-if="auth.user?.is_staff" class="font-medium">
+			{{ item.client?.last_name }} {{ item.client?.first_name }}
 		</div>
 		<div class="text-sm text-gray-500">
 			Puissance: {{ item.installation_power }} kWc • {{ item.installation_type }}

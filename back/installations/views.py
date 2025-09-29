@@ -246,9 +246,10 @@ class FormViewSet(viewsets.ModelViewSet):
 			except Exception:
 				pass
 		# 2) Créer un compte client si nécessaire et envoyer l'email d'initiation
-		client_email = form.offer.email
-		client_first = form.offer.first_name
-		client_last = form.offer.last_name
+		client_email = offer.email
+		client_first = offer.first_name
+		client_last = offer.last_name
+		client_phone = offer.phone
 		user = None
 		password_for_email = None
 		if client_email:
@@ -259,6 +260,7 @@ class FormViewSet(viewsets.ModelViewSet):
 					email=client_email,
 					first_name=client_first or '',
 					last_name=client_last or '',
+					phone_number=client_phone or '',
 					role=User.UserRoles.CUSTOMER,
 					password=password_for_email,
 				)
@@ -266,8 +268,8 @@ class FormViewSet(viewsets.ModelViewSet):
 			if hasattr(form, 'client'):
 				form.client = user
 				form.save(update_fields=['client', 'updated_at'])
-		# Email au client
-		if client_email:
+
+			# Email au client
 			ctx = {
 				'user': user,
 				'password': password_for_email,

@@ -142,7 +142,8 @@ watch([actionParam, () => props.item, () => props.item?.enedis_mandate], () => {
             <div class="flex flex-col md:flex-row items-start justify-between gap-6">
                 <!-- Infos installation (gauche) -->
                 <div class="flex flex-col gap-1">
-                    <div class="font-semibold">{{ item?.client_last_name }} {{ item?.client_first_name }}</div>
+                    <div class="font-semibold">{{ item?.client?.last_name }} {{ item?.client?.first_name }}</div>
+                    <div class="text-sm text-gray-500">{{ item?.client?.phone_number }}</div>
                     <div class="text-sm text-gray-500">{{ item?.client_address }}</div>
                     <div class="text-xs text-gray-400">Puissance: {{ item?.installation_power }} kWc • {{
                         item?.installation_type }}</div>

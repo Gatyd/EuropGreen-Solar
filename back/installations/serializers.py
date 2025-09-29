@@ -95,13 +95,15 @@ class UserMiniSerializer(serializers.Serializer):
 	id = serializers.CharField()
 	first_name = serializers.CharField()
 	last_name = serializers.CharField()
+	phone_number = serializers.CharField()
 	email = serializers.EmailField()
 
 class FormSerializer(serializers.ModelSerializer):
+	client = UserMiniSerializer(read_only=True)
 	class Meta:
 		model = Form
 		fields = [
-			'id', 'offer', 'client_first_name', 'client_last_name', 'client_address',
+			'id', 'offer', 'client_address', 'client',
 			'installation_power', 'installation_type', 'status',
 			'created_by', 'created_at', 'updated_at',
 		]
@@ -132,7 +134,7 @@ class FormDetailSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Form
 		fields = [
-			'id', 'offer', 'client_first_name', 'client_last_name', 'client_address',
+			'id', 'offer', 'client_address',
 			'installation_power', 'installation_type', 'status',
 			'created_by', 'client', 'created_at', 'updated_at',
 			'technical_visit', 'representation_mandate', 'administrative_validation',

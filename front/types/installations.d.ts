@@ -121,8 +121,8 @@ export interface Commissioning {
 export interface InstallationForm {
   id: string
   offer: Offer
-  client_first_name: string
-  client_last_name: string
+  // client_first_name: string
+  // client_last_name: string
   client_address: string
   installation_power: number
   installation_type: string
@@ -137,6 +137,7 @@ export interface InstallationForm {
     id: string
     first_name: string
     last_name: string
+    phone_number: string
     email: string
   } | null
   created_at: string

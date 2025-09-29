@@ -44,8 +44,8 @@ class Form(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     offer = models.OneToOneField("offers.Offer", on_delete=models.CASCADE, related_name="installations_form")
-    client_first_name = models.CharField(max_length=100)
-    client_last_name = models.CharField(max_length=100)
+    # client_first_name = models.CharField(max_length=100)
+    # client_last_name = models.CharField(max_length=100)
     client_address = models.TextField()
     installation_power = models.DecimalField(max_digits=5, decimal_places=2)
     installation_type = models.CharField(max_length=100)
