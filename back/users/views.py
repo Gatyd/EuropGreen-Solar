@@ -5,8 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from authentication.permissions import IsAdminOrStaffReadOnly
+from rest_framework.permissions import IsAdminUser
 from .models import User
+from .models import Role
 from .serializers import UserSerializer, AdminUserSerializer, ChangePasswordSerializer
+from .serializers import RoleSerializer
 from installations.models import TechnicalVisit, InstallationCompleted, RepresentationMandate
 from billing.models import Quote
 from invoices.models import Invoice
@@ -330,3 +333,20 @@ class SupportView(APIView):
             return Response({ 'detail': "Échec d'envoi de l'email" }, status=status.HTTP_502_BAD_GATEWAY)
 
         return Response({ 'status': 'ok' }, status=status.HTTP_200_OK)
+
+
+@extend_schema_view(
+    list=extend_schema(summary="Liste des rôles"),
+    retrieve=extend_schema(summary="Détail d'un rôle"),
+    create=extend_schema(summary="Créer un rôle"),
+    partial_update=extend_schema(summary="Mettre à jour partiellement un rôle"),
+    destroy=extend_schema(summary="Supprimer un rôle")
+)
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = Role.objects.all().order_by('name')
+    serializer_class = RoleSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_permissions(self):
+        # Permettre lecture aux staff read-only si besoin plus tard, ici strict admin
+        return super().get_permissions()

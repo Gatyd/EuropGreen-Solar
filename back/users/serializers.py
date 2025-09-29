@@ -6,7 +6,7 @@ from django.conf import settings
 import requests
 import secrets
 import string
-from .models import User, UserAccess
+from .models import User, UserAccess, Role
 from installations.models import Form as InstallationForm
 
 
@@ -277,4 +277,13 @@ class ChangePasswordSerializer(serializers.Serializer):
             user.set_password(self.validated_data['new_password'])
             user.save()
         return user
+
+
+class RoleSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Role
+		fields = [
+			'id', 'name', 'installation', 'offers', 'requests', 'administrative_procedures', 'created_at', 'updated_at'
+		]
+		read_only_fields = ['id', 'created_at', 'updated_at']
     

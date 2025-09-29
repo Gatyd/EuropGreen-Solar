@@ -24,12 +24,10 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
 
     class UserRoles(models.TextChoices):
-        EMPLOYEE = "employee", "Employee"
-        INSTALLER = "installer", "Installer"
-        SECRETARY = "secretary", "Secretary"
-        REGIONAL_MANAGER = "regional_manager", "Regional Manager"
-        CUSTOMER = "customer", "Customer"
         ADMIN = "admin", "Administrateur"
+        CUSTOMER = "customer", "Client"
+        COLLABORATOR = "collaborator", "Collaborateur"
+        SALES = "sales", "Commercial"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=50)
@@ -40,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     accept_invitation = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    role = models.CharField(max_length=17, choices=UserRoles.choices, default=UserRoles.EMPLOYEE)
+    role = models.CharField(max_length=17, choices=UserRoles.choices, default=UserRoles.COLLABORATOR)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -56,6 +54,28 @@ class UserAccess(models.Model):
     offers = models.BooleanField(default=False)
     requests = models.BooleanField(default=False)
     administrative_procedures = models.BooleanField(default=False)
+
+
+class Role(models.Model):
+    """Rôle dynamique définissable côté admin (non encore relié aux utilisateurs).
+
+    Champs d'accès calqués sur UserAccess pour réutiliser même logique d'autorisations.
+    """
+    name = models.CharField(max_length=100, unique=True)
+    installation = models.BooleanField(default=False)
+    offers = models.BooleanField(default=False)
+    requests = models.BooleanField(default=False)
+    administrative_procedures = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Rôle"
+        verbose_name_plural = "Rôles"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
 
 
 class PasswordResetToken(models.Model):
