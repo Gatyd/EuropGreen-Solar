@@ -12,16 +12,6 @@ type Cerfa16702Draft = {
     dpc8: File[]
     dpc11: File[]
     dpc11_notice_materiaux: string
-    // legacy single url fields kept for backwards print usage
-    dpc1_url?: string | null
-    dpc2_url?: string | null
-    dpc3_url?: string | null
-    dpc4_url?: string | null
-    dpc5_url?: string | null
-    dpc6_url?: string | null
-    dpc7_url?: string | null
-    dpc8_url?: string | null
-    dpc11_url?: string | null
 }
 
 const props = defineProps<{
@@ -50,20 +40,6 @@ const dpcLabels = [
     { key: 'dpc11', name: "DPC11 - NOTICE DES MATERIAUX UTILISES" },
 ]
 
-const getAttachmentUrl = (key: string): string | undefined => {
-    switch (key) {
-        case 'dpc1': return props.draft.dpc1_url || undefined
-        case 'dpc2': return props.draft.dpc2_url || undefined
-        case 'dpc3': return props.draft.dpc3_url || undefined
-        case 'dpc4': return props.draft.dpc4_url || undefined
-        case 'dpc5': return props.draft.dpc5_url || undefined
-        case 'dpc6': return props.draft.dpc6_url || undefined
-        case 'dpc7': return props.draft.dpc7_url || undefined
-        case 'dpc8': return props.draft.dpc8_url || undefined
-        case 'dpc11': return props.draft.dpc11_url || undefined
-        default: return undefined
-    }
-}
 
 // Accès File par clé
 const getAttachmentFile = (key: string): File | null => {
@@ -115,19 +91,15 @@ const logicalPages = computed<AttachmentViewItem[][]>(() => {
             if (!objectUrlCache.has(cacheKey)) objectUrlCache.set(cacheKey, URL.createObjectURL(f))
             sources.push(objectUrlCache.get(cacheKey)!)
         })
-        // Fallback legacy single url
-        if (!sources.length) {
-            const legacyUrl = getAttachmentUrl(key)
-            if (legacyUrl) sources.push(legacyUrl)
-        }
-            const noticeFirst = (key === 'dpc11' && props.draft.dpc11_notice_materiaux)
+        // Pas de fallback legacy: anciens champs supprimés.
+        const noticeFirst = (key === 'dpc11' && props.draft.dpc11_notice_materiaux)
         if (noticeFirst) {
             pages.push([
-                    { key, title: label.name, source: '', ordering: 0, indexWithinKey: -1, dpcIndex, isTextNotice: true, totalForKey: sources.length }
+                { key, title: label.name, source: '', ordering: 0, indexWithinKey: -1, dpcIndex, isTextNotice: true, totalForKey: sources.length }
             ])
         }
         // Découpage en segments de 2 images
-            const totalForKey = sources.length
+        const totalForKey = sources.length
         for (let i = 0; i < sources.length; i += 2) {
             const slice = sources.slice(i, i + 2)
             const pageItems: AttachmentViewItem[] = slice.map((src, idx) => ({
@@ -137,7 +109,7 @@ const logicalPages = computed<AttachmentViewItem[][]>(() => {
                 ordering: i + idx + 1,
                 indexWithinKey: i + idx,
                 dpcIndex,
-                    totalForKey,
+                totalForKey,
             }))
             pages.push(pageItems)
         }
@@ -194,10 +166,13 @@ const projectAddress = computed(() => {
                 <div v-for="item in page" :key="item.key + '-' + item.ordering" class="flex flex-col">
                     <div class="text-xs font-semibold text-zinc-600 mb-2 uppercase break-words">
                         {{ item.title }}
-                        <span class="text-[10px]" v-if="item.totalForKey > 1 && item.indexWithinKey >= 0">(Doc {{ item.indexWithinKey + 1 }})</span>
+                        <span class="text-[10px]" v-if="item.totalForKey > 1 && item.indexWithinKey >= 0">(Doc {{
+                            item.indexWithinKey + 1 }})</span>
                     </div>
-                    <div class="rounded-md bg-white flex items-center justify-center max-h-[240mm] overflow-hidden" :class="{'min-h-[110mm]': page.length > 1, 'min-h-[220mm]': page.length === 1 }">
-                        <img v-if="item.source" :src="item.source" :alt="item.title" class="max-w-full max-h-[235mm] h-auto w-auto" />
+                    <div class="rounded-md bg-white flex items-center justify-center max-h-[240mm] overflow-hidden"
+                        :class="{ 'min-h-[110mm]': page.length > 1, 'min-h-[220mm]': page.length === 1 }">
+                        <img v-if="item.source" :src="item.source" :alt="item.title"
+                            class="max-w-full max-h-[235mm] h-auto w-auto" />
                         <div v-else class="text-gray-500 text-sm">Aucun document</div>
                     </div>
                 </div>
