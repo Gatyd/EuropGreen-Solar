@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { User, UserRoles } from '~/types';
+import type { User, UserRoles, Role } from '~/types';
+import RoleSelect from '~/components/user/role/SelectMenu.vue'
 
 const props = defineProps<{
     modelValue: boolean,
@@ -28,47 +29,40 @@ const validate = (state: any) => {
         errors.push({ name: 'email', message: 'Adresse email invalide' })
     if (!state.role) errors.push({ name: 'role', message: 'Rôle obligatoire.' })
     if (state.role !== 'admin' && state.useraccess.length === 0) {
-        errors.push({ name: 'useraccess', message: 'Au moins un accès doit être sélectionné.' })
+        errors.push({ name: 'useraccess', message: 'Sélectionnez au moins un accès.' })
     }
     return errors
 }
 
-const roles = [
-    { label: 'Administrateur', value: 'admin' },
-    { label: 'Employé', value: 'employee' },
-    { label: 'Installateur', value: 'installer' },
-    { label: 'Sécrétaire', value: 'secretary' },
-    { label: 'Responsable régional', value: 'regional_manager' }
-]
+// Nouveau sélecteur de rôles (objet complet)
+const selectedRole = ref<Role | null>(null)
+const ACCESS_KEYS = ['installation', 'offers', 'requests', 'administrative_procedures'] as const
 
-const allAccess = [
-    { label: 'Installation', value: 'installation' },
-    { label: 'Demandes', value: 'requests' },
-    { label: 'Offres', value: 'offers' },
-    { label: 'Démarches administratives', value: 'administrative_procedures' }
-]
-
-const updateAccess = (role: string) => {
-    if (role === 'employee') {
-        state.useraccess = ['installation', 'offers', 'requests']
-    } else if (role === 'installer') {
-        state.useraccess = ['installation']
-    } else if (role === 'secretary') {
-        state.useraccess = ['installation', 'administrative_procedures']
-    } else if (role === 'regional_manager') {
-        state.useraccess = ['installation', 'offers', 'requests', 'administrative_procedures']
+watch(selectedRole, (val) => {
+    if (val) {
+        state.role = val.name as UserRoles
+        state.useraccess = ACCESS_KEYS.filter(k => (val as any)[k]) as string[]
     } else {
+        state.role = '' as UserRoles
         state.useraccess = []
     }
-}
+})
 
 const formatAccess = (selectedAccess: string[]) => {
     const accessObject: Record<string, boolean> = {}
-    allAccess.forEach(acces => {
-        accessObject[acces.value] = selectedAccess.includes(acces.value)
+    ACCESS_KEYS.forEach(key => {
+        accessObject[key] = selectedAccess.includes(key)
     })
     return accessObject
 }
+
+// Options pour multisélection accès (libellés utilisateurs)
+const accessOptions = [
+    { label: 'Installations', value: 'installation' },
+    { label: 'Offres', value: 'offers' },
+    { label: 'Demandes', value: 'requests' },
+    { label: 'Démarches administratives', value: 'administrative_procedures' }
+]
 
 const formatDataForAPI = () => {
     const data = {
@@ -102,8 +96,19 @@ watch(() => props.user, (newUser) => {
         state.useraccess = Object.entries(newUser.useraccess || {})
             .filter(([_, value]) => value)
             .map(([key]) => key)
+        selectedRole.value = {
+            id: 'prefill:' + newUser.role,
+            name: newUser.role,
+            installation: !!(newUser.useraccess?.installation ?? (newUser.role === 'admin')),
+            offers: !!(newUser.useraccess?.offers ?? (newUser.role === 'admin')),
+            requests: !!(newUser.useraccess?.requests ?? (newUser.role === 'admin')),
+            administrative_procedures: !!(newUser.useraccess?.administrative_procedures ?? (newUser.role === 'admin')),
+            created_at: '',
+            updated_at: ''
+        }
     } else {
         resetForm()
+        selectedRole.value = null
     }
 }, { immediate: true })
 
@@ -171,8 +176,8 @@ const trySubmit = async () => {
                     <UFormField class="col-span-12 md:col-span-6" label="Prénom" name="first_name" required>
                         <UInput v-model="state.first_name" class="w-full" type="text" placeholder="Entrez le prénom" />
                     </UFormField>
-                    <UFormField class="col-span-12 md:col-span-6" label="Email" name="email" help="L'invitation sera envoyée à cette adresse email"
-                        required>
+                    <UFormField class="col-span-12 md:col-span-6" label="Email" name="email"
+                        help="L'invitation sera envoyée à cette adresse email" required>
                         <UInput v-model="state.email" type="email" class="w-full"
                             placeholder="Entrez l'adresse email" />
                     </UFormField>
@@ -181,18 +186,17 @@ const trySubmit = async () => {
                             placeholder="Entrez le numéro de téléphone" />
                     </UFormField>
                     <UFormField class="col-span-12 md:col-span-4" label="Rôle" name="role" required>
-                        <USelectMenu v-model="state.role" class="w-full" :items="roles" value-key="value"
-                            label-key="label" placeholder="Sélectionnez un rôle" @update:model-value="updateAccess" />
+                        <RoleSelect v-model="selectedRole" />
                     </UFormField>
-                    <UFormField v-if="state.role !== 'admin'" class="col-span-12 md:col-span-8" label="Accès" name="useraccess">
-                        <USelectMenu v-model="state.useraccess" class="w-full" :items="allAccess" value-key="value"
-                            label-key="label" placeholder="Sélectionnez les accès" multiple />
+                    <UAlert v-if="state.role === 'admin'" class="col-span-12 md:col-span-8" title="Accès administrateur"
+                        variant="subtle"
+                        description="En invitant un administrateur, il aura un accès complet à tous les modules et fonctionnalités."
+                        icon="i-heroicons-shield-check" :ui="{ icon: 'size-11' }" />
+                    <UFormField v-else class="col-span-12 md:col-span-8" label="Accès personnalisés" name="useraccess"
+                        help="Sélectionnez les accès spécifiques pour cet utilisateur">
+                        <USelectMenu v-model="state.useraccess" :items="accessOptions" value-key="value"
+                            label-key="label" multiple placeholder="Sélectionnez les accès" class="w-full" />
                     </UFormField>
-                    <UAlert v-else class="col-span-12" title="Accès administrateur" variant="subtle"
-                        description="En invitant un administrateur, il aura un accès complet à tous les modules et fonctionnalités, y compris la gestion des utilisateurs et des configurations."
-                        icon="i-heroicons-shield-check" :ui="{
-                            icon: 'size-11'
-                        }" />
                 </div>
 
                 <div class="flex justify-center">

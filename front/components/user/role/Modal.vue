@@ -46,9 +46,10 @@ watch(model, (isOpen) => {
     }
 }, { immediate: true })
 
-const validate = () => {
+const validate = (state: any) => {
     const errors: { name: string; message: string }[] = []
     if (!state.name?.trim()) errors.push({ name: 'name', message: 'Nom obligatoire.' })
+    else if (state.name.trim().length > 20) errors.push({ name: 'name', message: 'Le nom ne doit pas dépasser 20 caractères.' })
     if (selectedAccesses.value.length === 0) errors.push({ name: 'accesses', message: 'Au moins un accès doit être sélectionné.' })
     return errors
 }
@@ -114,13 +115,13 @@ const submitForm = async () => {
         :description="role ? 'Modifiez les informations du rôle' : 'Créez un nouveau rôle avec ses accès'">
         <template #body>
             <!-- Formulaire -->
-            <UForm :state="state" @submit="submitForm" class="space-y-4">
-                <UFormField label="Nom du rôle" required>
+            <UForm :state="state" :validate="validate" @submit="submitForm" class="space-y-4">
+                <UFormField name="name" label="Nom du rôle" required>
                     <UInput v-model="state.name" placeholder="Saisissez le nom du rôle" :disabled="loading"
                         autocomplete="off" class="w-full" />
                 </UFormField>
 
-                <UFormField label="Accès autorisés" help="Sélectionnez les modules auxquels ce rôle aura accès"
+                <UFormField name="accesses" label="Accès autorisés" help="Sélectionnez les modules auxquels ce rôle aura accès"
                     required>
                     <USelectMenu multiple v-model="selectedAccessObjects" :items="accessOptions" :disabled="loading"
                         placeholder="Choisissez les accès" class="w-full" />

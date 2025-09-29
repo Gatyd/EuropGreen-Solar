@@ -38,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     accept_invitation = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    role = models.CharField(max_length=17, choices=UserRoles.choices, default=UserRoles.COLLABORATOR)
+    role = models.CharField(max_length=20, choices=UserRoles.choices, default=UserRoles.COLLABORATOR)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -61,7 +61,7 @@ class Role(models.Model):
 
     Champs d'accès calqués sur UserAccess pour réutiliser même logique d'autorisations.
     """
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=20, unique=True)
     installation = models.BooleanField(default=False)
     offers = models.BooleanField(default=False)
     requests = models.BooleanField(default=False)
