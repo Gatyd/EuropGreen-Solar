@@ -60,7 +60,19 @@ const links = [
         id: "users",
         label: "Utilisateurs",
         icon: "i-heroicons-users",
-        to: "/home/users",
+        defaultOpen: true,
+        children: [
+            {
+                icon: 'i-heroicons-shield-check',
+                label: "Rôles",
+                to: "/home/users/roles",
+            },
+            {
+                icon: 'i-heroicons-users',
+                label: "Utilisateurs",
+                to: "/home/users/list",
+            }
+        ],
         tooltip: {
             text: "Utilisateurs",
         },
@@ -131,7 +143,7 @@ const accessLink = links.map((link: any) => {
         if ((link.id === "offers") && !useraccess?.offers) return null
         if ((link.id === "installations") && !useraccess?.installation) return null
     }
-    if (user.value?.is_staff){
+    if (user.value?.is_staff) {
         if (link.id === "sav") return null
     }
     if (!user.value?.is_staff && !user.value?.is_superuser) {
