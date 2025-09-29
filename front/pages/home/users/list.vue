@@ -137,13 +137,11 @@ const columns: TableColumn<User>[] = [{
     cell: ({ row }) => {
         const roleLabels = {
             admin: 'Administrateur',
-            employee: 'Employé',
-            installer: 'Installateur',
-            secretary: 'Secrétaire',
-            regional_manager: 'Responsable régional',
+            collaborator: 'Collaborateur',
+            sales: 'Commercial',
             customer: 'Client',
         }
-        return roleLabels[row.original.role] || 'Utilisateur'
+        return roleLabels[row.original.role] || row.original.role
     }
 }, {
     accessorKey: 'is_active',

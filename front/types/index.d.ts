@@ -1,6 +1,7 @@
 import type { InstallationStatus } from './installations'
 
-export type UserRoles = "employee" | "installer" | "secretary" | "regional_manager" | "customer" | "admin";
+// Aligné avec le backend: quatre rôles natifs
+export type UserRoles = "admin" | "customer" | "collaborator" | "sales";
 
 export interface Item {
     value: string;
@@ -17,6 +18,18 @@ export interface UserAccess {
     offers: boolean,
     requests: boolean,
     administrative_procedures: boolean
+}
+
+// Nouveau modèle Role (dynamique) non encore lié directement à User
+export interface Role {
+    id: string;
+    name: string;
+    installation: boolean;
+    offers: boolean;
+    requests: boolean;
+    administrative_procedures: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface User{
