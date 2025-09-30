@@ -231,6 +231,11 @@ class FormViewSet(viewsets.ModelViewSet):
 		quote = Quote.objects.filter(offer=form.offer).order_by('-version').first()
 		pdf_attachment = None
 		if quote:
+			# Copier les commissions du devis vers la fiche d'installation
+			form.commission_amount = quote.commission_amount or 0
+			form.sales_commission_amount = quote.sales_commission_amount or 0
+			form.save(update_fields=['commission_amount', 'sales_commission_amount', 'updated_at'])
+			
 			try:
 				pdf_bytes = render_quote_pdf(quote)
 				if pdf_bytes:

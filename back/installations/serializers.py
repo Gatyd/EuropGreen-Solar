@@ -105,9 +105,11 @@ class FormSerializer(serializers.ModelSerializer):
 		fields = [
 			'id', 'offer', 'client_address', 'client',
 			'installation_power', 'installation_type', 'status',
+			'commission_amount', 'commission_paid',
+			'sales_commission_amount', 'sales_commission_paid',
 			'created_by', 'created_at', 'updated_at',
 		]
-		read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+		read_only_fields = ['id', 'created_by', 'commission_amount', 'sales_commission_amount', 'created_at', 'updated_at']
 
 class FormDetailSerializer(serializers.ModelSerializer):
 	created_by = UserMiniSerializer(read_only=True)
@@ -136,6 +138,8 @@ class FormDetailSerializer(serializers.ModelSerializer):
 		fields = [
 			'id', 'offer', 'client_address',
 			'installation_power', 'installation_type', 'status',
+			'commission_amount', 'commission_paid',
+			'sales_commission_amount', 'sales_commission_paid',
 			'created_by', 'client', 'created_at', 'updated_at',
 			'technical_visit', 'representation_mandate', 'administrative_validation',
 			'installation_completed', 'consuel_visit', 'enedis_connection', 'commissioning',

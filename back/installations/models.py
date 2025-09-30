@@ -56,6 +56,29 @@ class Form(models.Model):
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="installations")
     # Utilisateur (installateur) affecté à cette fiche
     affected_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_installations")
+    
+    # Commissions (copiées depuis le devis)
+    commission_amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        default=0,
+        help_text="Commission du collaborateur/client (apporteur d'affaires)"
+    )
+    commission_paid = models.BooleanField(
+        default=False,
+        help_text="Indique si la commission du collaborateur/client a été payée"
+    )
+    sales_commission_amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        default=0,
+        help_text="Commission du commercial (assigned_to)"
+    )
+    sales_commission_paid = models.BooleanField(
+        default=False,
+        help_text="Indique si la commission du commercial a été payée"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
