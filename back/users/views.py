@@ -80,6 +80,11 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         is_staff_param = self.request.query_params.get('is_staff', None)
         if is_staff_param is not None:
             queryset = queryset.filter(is_staff=is_staff_param.lower() == 'true')
+        
+        # Filtrage par rôle spécifique
+        role_param = self.request.query_params.get('role', None)
+        if role_param is not None:
+            queryset = queryset.filter(role=role_param)
 
         return queryset
 

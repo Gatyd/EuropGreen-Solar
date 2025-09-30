@@ -1,7 +1,7 @@
 import type { InstallationStatus } from './installations'
 
-// Aligné avec le backend: quatre rôles natifs
-export type UserRoles = "admin" | "customer" | "collaborator" | "sales";
+// Aligné avec le backend: cinq rôles natifs + possibilité de rôles personnalisés
+export type UserRoles = "admin" | "customer" | "collaborator" | "sales" | "installer" | string;
 
 export interface Item {
     value: string;

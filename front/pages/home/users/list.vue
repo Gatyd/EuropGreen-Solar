@@ -135,12 +135,14 @@ const columns: TableColumn<User>[] = [{
     accessorKey: 'role',
     header: 'Rôle',
     cell: ({ row }) => {
-        const roleLabels = {
+        const roleLabels: Record<string, string> = {
             admin: 'Administrateur',
             collaborator: 'Collaborateur',
             sales: 'Commercial',
             customer: 'Client',
+            installer: 'Installateur',
         }
+        // Si c'est un rôle natif, afficher le label, sinon afficher le nom tel quel (rôle personnalisé)
         return roleLabels[row.original.role] || row.original.role
     }
 }, {

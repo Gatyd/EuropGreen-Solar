@@ -24,10 +24,12 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
 
     class UserRoles(models.TextChoices):
+        """Rôles natifs du système - utilisés pour référence et validation côté code"""
         ADMIN = "admin", "Administrateur"
         CUSTOMER = "customer", "Client"
         COLLABORATOR = "collaborator", "Collaborateur"
         SALES = "sales", "Commercial"
+        INSTALLER = "installer", "Installateur"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=50)
@@ -38,7 +40,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     accept_invitation = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    role = models.CharField(max_length=20, choices=UserRoles.choices, default=UserRoles.COLLABORATOR)
+    # Pas de choices pour permettre les rôles dynamiques créés via Role model
+    role = models.CharField(max_length=50, default=UserRoles.COLLABORATOR)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -47,6 +50,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def is_native_role(self):
+        """Vérifie si le rôle de l'utilisateur est un rôle natif du système"""
+        return self.role in [choice[0] for choice in self.UserRoles.choices]
+    
+    def get_role_display(self):
+        """Retourne le libellé du rôle (natif ou personnalisé)"""
+        # Pour les rôles natifs, retourner le label défini
+        for choice_value, choice_label in self.UserRoles.choices:
+            if self.role == choice_value:
+                return choice_label
+        # Pour les rôles personnalisés, retourner le nom tel quel
+        return self.role
 
 class UserAccess(models.Model):
     user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE)

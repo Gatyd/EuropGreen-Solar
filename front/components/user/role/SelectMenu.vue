@@ -17,6 +17,7 @@ const selectedId = ref<string | null>(null)
 
 // Rôles natifs (affichés même si aucun rôle en base)
 // Note: ids préfixés pour éviter collision avec UUID/ids DB
+// Les valeurs 'name' doivent correspondre exactement aux UserRoles du backend
 const nativeRoles: Role[] = [
     {
         id: 'native:admin',
@@ -29,8 +30,18 @@ const nativeRoles: Role[] = [
         updated_at: ''
     },
     {
+        id: 'native:customer',
+        name: 'customer',
+        installation: false,
+        offers: false,
+        requests: false,
+        administrative_procedures: false,
+        created_at: '',
+        updated_at: ''
+    },
+    {
         id: 'native:collaborator',
-        name: 'collaborateur',
+        name: 'collaborator',
         installation: true,
         offers: false,
         requests: false,
@@ -40,7 +51,17 @@ const nativeRoles: Role[] = [
     },
     {
         id: 'native:sales',
-        name: 'commercial',
+        name: 'sales',
+        installation: true,
+        offers: true,
+        requests: true,
+        administrative_procedures: false,
+        created_at: '',
+        updated_at: ''
+    },
+    {
+        id: 'native:installer',
+        name: 'installer',
         installation: true,
         offers: false,
         requests: false,
@@ -76,8 +97,10 @@ function rolesMapClear() {
 
 const nativeDisplayMap: Record<string, string> = {
     admin: 'Administrateur',
-    collaborateur: 'Collaborateur',
-    commercial: 'Commercial'
+    customer: 'Client',
+    collaborator: 'Collaborateur',
+    sales: 'Commercial',
+    installer: 'Installateur'
 }
 function formatLabel(r: Role) {
     // Ne montre plus le résumé des accès, uniquement le nom (localisé si natif)
