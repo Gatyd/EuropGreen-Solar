@@ -4,13 +4,14 @@ import type { TableColumn } from '@nuxt/ui'
 import type { User } from '~/types'
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import { useAuthStore } from '~/store/auth'
+import type { NavigationMenuItem } from '@nuxt/ui'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 const UTooltip = resolveComponent('UTooltip')
 const AssignInstallerPopover = resolveComponent('InstallationAssignInstallerPopover')
-// Etat d’ouverture par ligne (clé: id utilisateur)
+// Etat d'ouverture par ligne (clé: id utilisateur)
 const openAssignFor = ref<Record<string, boolean>>({})
 const q = ref("")
 const toast = useToast()
@@ -21,6 +22,18 @@ const router = useRouter()
 const auth = useAuthStore()
 const commissionModal = ref(false)
 const selectedUser = ref<User | undefined>(undefined)
+const creating = ref(false)
+
+const links: NavigationMenuItem[][] = [[{
+	icon: 'i-heroicons-user-plus',
+	label: "Prospects",
+	to: "/home/customers/prospects",
+},
+{
+	icon: 'i-heroicons-user-group',
+	label: "Clients",
+	to: "/home/customers/list",
+}]]
 
 const attributLabels: { [key: string]: string } = {
 	first_name: 'Prénom',
@@ -45,6 +58,16 @@ async function fetchUsers() {
 	)
 	users.value = result || undefined
 	loading.value = false
+}
+
+const newClient = () => {
+	creating.value = true
+	selectedUser.value = undefined
+}
+
+const submitFromModal = async () => {
+	creating.value = false
+	await fetchUsers()
 }
 
 const columns: TableColumn<User>[] = [{
@@ -232,13 +255,33 @@ onMounted(fetchUsers)
 
 <template>
 	<div>
+		<div class="sticky top-0 z-50 bg-white">
+			<UDashboardNavbar title="Clients" class="lg:text-2xl font-semibold"
+				:ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">
+				<template #right>
+					<UButton color="primary" icon="i-heroicons-plus" label="Nouveau client" @click="newClient" />
+				</template>
+			</UDashboardNavbar>
+
+			<UDashboardToolbar class="py-0 px-1.5 overflow-x-auto md:block">
+				<UNavigationMenu :items="links" />
+			</UDashboardToolbar>
+		</div>
+
 		<UserCommissionModal v-if="selectedUser && auth.user?.is_superuser" v-model="commissionModal" :user="selectedUser" @submit="fetchUsers" />
-		<UDashboardToolbar>
+		
+		<ClientOnly>
+			<UserModal :model-value="creating" :user="selectedUser" @update:model-value="v => creating = v"
+				@submit="submitFromModal" />
+		</ClientOnly>
+
+		<UDashboardToolbar class="lg:mt-4 lg:ps-3">
 			<template #left>
 				<SearchInput v-model="q" />
 			</template>
 
 			<template #right>
+				<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchUsers">Rafraîchir</UButton>
 				<UDropdownMenu :items="table?.tableApi
 					?.getAllColumns()
 					.filter((column) => column.getCanHide())

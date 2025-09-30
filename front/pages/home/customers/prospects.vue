@@ -5,6 +5,7 @@ import { getPaginationRowModel } from '@tanstack/vue-table'
 import apiRequest from '~/utils/apiRequest'
 import type { ProspectRequest, ProspectStatus } from '~/types/requests'
 import { useAuthStore } from '~/store/auth'
+import type { NavigationMenuItem } from '@nuxt/ui'
 
 const auth = useAuthStore()
 const toast = useToast()
@@ -14,6 +15,17 @@ const creating = ref(false)
 const selected = ref<ProspectRequest | null>(null)
 const items = ref<Array<ProspectRequest & { offer?: { id: string; status: import('~/types/offers').OfferStatus } | null }>>([])
 const table = useTemplateRef('table')
+
+const links: NavigationMenuItem[][] = [[{
+	icon: 'i-heroicons-user-plus',
+	label: "Prospects",
+	to: "/home/customers/prospects",
+},
+{
+	icon: 'i-heroicons-user-group',
+	label: "Clients",
+	to: "/home/customers/list",
+}]]
 
 const stageLabel = (it: { offer?: { id: string | null } | null }) => (it.offer && it.offer.id ? 'Offre' : 'Demande')
 const stageColor = (it: { offer?: { id: string | null } | null }) => (it.offer && it.offer.id ? 'primary' : 'secondary')
@@ -53,8 +65,8 @@ const offerStatusLabel: Record<OfferStatus, string> = {
 
 const fetchProspects = async () => {
 	loading.value = true
-		const data = await apiRequest<ProspectRequest[]>(
-			() => $fetch('/api/requests/?scope=prospects', { credentials: 'include' }),
+	const data = await apiRequest<ProspectRequest[]>(
+		() => $fetch('/api/requests/?scope=prospects', { credentials: 'include' }),
 		toast
 	)
 	items.value = (data || []) as any
@@ -109,15 +121,27 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 </script>
 
 <template>
-	<UDashboardToolbar>
-		<template #left>
-			<SearchInput v-model="q" />
-		</template>
-		<template #right>
-			<UButton color="primary" icon="i-heroicons-plus" label="Nouveau prospect" @click="newProspect" />
-			<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchProspects">Rafraîchir</UButton>
-		</template>
-	</UDashboardToolbar>
+	<div class="sticky top-0 z-50 bg-white">
+		<UDashboardNavbar title="Prospects" class="lg:text-2xl font-semibold"
+			:ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">
+			<template #right>
+				<UButton color="primary" icon="i-heroicons-plus" label="Nouveau prospect" @click="newProspect" />
+			</template>
+		</UDashboardNavbar>
+
+		<UDashboardToolbar class="py-0 px-1.5 overflow-x-auto md:block">
+			<UNavigationMenu :items="links" />
+		</UDashboardToolbar>
+
+		<UDashboardToolbar class="px-1.5">
+			<template #left>
+				<SearchInput v-model="q" />
+			</template>
+			<template #right>
+				<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchProspects">Rafraîchir</UButton>
+			</template>
+		</UDashboardToolbar>
+	</div>
 
 	<ClientOnly>
 		<RequestModal :model-value="creating" :payload="selected" @update:model-value="v => creating = v"
@@ -125,21 +149,18 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 	</ClientOnly>
 
 	<div class="w-full px-2 sm:px-6 space-y-4 pb-4">
-		<UTable
-			ref="table"
-			:data="items"
-			:columns="columns"
-			v-model:global-filter="q"
-			class="flex-1"
-			:loading="loading"
-			:pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
-			v-model:pagination="pagination"
-		/>
-		<div class="flex flex-col md:flex-row justify-center gap-4 md:gap-0 items-center md:justify-between border-t border-(--ui-border) pt-4">
+		<UTable sticky ref="table" :data="items" :columns="columns" v-model:global-filter="q" class="flex-1 max-h-[400px] lg:max-h-[500px]" :loading="loading"
+			:pagination-options="{ getPaginationRowModel: getPaginationRowModel() }" v-model:pagination="pagination" />
+		<div
+			class="flex flex-col md:flex-row justify-center gap-4 md:gap-0 items-center md:justify-between border-t border-(--ui-border) pt-4">
 			<UFormField :ui="{ root: 'flex items-center' }" label="Lignes par page : ">
-				<USelectMenu class="w-20 ms-3" :search-input="false" :items="[10, 20, 30, 40, 50]" v-model="pagination.pageSize" @update:model-value="(p) => table?.tableApi?.setPageSize(p)" />
+				<USelectMenu class="w-20 ms-3" :search-input="false" :items="[10, 20, 30, 40, 50]"
+					v-model="pagination.pageSize" @update:model-value="(p) => table?.tableApi?.setPageSize(p)" />
 			</UFormField>
-			<UPagination :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1" :items-per-page="table?.tableApi?.getState().pagination.pageSize" :total="table?.tableApi?.getFilteredRowModel().rows.length" @update:page="(p) => table?.tableApi?.setPageIndex(p - 1)" />
+			<UPagination :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+				:items-per-page="table?.tableApi?.getState().pagination.pageSize"
+				:total="table?.tableApi?.getFilteredRowModel().rows.length"
+				@update:page="(p) => table?.tableApi?.setPageIndex(p - 1)" />
 		</div>
 	</div>
 </template>
