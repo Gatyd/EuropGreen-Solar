@@ -44,7 +44,7 @@ const nativeRoles: Role[] = [
         name: 'collaborator',
         installation: true,
         offers: false,
-        requests: false,
+        requests: true,
         administrative_procedures: false,
         created_at: '',
         updated_at: ''

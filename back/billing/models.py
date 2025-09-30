@@ -67,6 +67,8 @@ class Quote(models.Model):
 	discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 	tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=20)  # en %
 	total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+	commission_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Montant de commission du collaborateur/client (source)")
+	sales_commission_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Montant de commission du commercial (assigned_to)")
 	pdf = models.FileField(upload_to="quotes/pdfs/", null=True, blank=True)
 
 	created_by = models.ForeignKey(

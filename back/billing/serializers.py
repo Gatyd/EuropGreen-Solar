@@ -97,6 +97,8 @@ class QuoteSerializer(serializers.ModelSerializer):
             "discount_amount",
             "tax_rate",
             "total",
+            "commission_amount",
+            "sales_commission_amount",
             "pdf",
             "created_by",
             "updated_by",
@@ -105,7 +107,7 @@ class QuoteSerializer(serializers.ModelSerializer):
             "lines",
             "signature",
         ]
-        read_only_fields = ["id", "number", "version", "subtotal", "discount_amount", "total", "pdf", "created_at", "updated_at",]
+        read_only_fields = ["id", "number", "version", "subtotal", "discount_amount", "total", "commission_amount", "sales_commission_amount", "pdf", "created_at", "updated_at",]
     # Aucun override requis; 'offer' reste obligatoire pour les créations classiques
 
     def get_pdf(self, obj: Quote):

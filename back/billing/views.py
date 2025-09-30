@@ -14,6 +14,7 @@ from .serializers import (
     QuoteNegotiationReplySerializer,
 )
 from django.core.files.base import ContentFile
+from decimal import Decimal
 import asyncio
 from typing import Optional
 import logging
@@ -608,12 +609,51 @@ class QuoteViewSet(viewsets.ModelViewSet):
 
         sig.save()
 
+        # Calcul des commissions (collaborateur/client + commercial)
+        commission_amount = Decimal('0')
+        sales_commission_amount = Decimal('0')
+        
+        try:
+            # Vérifier si la demande liée au devis existe
+            prospect_request = quote.offer.request
+            
+            if prospect_request:
+                # 1. Commission du collaborateur/client (source)
+                if prospect_request.source_type in ('collaborator', 'client') and prospect_request.source:
+                    source_user = prospect_request.source
+                    if hasattr(source_user, 'commission') and source_user.commission:
+                        user_commission = source_user.commission
+                        if user_commission.type == 'value':
+                            # Montant fixe
+                            commission_amount = user_commission.value
+                        elif user_commission.type == 'percentage':
+                            # Pourcentage sur le montant HT (subtotal)
+                            commission_amount = (quote.subtotal * user_commission.value / Decimal('100')).quantize(Decimal('0.01'))
+                
+                # 2. Commission du commercial (assigned_to)
+                if prospect_request.assigned_to:
+                    sales_user = prospect_request.assigned_to
+                    if hasattr(sales_user, 'commission') and sales_user.commission:
+                        sales_user_commission = sales_user.commission
+                        if sales_user_commission.type == 'value':
+                            # Montant fixe
+                            sales_commission_amount = sales_user_commission.value
+                        elif sales_user_commission.type == 'percentage':
+                            # Pourcentage sur le montant HT (subtotal)
+                            sales_commission_amount = (quote.subtotal * sales_user_commission.value / Decimal('100')).quantize(Decimal('0.01'))
+        except Exception as e:
+            # En cas d'erreur, on laisse les commissions à 0 et on continue
+            logger.warning(f"Erreur lors du calcul des commissions pour le devis {quote.id}: {e}")
+
+        quote.commission_amount = commission_amount
+        quote.sales_commission_amount = sales_commission_amount
+
         # Maj des statuts
         from offers.models import Offer as OfferModel
         quote.status = Quote.Status.ACCEPTED
         quote.offer.status = OfferModel.Status.QUOTE_SIGNED
         quote.offer.save(update_fields=["status"])
-        quote.save(update_fields=["status"])
+        quote.save(update_fields=["status", "commission_amount", "sales_commission_amount"])
 
         data = QuoteSerializer(quote, context={"request": request}).data
         return Response(data, status=status.HTTP_200_OK)
