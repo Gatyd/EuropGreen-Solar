@@ -14,6 +14,8 @@ class ProspectRequest(models.Model):
 	class Source(models.TextChoices):
 		CALL_CENTER = "call_center", "Call Center"
 		WEB_FORM = "web_form", "Formulaire de demande"
+		CLIENT = "client", "Client"
+		COLLABORATOR = "collaborator", "Collaborateur"
 
 	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 	last_name = models.CharField(max_length=100)
@@ -24,7 +26,8 @@ class ProspectRequest(models.Model):
 	housing_type = models.CharField(max_length=100, blank=True)
 	electricity_bill = models.FileField(upload_to="requests/bills/", blank=True, null=True)
 	status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
-	source = models.CharField(max_length=20, choices=Source.choices, default=Source.WEB_FORM)
+	source_type = models.CharField(max_length=20, choices=Source.choices, default=Source.WEB_FORM)
+	source = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="prospect_sources")
 	appointment_date = models.DateTimeField(null=True)
 	converted_to_offer_at = models.DateTimeField(null=True, blank=True)
 	# Indique la décision finale lorsque le statut est clôturé:

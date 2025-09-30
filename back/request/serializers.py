@@ -13,8 +13,12 @@ class AssignedToSerializer(serializers.ModelSerializer):
 class ProspectRequestSerializer(serializers.ModelSerializer):
     assigned_to = AssignedToSerializer(read_only=True)
     created_by = AssignedToSerializer(read_only=True)
+    source = AssignedToSerializer(read_only=True)
     assigned_to_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), source="assigned_to", write_only=True, allow_null=True, required=False
+    )
+    source_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), source="source", write_only=True, allow_null=True, required=False
     )
     # Informations minimales de l'offre liée (si existante)
     offer = serializers.SerializerMethodField(read_only=True)
@@ -23,11 +27,12 @@ class ProspectRequestSerializer(serializers.ModelSerializer):
         model = ProspectRequest
         fields = [
             "id", "last_name", "first_name", "email", "phone", "address", "housing_type",
-            "electricity_bill", "status", "source", "assigned_to", "assigned_to_id", # "notes",
+            "electricity_bill", "status", "source_type", "source", "source_id", 
+            "assigned_to", "assigned_to_id", # "notes",
             "converted_decision",
             "created_at", "updated_at", "created_by", "appointment_date", "offer"
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "assigned_to", "created_by"]
+        read_only_fields = ["id", "created_at", "updated_at", "assigned_to", "created_by", "source"]
 
     def validate(self, attrs):
         return super().validate(attrs)

@@ -1,6 +1,6 @@
 export type ProspectStatus = "new" | "followup" | "info" | "in_progress" | "closed";
 
-export type ProspectSource = "call_center" | "web_form";
+export type ProspectSource = "call_center" | "web_form" | "client" | "collaborator";
 
 export interface ProspectRequest {
   id: string;
@@ -12,7 +12,14 @@ export interface ProspectRequest {
   housing_type?: string;
   electricity_bill?: string; // URL du fichier
   status: ProspectStatus;
-  source: ProspectSource;
+  source_type: ProspectSource;
+  source?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    role: string;
+  } | null;
   appointment_date?: string;
   assigned_to?: {
     id: string;
@@ -46,7 +53,8 @@ export interface ProspectRequestPayload {
   housing_type?: string;
   electricity_bill?: File | null;
   status?: ProspectStatus;
-  source: ProspectSource;
+  source_type: ProspectSource;
+  source_id?: string;
   appointment_date?: string | null;
   assigned_to_id?: string;
 //   notes?: string;

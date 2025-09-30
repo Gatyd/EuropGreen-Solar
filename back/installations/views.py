@@ -297,7 +297,7 @@ class FormViewSet(viewsets.ModelViewSet):
 			return Response({'installer_id': 'Ce champ est requis.'}, status=status.HTTP_400_BAD_REQUEST)
 		installer = get_object_or_404(User, pk=installer_id)
 		# Optionnel: restreindre aux rôles autorisés
-		if installer.role not in [User.UserRoles.INSTALLER, User.UserRoles.EMPLOYEE]:
+		if installer.role not in [User.UserRoles.INSTALLER]:
 			return Response({'detail': "L'utilisateur sélectionné n'est pas un installateur valide."}, status=status.HTTP_400_BAD_REQUEST)
 		form.affected_user = installer
 		form.save(update_fields=['affected_user', 'updated_at'])

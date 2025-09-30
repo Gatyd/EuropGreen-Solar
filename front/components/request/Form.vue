@@ -15,6 +15,14 @@ const sourceItems = [
     {
         value: 'call_center',
         label: 'Centre d\'appel'
+    },
+    {
+        value: 'client',
+        label: 'Client'
+    },
+    {
+        value: 'collaborator',
+        label: 'Collaborateur'
     }
 ]
 
@@ -27,7 +35,8 @@ const state = reactive<ProspectRequestPayload>({
     housing_type: '',
     electricity_bill: null,
     status: 'new' as ProspectStatus,
-    source: 'web_form' as ProspectSource,
+    source_type: 'web_form' as ProspectSource,
+    source_id: undefined,
     appointment_date: null,
     assigned_to_id: undefined,
     // notes: ''
@@ -56,11 +65,12 @@ watch(() => props.modelValue, (v) => {
             address: v.address,
             housing_type: v.housing_type || '',
             status: v.status,
-            source: v.source,
+            source_type: v.source_type,
             appointment_date: v.appointment_date ? isoToLocalInput(v.appointment_date) : null,
             electricity_bill: null
         })
         state.assigned_to_id = v.assigned_to?.id
+        state.source_id = v.source?.id
     }
 }, { immediate: true })
 
@@ -73,8 +83,9 @@ const validate = (st: any) => {
     if (!st.phone) errors.push({ name: 'phone', message: 'Téléphone obligatoire.' })
     if (!st.address) errors.push({ name: 'address', message: 'Adresse obligatoire.' })
     // if (!state.assigned_to_id) errors.push({ name: 'assigned_to_id', message: 'Employé chargé d\'affaire obligatoire.' })
-    if (!st.source) errors.push({ name: 'source', message: 'Source obligatoire.' })
-    else if (st.source === 'call_center' && !st.appointment_date) errors.push({ name: 'appointment_date', message: 'Date de rendez-vous obligatoire.' })
+    if (!st.source_type) errors.push({ name: 'source_type', message: 'Source obligatoire.' })
+    else if (st.source_type === 'call_center' && !st.appointment_date) errors.push({ name: 'appointment_date', message: 'Date de rendez-vous obligatoire.' })
+    else if ((st.source_type === 'client' || st.source_type === 'collaborator') && !st.source_id) errors.push({ name: 'source_id', message: 'Source utilisateur obligatoire.' })
     return errors
 }
 
@@ -95,7 +106,8 @@ const submit = async () => {
         const iso = new Date(state.appointment_date).toISOString()
         form.append('appointment_date', iso)
     }
-    form.append('source', state.source)
+    form.append('source_type', state.source_type)
+    if (state.source_id) form.append('source_id', state.source_id)
     if (state.assigned_to_id) form.append('assigned_to_id', state.assigned_to_id)
     // if (state.notes) form.append('notes', state.notes)
     const res = await apiRequest<ProspectRequest>(
@@ -131,15 +143,34 @@ const submit = async () => {
                 <UInput v-model="state.address" class="w-full" />
             </UFormField>
             <div class="space-y-4">
-                <UFormField label="Source de la demande" name="source" required>
-                    <USelect v-model="state.source" :items="sourceItems" class="w-full" />
+                <UFormField label="Source de la demande" name="source_type" required>
+                    <USelect v-model="state.source_type" :items="sourceItems" class="w-full" />
                 </UFormField>
-                <UFormField v-if="state.source === 'call_center'" label="Date de Rendez-vous" name="appointment_date"
+                <UFormField v-if="state.source_type === 'call_center'" label="Date de Rendez-vous" name="appointment_date"
                     required>
                     <UInput v-model="state.appointment_date" type="datetime-local" class="w-full" />
                 </UFormField>
+                <UFormField v-if="state.source_type === 'client'" 
+                    label="Client source" 
+                    name="source_id" required>
+                    <UserSelectMenu 
+                        v-model="state.source_id" 
+                        role-filter="customer"
+                        class="w-full" />
+                </UFormField>
+                <UFormField v-if="state.source_type === 'collaborator'" 
+                    label="Collaborateur source" 
+                    name="source_id" required>
+                    <UserSelectMenu 
+                        v-model="state.source_id" 
+                        role-filter="collaborator"
+                        class="w-full" />
+                </UFormField>
                 <UFormField v-if="auth.user?.is_superuser" label="Employé chargé d'affaire" name="assigned_to_id">
-                    <UserSelectMenu v-model="state.assigned_to_id" class="w-full" />
+                    <UserSelectMenu 
+                        v-model="state.assigned_to_id" 
+                        role-filter="sales"
+                        class="w-full" />
                 </UFormField>
                 <UFormField v-else label="Type de logement (optionnel)" name="housing_type">
                     <UInput v-model="state.housing_type" class="w-full" />
@@ -157,7 +188,7 @@ const submit = async () => {
                         <div class="text-xs text-gray-500 mb-3">Téléchargez un nouveau fichier pour remplacer l'actuel
                         </div>
                     </div>
-                    <UFileUpload v-model="state.electricity_bill" class="w-full" />
+                    <UFileUpload icon="i-heroicons-arrow-up-tray-16-solid" v-model="state.electricity_bill" class="w-full" />
                 </UFormField>
                 <UFormField v-if="auth.user?.is_superuser" label="Type de logement (optionnel)" name="housing_type">
                     <UInput v-model="state.housing_type" class="w-full" />

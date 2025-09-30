@@ -6,6 +6,10 @@ const model = defineModel({
     type: String
 })
 
+const props = defineProps<{
+    roleFilter?: string // 'sales', 'customer', 'collaborator'
+}>()
+
 const users = ref<Item[]>([])
 const openMenu = ref(false)
 const showModal = ref(false)
@@ -21,12 +25,23 @@ const addNewUser = async (e?: Event) => {
 
 const fetchUsers = async () => {
     loading.value = true
-    const response = await apiRequest(
-        () => $fetch('/api/users/'),
+    let endpoint = '/api/users/'
+    
+    // Filtrage par rôle
+    if (props.roleFilter === 'sales') {
+        endpoint += '?role=sales'
+    } else if (props.roleFilter === 'customer') {
+        endpoint += '?role=customer'
+    } else if (props.roleFilter === 'collaborator') {
+        endpoint += '?role=collaborator'
+    }
+    
+    const response = await apiRequest<User[]>(
+        () => $fetch(endpoint, { credentials: 'include' }),
         toast
     )
     if (response) {
-        users.value = response?.map((user: User) => ({
+        users.value = response.map((user: User) => ({
             label: `${user.first_name} ${user.last_name}`,
             value: user.id
         }))
@@ -41,6 +56,11 @@ const selectNewUser = (user: User) => {
     })
     model.value = user.id
 }
+
+// Refetch quand le roleFilter change
+watch(() => props.roleFilter, () => {
+    fetchUsers()
+}, { immediate: false })
 
 onMounted(() => {
     fetchUsers()
