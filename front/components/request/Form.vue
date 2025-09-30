@@ -49,6 +49,29 @@ const sourceItems = [
     }
 ]
 
+// Initialiser source_type selon le rôle de l'utilisateur dès le départ
+const initialSourceType = computed(() => {
+    return userRoleSourceType.value || 'web_form'
+})
+
+// Initialiser source_id selon le rôle de l'utilisateur dès le départ
+const initialSourceId = computed(() => {
+    if (!auth.user) return undefined
+    if (auth.user.role === 'collaborator' || auth.user.role === 'customer') {
+        return auth.user.id
+    }
+    return undefined
+})
+
+// Initialiser assigned_to_id selon le rôle de l'utilisateur dès le départ
+const initialAssignedToId = computed(() => {
+    if (!auth.user) return undefined
+    if (auth.user.role === 'sales') {
+        return auth.user.id
+    }
+    return undefined
+})
+
 const state = reactive<ProspectRequestPayload>({
     last_name: '',
     first_name: '',
@@ -58,30 +81,65 @@ const state = reactive<ProspectRequestPayload>({
     housing_type: '',
     electricity_bill: null,
     status: 'new' as ProspectStatus,
-    source_type: 'web_form' as ProspectSource,
-    source_id: undefined,
+    source_type: initialSourceType.value as ProspectSource,
+    source_id: initialSourceId.value,
     appointment_date: null,
-    assigned_to_id: undefined,
+    assigned_to_id: initialAssignedToId.value,
     // notes: ''
 })
 
-// Auto-remplir source_type, source_id et assigned_to_id selon le rôle
-watch([() => auth.user, () => props.modelValue], () => {
-    if (!props.modelValue && userRoleSourceType.value) {
-        // Nouvelle demande : auto-remplir selon le rôle
+console.log('🎬 State initialisé:', {
+    source_type: state.source_type,
+    source_id: state.source_id,
+    assigned_to_id: state.assigned_to_id,
+    user_role: auth.user?.role
+})
+
+// Réinitialiser le formulaire quand le modal s'ouvre pour une nouvelle demande
+watch([() => auth.user, () => props.modelValue], ([user, model]) => {
+    console.log('🔍 Watcher déclenché:', { 
+        user: user?.role, 
+        hasModel: !!model,
+        userRoleSourceType: userRoleSourceType.value,
+        currentSourceType: state.source_type,
+        currentSourceId: state.source_id
+    })
+    
+    // Si c'est une édition, le watcher modelValue s'en occupe
+    if (model) {
+        console.log('📝 Mode édition - le watcher modelValue va gérer')
+        return
+    }
+    
+    // Pour une nouvelle demande, réappliquer les valeurs par défaut selon le rôle
+    if (!model && user && userRoleSourceType.value) {
+        console.log('✅ Réinitialisation pour nouvelle demande, rôle:', user.role)
+        
         state.source_type = userRoleSourceType.value as ProspectSource
         
-        // Auto-remplir source_id pour collaborator et customer
-        if (userRoleSourceType.value === 'collaborator' || userRoleSourceType.value === 'client') {
-            state.source_id = auth.user?.id
+        // Auto-remplir source_id pour collaborator et customer (client)
+        if (user.role === 'collaborator' || user.role === 'customer') {
+            state.source_id = user.id
+            console.log('📝 Source ID réinitialisé:', user.id)
+        } else {
+            state.source_id = undefined
         }
         
         // Auto-remplir assigned_to_id pour sales
-        if (userRoleSourceType.value === 'commercial') {
-            state.assigned_to_id = auth.user?.id
+        if (user.role === 'sales') {
+            state.assigned_to_id = user.id
+            console.log('📝 Assigned to ID réinitialisé:', user.id)
+        } else if (!user.is_superuser) {
+            state.assigned_to_id = undefined
         }
+        
+        console.log('🎯 State après réinitialisation:', {
+            source_type: state.source_type,
+            source_id: state.source_id,
+            assigned_to_id: state.assigned_to_id
+        })
     }
-}, { immediate: true })
+})
 
 // Helper: formater une date ISO en valeur d'input datetime-local (YYYY-MM-DDTHH:MM) en heure locale
 function isoToLocalInput(iso: string): string {
@@ -133,6 +191,14 @@ const submit = async () => {
     loading.value = true
     const form = new FormData()
     const toast = useToast()
+    
+    console.log('📤 Soumission du formulaire - State actuel:', {
+        source_type: state.source_type,
+        source_id: state.source_id,
+        assigned_to_id: state.assigned_to_id,
+        user_role: auth.user?.role
+    })
+    
     form.append('last_name', state.last_name)
     form.append('first_name', state.first_name)
     form.append('email', state.email)
@@ -149,6 +215,13 @@ const submit = async () => {
     form.append('source_type', state.source_type)
     if (state.source_id) form.append('source_id', state.source_id)
     if (state.assigned_to_id) form.append('assigned_to_id', state.assigned_to_id)
+    
+    console.log('📦 FormData construit - Valeurs envoyées:', {
+        source_type: form.get('source_type'),
+        source_id: form.get('source_id'),
+        assigned_to_id: form.get('assigned_to_id')
+    })
+    
     // if (state.notes) form.append('notes', state.notes)
     const res = await apiRequest<ProspectRequest>(
         () => $fetch(`/api/requests/${props.modelValue ? `${props.modelValue.id}/` : ''}`,
@@ -182,58 +255,39 @@ const submit = async () => {
             <UFormField label="Adresse" name="address" required class="col-span-2">
                 <UInput v-model="state.address" class="w-full" />
             </UFormField>
-            <div class="space-y-4">
+            <div class="space-y-4 col-span-2 md:col-span-1">
                 <!-- Source type : uniquement pour admin -->
                 <UFormField v-if="showSourceTypeSelect" label="Source de la demande" name="source_type" required>
                     <USelect v-model="state.source_type" :items="sourceItems" class="w-full" />
                 </UFormField>
-                
+
                 <!-- Date RDV pour call_center -->
-                <UFormField v-if="state.source_type === 'call_center'" label="Date de Rendez-vous" name="appointment_date"
-                    required>
+                <UFormField v-if="state.source_type === 'call_center'" label="Date de Rendez-vous"
+                    name="appointment_date" required>
                     <UInput v-model="state.appointment_date" type="datetime-local" class="w-full" />
                 </UFormField>
-                
-                <!-- Source utilisateur : uniquement pour admin quand source = client/collaborator/commercial -->
-                <UFormField v-if="showSourceField && state.source_type === 'client'" 
-                    label="Client source" 
+
+                <!-- Source utilisateur : uniquement pour admin quand source = client/collaborator -->
+                <UFormField v-if="showSourceField && state.source_type === 'client'" label="Client source"
                     name="source_id" required>
-                    <UserSelectMenu 
-                        v-model="state.source_id" 
-                        role-filter="customer"
-                        class="w-full" />
+                    <UserSelectMenu v-model="state.source_id" role-filter="customer" class="w-full" />
                 </UFormField>
-                <UFormField v-if="showSourceField && state.source_type === 'collaborator'" 
-                    label="Collaborateur source" 
+                <UFormField v-if="showSourceField && state.source_type === 'collaborator'" label="Collaborateur source"
                     name="source_id" required>
-                    <UserSelectMenu 
-                        v-model="state.source_id" 
-                        role-filter="collaborator"
-                        class="w-full" />
+                    <UserSelectMenu v-model="state.source_id" role-filter="collaborator" class="w-full" />
                 </UFormField>
-                <UFormField v-if="showSourceField && state.source_type === 'commercial'" 
-                    label="Commercial source" 
-                    name="source_id" required>
-                    <UserSelectMenu 
-                        v-model="state.source_id" 
-                        role-filter="sales"
-                        class="w-full" />
-                </UFormField>
-                
+
                 <!-- Employé chargé d'affaire : uniquement pour admin -->
                 <UFormField v-if="showAssignedToField" label="Employé chargé d'affaire" name="assigned_to_id">
-                    <UserSelectMenu 
-                        v-model="state.assigned_to_id" 
-                        role-filter="sales"
-                        class="w-full" />
+                    <UserSelectMenu v-model="state.assigned_to_id" role-filter="sales" class="w-full" />
                 </UFormField>
-                
+
                 <!-- Type de logement si pas admin -->
                 <UFormField v-if="!auth.user?.is_superuser" label="Type de logement (optionnel)" name="housing_type">
                     <UInput v-model="state.housing_type" class="w-full" />
                 </UFormField>
             </div>
-            <div class="space-y-3">
+            <div class="space-y-3 col-span-2 md:col-span-1">
                 <UFormField label="Facture d'électricité (optionnelle)" description="JPG, PNG ou PDF"
                     name="electricity_bill">
                     <!-- Affichage du fichier existant en mode édition -->
@@ -245,7 +299,8 @@ const submit = async () => {
                         <div class="text-xs text-gray-500 mb-3">Téléchargez un nouveau fichier pour remplacer l'actuel
                         </div>
                     </div>
-                    <UFileUpload icon="i-heroicons-arrow-up-tray-16-solid" v-model="state.electricity_bill" class="w-full" />
+                    <UFileUpload icon="i-heroicons-arrow-up-tray-16-solid" v-model="state.electricity_bill"
+                        class="w-full" />
                 </UFormField>
                 <UFormField v-if="auth.user?.is_superuser" label="Type de logement (optionnel)" name="housing_type">
                     <UInput v-model="state.housing_type" class="w-full" />

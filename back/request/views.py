@@ -41,7 +41,12 @@ class ProspectRequestViewSet(
 		return [IsAuthenticated()]
 
 	def get_serializer_class(self):
-		"""Utilise ClientProspectRequestSerializer pour les clients non-staff."""
+		"""Utilise ClientProspectRequestSerializer pour les clients non-staff EN LECTURE SEULEMENT."""
+		# Pour la création/modification, toujours utiliser ProspectRequestSerializer
+		if self.action in ['create', 'update', 'partial_update']:
+			return ProspectRequestSerializer
+		
+		# Pour la lecture (list, retrieve), utiliser ClientProspectRequestSerializer pour les clients
 		if self.request.user.is_authenticated and not self.request.user.is_staff and not self.request.user.is_superuser:
 			return ClientProspectRequestSerializer
 		return ProspectRequestSerializer

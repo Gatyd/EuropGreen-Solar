@@ -10,6 +10,8 @@ const auth = useAuthStore()
 const toast = useToast()
 const q = ref('')
 const loading = ref(true)
+const creating = ref(false)
+const selected = ref<ProspectRequest | null>(null)
 const items = ref<Array<ProspectRequest & { offer?: { id: string; status: import('~/types/offers').OfferStatus } | null }>>([])
 const table = useTemplateRef('table')
 
@@ -61,6 +63,16 @@ const fetchProspects = async () => {
 
 onMounted(fetchProspects)
 
+const newProspect = () => {
+	creating.value = true
+	selected.value = null
+}
+
+const submitFromModal = async (form: FormData) => {
+	creating.value = false
+	await fetchProspects()
+}
+
 const columns: TableColumn<any>[] = [
 	{ accessorKey: 'last_name', header: 'Nom', cell: ({ row }) => row.original.last_name },
 	{ accessorKey: 'first_name', header: 'Prénom', cell: ({ row }) => row.original.first_name },
@@ -102,9 +114,15 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 			<SearchInput v-model="q" />
 		</template>
 		<template #right>
+			<UButton color="primary" icon="i-heroicons-plus" label="Nouveau prospect" @click="newProspect" />
 			<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchProspects">Rafraîchir</UButton>
 		</template>
 	</UDashboardToolbar>
+
+	<ClientOnly>
+		<RequestModal :model-value="creating" :payload="selected" @update:model-value="v => creating = v"
+			@submit="submitFromModal" />
+	</ClientOnly>
 
 	<div class="w-full px-2 sm:px-6 space-y-4 pb-4">
 		<UTable
