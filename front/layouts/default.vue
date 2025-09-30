@@ -57,6 +57,15 @@ const links = [
         },
     },
     {
+        id: "commissions",
+        label: "Commissions",
+        icon: "i-heroicons-currency-euro",
+        to: "/home/commissions",
+        tooltip: {
+            text: "Commissions",
+        },
+    },
+    {
         id: "users",
         label: "Utilisateurs",
         icon: "i-heroicons-users",
@@ -135,6 +144,7 @@ const accessLink = links.map((link: any) => {
         if (link.id === "users") return null
         if (link.id === "products") return null
         if (link.id === "home") return null
+        if (link.id === "commissions") return null
     }
     if (!user.value?.is_superuser && user.value?.is_staff) {
         const useraccess = user.value?.useraccess;
