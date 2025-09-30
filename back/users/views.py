@@ -6,10 +6,9 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from authentication.permissions import IsAdminOrStaffReadOnly
 from rest_framework.permissions import IsAdminUser
-from .models import User
-from .models import Role
+from .models import User, Role, Commission
 from .serializers import UserSerializer, AdminUserSerializer, ChangePasswordSerializer
-from .serializers import RoleSerializer
+from .serializers import RoleSerializer, CommissionSerializer
 from installations.models import TechnicalVisit, InstallationCompleted, RepresentationMandate
 from billing.models import Quote
 from invoices.models import Invoice
@@ -203,6 +202,43 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+    
+    @extend_schema(
+        summary="Gérer la commission d'un utilisateur",
+        description="Créer ou mettre à jour la commission d'un utilisateur (commercial, collaborateur ou client)",
+        request=CommissionSerializer
+    )
+    @action(detail=True, methods=['post', 'patch'], serializer_class=CommissionSerializer)
+    def commission(self, request, pk=None):
+        """Créer ou mettre à jour la commission d'un utilisateur"""
+        user = self.get_object()
+        
+        # Vérifier que l'utilisateur peut avoir une commission
+        if user.role not in [User.UserRoles.SALES, User.UserRoles.COLLABORATOR, User.UserRoles.CUSTOMER]:
+            return Response(
+                {"error": "Seuls les commerciaux, collaborateurs et clients peuvent avoir une commission"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Essayer de récupérer la commission existante
+            commission_obj = user.commission
+            # Mise à jour
+            serializer = CommissionSerializer(commission_obj, data=request.data, partial=True)
+        except Commission.DoesNotExist:
+            # Création
+            serializer = CommissionSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save(user=user)
+            return Response(
+                {
+                    "message": "Commission mise à jour avec succès",
+                    "commission": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserViewSet(viewsets.GenericViewSet):
     """

@@ -32,6 +32,12 @@ export interface Role {
     updated_at: string;
 }
 
+export interface Commission {
+    id?: string;
+    type: 'percentage' | 'value';
+    value: number;
+}
+
 export interface User{
     id: string;
 	first_name: string;
@@ -44,6 +50,7 @@ export interface User{
     is_staff: boolean;
     is_superuser: boolean;
 	useraccess?: UserAccess;
+    commission?: Commission;
     // Champs calculés (clients uniquement)
     installations_count?: number;
     last_installation?: { id: string; status: InstallationStatus; installer?: { id: string; first_name: string; last_name: string } } | null;

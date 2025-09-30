@@ -16,6 +16,7 @@ const q = ref("")
 const formModal = ref(false)
 const deactivateModal = ref(false)
 const deleteModal = ref(false)
+const commissionModal = ref(false)
 const selectedUser = ref<User | undefined>(undefined)
 const toast = useToast()
 const loading = ref(true)
@@ -29,6 +30,7 @@ const attributLabels: { [key: string]: string } = {
     email: 'Email',
     role: 'Rôle',
     is_active: 'Compte',
+    commission: 'Commission',
     actions: 'Actions'
 }
 
@@ -73,6 +75,21 @@ function getRowItems(row: Row<User>) {
             }
         }
     ]
+
+    // Ajouter l'action de commission pour les rôles éligibles
+    if (['sales', 'collaborator', 'customer'].includes(row.original.role)) {
+        items.push(
+            { type: 'separator' },
+            {
+                label: 'Commission',
+                icon: 'i-heroicons-percent-badge',
+                onSelect() {
+                    selectedUser.value = row.original
+                    commissionModal.value = true
+                }
+            }
+        )
+    }
 
     // Pour les non-admins, ajouter les actions de gestion d'accès
     if (row.original.role !== 'admin') {
@@ -165,6 +182,15 @@ const columns: TableColumn<User>[] = [{
         return row.original.role === 'admin' ? 'Complet' : accessCount > 0 ? `${accessCount} accès` : 'Aucun'
     }
 }, {
+    accessorKey: 'commission',
+    header: 'Commission',
+    cell: ({ row }) => {
+        if (!row.original.commission) return '—'
+        const value = row.original.commission.value
+        const type = row.original.commission.type
+        return type === 'percentage' ? `${formatPrice(value)} %` : `${formatPrice(value)} €`
+    }
+}, {
     id: 'actions',
     cell: ({ row }) => {
         return h(
@@ -225,6 +251,7 @@ onMounted(fetchUsers)
 
 <template>
     <UserModal v-model="formModal" :user="selectedUser" @submit="fetchUsers" />
+    <UserCommissionModal v-if="selectedUser" v-model="commissionModal" :user="selectedUser" @submit="fetchUsers" />
     <UserDeactivateModal v-model="deactivateModal" v-if="selectedUser" :user="selectedUser" @deactivate="fetchUsers" />
     <UserDeleteModal v-model="deleteModal" v-if="selectedUser" :user="selectedUser" @delete="fetchUsers" />
     <div class="sticky top-0 z-50 bg-white">
