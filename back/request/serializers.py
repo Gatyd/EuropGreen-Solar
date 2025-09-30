@@ -55,3 +55,45 @@ class ProspectRequestSerializer(serializers.ModelSerializer):
             # remettre à None si une décision existait
             instance.converted_decision = None
         return super().update(instance, validated_data)
+
+
+class ClientProspectRequestSerializer(serializers.ModelSerializer):
+    """Serializer pour les clients qui consultent leurs prospects parrainés."""
+    offer = serializers.SerializerMethodField(read_only=True)
+    installation = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = ProspectRequest
+        fields = [
+            "id", "last_name", "first_name", "status", "created_at", 
+            "offer", "installation"
+        ]
+        read_only_fields = fields
+
+    def get_offer(self, obj: ProspectRequest):
+        """Retourne l'info minimale de l'offre liée: { id, status } ou None."""
+        try:
+            offer: Offer = obj.offer
+            if not offer:
+                return None
+            return {"id": str(offer.id), "status": offer.status}
+        except Offer.DoesNotExist:
+            return None
+
+    def get_installation(self, obj: ProspectRequest):
+        """Retourne les infos de commission de l'installation si l'offre existe et a été déplacée."""
+        try:
+            offer = obj.offer
+            if not offer or not offer.installation_moved_at:
+                return None
+            # Récupérer l'installation via la relation inverse
+            from installations.models import Form
+            installation = Form.objects.filter(offer=offer).first()
+            if not installation:
+                return None
+            return {
+                "commission_amount": str(installation.commission_amount),
+                "commission_paid": installation.commission_paid
+            }
+        except Exception:
+            return None

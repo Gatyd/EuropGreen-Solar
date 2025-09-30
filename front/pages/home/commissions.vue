@@ -122,7 +122,7 @@ const columns: TableColumn<Commission>[] = [{
         if (!client) return '—'
         return `${client.first_name} ${client.last_name}`
     }
-}, 
+},
 // {
 //     accessorKey: 'client_email',
 //     header: 'Email client',
@@ -162,13 +162,11 @@ const columns: TableColumn<Commission>[] = [{
             return h('div', { class: 'text-center' }, '—')
         }
 
-        return h('div', { class: 'flex justify-center' }, [
-            h(UBadge, {
-                color: isPaid ? 'success' : 'warning',
-                label: `${amount} €`,
-                variant: 'subtle'
-            })
-        ])
+        return h(UBadge, {
+            color: isPaid ? 'success' : 'warning',
+            label: `${amount} €`,
+            variant: 'subtle'
+        })
     }
 }, {
     accessorKey: 'sales_commission',
@@ -181,71 +179,69 @@ const columns: TableColumn<Commission>[] = [{
             return h('div', { class: 'text-center' }, '—')
         }
 
-        return h('div', { class: 'flex justify-center' }, [
-            h(UBadge, {
-                color: isPaid ? 'success' : 'warning',
-                label: `${amount} €`,
-                variant: 'subtle'
-            })
-        ])
+        return h(UBadge, {
+            color: isPaid ? 'success' : 'warning',
+            label: `${amount} €`,
+            variant: 'subtle'
+        })
     }
 }, {
-	id: 'actions',
-	header: 'Actions',
-	cell: ({ row }) => {
-		const items: any[] = []
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => {
+        const items: any[] = []
 
-		// Bouton payer commission collaborateur
-		if (row.original.commission_amount > 0 && !row.original.commission_paid) {
-			items.push({
-				label: 'Payer commission collaborateur',
-				icon: 'i-heroicons-check-circle',
-				color: 'success',
-				onSelect: () => paySourceCommission(row.original.id)
-			})
-		}
+        // Bouton payer commission collaborateur
+        if (row.original.commission_amount > 0 && !row.original.commission_paid) {
+            items.push({
+                label: 'Payer commission collaborateur',
+                icon: 'i-heroicons-check-circle',
+                color: 'success',
+                onSelect: () => paySourceCommission(row.original.id)
+            })
+        }
 
-		// Bouton payer commission commercial
-		if (row.original.sales_commission_amount > 0 && !row.original.sales_commission_paid) {
-			items.push({
-				label: 'Payer commission commercial',
-				icon: 'i-heroicons-check-badge',
-				color: 'primary',
-				onSelect: () => paySalesCommission(row.original.id)
-			})
-		}
+        // Bouton payer commission commercial
+        if (row.original.sales_commission_amount > 0 && !row.original.sales_commission_paid) {
+            items.push({
+                label: 'Payer commission commercial',
+                icon: 'i-heroicons-check-badge',
+                color: 'primary',
+                onSelect: () => paySalesCommission(row.original.id)
+            })
+        }
 
-		// Si aucune action disponible, afficher un tiret
-		if (items.length === 0) {
-			return h('span', { class: 'text-gray-400' }, '—')
-		}
+        // Si aucune action disponible, afficher un tiret
+        if (items.length === 0) {
+            return h('span', { class: 'text-gray-400' }, '—')
+        }
 
-		// Retourner un dropdown avec les actions disponibles
-		return h(
-			'div',
-			{ class: 'text-right' },
-			h(
-				UDropdownMenu,
-				{
-					items: items,
-					'aria-label': 'Actions dropdown'
-				},
-				() =>
-					h(UButton, {
-						icon: 'i-lucide-ellipsis-vertical',
-						color: 'neutral',
-						variant: 'ghost',
-						class: 'ml-auto',
-						'aria-label': 'Actions dropdown'
-					})
-			)
-		)
-	}
+        // Retourner un dropdown avec les actions disponibles
+        return h(
+            'div',
+            { class: 'text-right' },
+            h(
+                UDropdownMenu,
+                {
+                    items: items,
+                    'aria-label': 'Actions dropdown'
+                },
+                () =>
+                    h(UButton, {
+                        icon: 'i-lucide-ellipsis-vertical',
+                        color: 'neutral',
+                        variant: 'ghost',
+                        class: 'ml-auto',
+                        'aria-label': 'Actions dropdown'
+                    })
+            )
+        )
+    }
 }]
 
 const pagination = ref({
-	pageIndex: 0,
-	pageSize: 10
+    pageIndex: 0,
+    pageSize: 10
 })
 
 onMounted(fetchCommissions)

@@ -4,7 +4,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from authentication.permissions import HasRequestsAccess
 from .models import ProspectRequest
-from .serializers import ProspectRequestSerializer
+from .serializers import ProspectRequestSerializer, ClientProspectRequestSerializer
 from django.db.models import Q
 from EuropGreenSolar.email_utils import send_mail as send_project_mail
 from rest_framework.decorators import action
@@ -33,7 +33,18 @@ class ProspectRequestViewSet(
 	serializer_class = ProspectRequestSerializer
 	http_method_names = ["get", "post", "patch"]
 	parser_classes = [MultiPartParser, FormParser, JSONParser]
-	permission_classes = [IsAuthenticated, HasRequestsAccess]
+
+	def get_permissions(self):
+		"""Permissions dynamiques : IsAuthenticated pour tous, HasRequestsAccess si staff."""
+		if self.request.user.is_authenticated and (self.request.user.is_staff or self.request.user.is_superuser):
+			return [IsAuthenticated(), HasRequestsAccess()]
+		return [IsAuthenticated()]
+
+	def get_serializer_class(self):
+		"""Utilise ClientProspectRequestSerializer pour les clients non-staff."""
+		if self.request.user.is_authenticated and not self.request.user.is_staff and not self.request.user.is_superuser:
+			return ClientProspectRequestSerializer
+		return ProspectRequestSerializer
 
 	def _send_assignment_email(self, instance: ProspectRequest, assignee):
 		"""Envoie l'email d'assignation au chargé d'affaire donné.
@@ -70,8 +81,8 @@ class ProspectRequestViewSet(
 		if user.is_superuser:
 			qs = ProspectRequest.objects.select_related("assigned_to", "offer")
 		elif not user.is_staff:
-			# Utilisateur non staff: ne voir que ses propres demandes via email
-			qs = ProspectRequest.objects.select_related("assigned_to", "offer").filter(email=user.email)
+			# Utilisateur non staff (client): voir les demandes où il est source
+			qs = ProspectRequest.objects.select_related("assigned_to", "offer").filter(source_id=user.id)
 		else:
 			# Staff non-admin: ne voir que les demandes qui lui sont assignées
 			qs = ProspectRequest.objects.select_related("assigned_to", "offer").filter(

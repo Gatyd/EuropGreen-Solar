@@ -117,6 +117,15 @@ const links = [
         },
     },
     {
+        id: "referrals",
+        label: "Parrainage",
+        icon: "i-heroicons-users",
+        to: "/home/referrals",
+        tooltip: {
+            text: "Parrainage",
+        },
+    },
+    {
         id: "settings",
         label: "Paramètres",
         defaultOpen: true,
@@ -155,9 +164,13 @@ const accessLink = links.map((link: any) => {
     }
     if (user.value?.is_staff) {
         if (link.id === "sav") return null
+        if (link.id === "referrals") return null
+    }
+    if (user.value?.is_superuser) {
+        if (link.id === "referrals") return null
     }
     if (!user.value?.is_staff && !user.value?.is_superuser) {
-        if (!["settings", "installations", "sav"].includes(link.id)) return null
+        if (!["settings", "installations", "sav", "referrals"].includes(link.id)) return null
     }
 
     return link;
