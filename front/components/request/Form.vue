@@ -7,6 +7,25 @@ const emit = defineEmits(['submit'])
 
 const loading = ref(false)
 const auth = useAuthStore()
+
+// Déterminer le type de source selon le rôle de l'utilisateur
+const userRoleSourceType = computed(() => {
+    if (!auth.user) return null
+    if (auth.user.role === 'collaborator') return 'collaborator'
+    if (auth.user.role === 'customer') return 'client'
+    if (auth.user.role === 'sales') return 'commercial'
+    return null
+})
+
+// Afficher le select de source uniquement pour les admins
+const showSourceTypeSelect = computed(() => auth.user?.is_superuser)
+
+// Afficher le champ source uniquement pour les admins
+const showSourceField = computed(() => auth.user?.is_superuser)
+
+// Afficher le champ assigned_to uniquement pour les admins
+const showAssignedToField = computed(() => auth.user?.is_superuser)
+
 const sourceItems = [
     {
         value: 'web_form',
@@ -23,6 +42,10 @@ const sourceItems = [
     {
         value: 'collaborator',
         label: 'Collaborateur'
+    },
+    {
+        value: 'commercial',
+        label: 'Commercial'
     }
 ]
 
@@ -41,6 +64,24 @@ const state = reactive<ProspectRequestPayload>({
     assigned_to_id: undefined,
     // notes: ''
 })
+
+// Auto-remplir source_type, source_id et assigned_to_id selon le rôle
+watch([() => auth.user, () => props.modelValue], () => {
+    if (!props.modelValue && userRoleSourceType.value) {
+        // Nouvelle demande : auto-remplir selon le rôle
+        state.source_type = userRoleSourceType.value as ProspectSource
+        
+        // Auto-remplir source_id pour collaborator et customer
+        if (userRoleSourceType.value === 'collaborator' || userRoleSourceType.value === 'client') {
+            state.source_id = auth.user?.id
+        }
+        
+        // Auto-remplir assigned_to_id pour sales
+        if (userRoleSourceType.value === 'commercial') {
+            state.assigned_to_id = auth.user?.id
+        }
+    }
+}, { immediate: true })
 
 // Helper: formater une date ISO en valeur d'input datetime-local (YYYY-MM-DDTHH:MM) en heure locale
 function isoToLocalInput(iso: string): string {
@@ -82,10 +123,9 @@ const validate = (st: any) => {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(st.email)) errors.push({ name: 'email', message: 'Email invalide.' })
     if (!st.phone) errors.push({ name: 'phone', message: 'Téléphone obligatoire.' })
     if (!st.address) errors.push({ name: 'address', message: 'Adresse obligatoire.' })
-    // if (!state.assigned_to_id) errors.push({ name: 'assigned_to_id', message: 'Employé chargé d\'affaire obligatoire.' })
     if (!st.source_type) errors.push({ name: 'source_type', message: 'Source obligatoire.' })
     else if (st.source_type === 'call_center' && !st.appointment_date) errors.push({ name: 'appointment_date', message: 'Date de rendez-vous obligatoire.' })
-    else if ((st.source_type === 'client' || st.source_type === 'collaborator') && !st.source_id) errors.push({ name: 'source_id', message: 'Source utilisateur obligatoire.' })
+    else if ((st.source_type === 'client' || st.source_type === 'collaborator' || st.source_type === 'commercial') && !st.source_id && showSourceField.value) errors.push({ name: 'source_id', message: 'Source utilisateur obligatoire.' })
     return errors
 }
 
@@ -143,14 +183,19 @@ const submit = async () => {
                 <UInput v-model="state.address" class="w-full" />
             </UFormField>
             <div class="space-y-4">
-                <UFormField label="Source de la demande" name="source_type" required>
+                <!-- Source type : uniquement pour admin -->
+                <UFormField v-if="showSourceTypeSelect" label="Source de la demande" name="source_type" required>
                     <USelect v-model="state.source_type" :items="sourceItems" class="w-full" />
                 </UFormField>
+                
+                <!-- Date RDV pour call_center -->
                 <UFormField v-if="state.source_type === 'call_center'" label="Date de Rendez-vous" name="appointment_date"
                     required>
                     <UInput v-model="state.appointment_date" type="datetime-local" class="w-full" />
                 </UFormField>
-                <UFormField v-if="state.source_type === 'client'" 
+                
+                <!-- Source utilisateur : uniquement pour admin quand source = client/collaborator/commercial -->
+                <UFormField v-if="showSourceField && state.source_type === 'client'" 
                     label="Client source" 
                     name="source_id" required>
                     <UserSelectMenu 
@@ -158,7 +203,7 @@ const submit = async () => {
                         role-filter="customer"
                         class="w-full" />
                 </UFormField>
-                <UFormField v-if="state.source_type === 'collaborator'" 
+                <UFormField v-if="showSourceField && state.source_type === 'collaborator'" 
                     label="Collaborateur source" 
                     name="source_id" required>
                     <UserSelectMenu 
@@ -166,13 +211,25 @@ const submit = async () => {
                         role-filter="collaborator"
                         class="w-full" />
                 </UFormField>
-                <UFormField v-if="auth.user?.is_superuser" label="Employé chargé d'affaire" name="assigned_to_id">
+                <UFormField v-if="showSourceField && state.source_type === 'commercial'" 
+                    label="Commercial source" 
+                    name="source_id" required>
+                    <UserSelectMenu 
+                        v-model="state.source_id" 
+                        role-filter="sales"
+                        class="w-full" />
+                </UFormField>
+                
+                <!-- Employé chargé d'affaire : uniquement pour admin -->
+                <UFormField v-if="showAssignedToField" label="Employé chargé d'affaire" name="assigned_to_id">
                     <UserSelectMenu 
                         v-model="state.assigned_to_id" 
                         role-filter="sales"
                         class="w-full" />
                 </UFormField>
-                <UFormField v-else label="Type de logement (optionnel)" name="housing_type">
+                
+                <!-- Type de logement si pas admin -->
+                <UFormField v-if="!auth.user?.is_superuser" label="Type de logement (optionnel)" name="housing_type">
                     <UInput v-model="state.housing_type" class="w-full" />
                 </UFormField>
             </div>

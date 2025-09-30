@@ -16,6 +16,7 @@ class ProspectRequest(models.Model):
 		WEB_FORM = "web_form", "Formulaire de demande"
 		CLIENT = "client", "Client"
 		COLLABORATOR = "collaborator", "Collaborateur"
+		COMMERCIAL = "commercial", "Commercial"
 
 	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 	last_name = models.CharField(max_length=100)

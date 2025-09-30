@@ -23,7 +23,10 @@ const getStatusLabel = (status: ProspectStatus): string => {
 const getSourceLabel = (source: ProspectSource): string => {
     const sourceLabels = {
         'call_center': 'Centre d\'appels',
-        'web_form': 'Formulaire web'
+        'web_form': 'Formulaire web',
+        'client': 'Client',
+        'collaborator': 'Collaborateur',
+        'commercial': 'Commercial'
     }
     return sourceLabels[source] || source
 }
@@ -60,8 +63,16 @@ const getSourceLabel = (source: ProspectSource): string => {
                         <div class="font-medium">{{ getStatusLabel(item.status) }}</div>
                     </div>
                     <div>
-                        <div class="text-sm text-gray-500">Source</div>
-                        <div class="font-medium">{{ getSourceLabel(item.source) }}</div>
+                        <div class="text-sm text-gray-500">Type de source</div>
+                        <div class="font-medium">{{ getSourceLabel(item.source_type) }}</div>
+                    </div>
+                    <div v-if="item.source">
+                        <div class="text-sm text-gray-500">Source utilisateur</div>
+                        <div class="font-medium">{{ item.source.first_name }} {{ item.source.last_name }}</div>
+                    </div>
+                    <div v-if="item.assigned_to">
+                        <div class="text-sm text-gray-500">Chargé d'affaire</div>
+                        <div class="font-medium">{{ item.assigned_to.first_name }} {{ item.assigned_to.last_name }}</div>
                     </div>
                     <div v-if="item.housing_type">
                         <div class="text-sm text-gray-500">Type de logement</div>

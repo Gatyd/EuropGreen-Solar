@@ -1,6 +1,6 @@
 export type ProspectStatus = "new" | "followup" | "info" | "in_progress" | "closed";
 
-export type ProspectSource = "call_center" | "web_form" | "client" | "collaborator";
+export type ProspectSource = "call_center" | "web_form" | "client" | "collaborator" | "commercial";
 
 export interface ProspectRequest {
   id: string;
