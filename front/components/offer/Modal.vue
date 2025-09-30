@@ -36,7 +36,7 @@ const validate = (st: any) => {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(st.email)) errors.push({ name: 'email', message: 'Email invalide.' })
     if (!st.phone) errors.push({ name: 'phone', message: 'Téléphone obligatoire.' })
     if (!st.address) errors.push({ name: 'address', message: 'Adresse obligatoire.' })
-    if (!st.project_details) errors.push({ name: 'project_details', message: 'Détails du projet obligatoire.' })
+    // if (!st.project_details) errors.push({ name: 'project_details', message: 'Détails du projet obligatoire.' })
     return errors
 }
 
@@ -91,7 +91,7 @@ const submit = async () => {
                 <UFormField label="Adresse" class="col-span-2" name="address" required>
                     <UInput v-model="state.address" class="w-full" />
                 </UFormField>
-                <UFormField class="col-span-2" label="Détails du projet" name="project_details" required>
+                <UFormField class="col-span-2" label="Détails du projet" name="project_details">
                     <UTextarea v-model="state.project_details" :rows="5" class="w-full"
                         placeholder="Puissance, matériel, remarques..." />
                 </UFormField>

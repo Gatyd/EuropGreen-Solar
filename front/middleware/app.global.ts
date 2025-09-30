@@ -32,6 +32,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "privacy",
     "evolution",
     "print",
+    "offers"
   ];
 
   // Si c'est une route publique, on laisse passer

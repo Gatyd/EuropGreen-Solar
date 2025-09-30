@@ -30,6 +30,8 @@ const attributLabels: { [key: string]: string } = {
 	status: 'Statut',
 	installer: 'Installateur',
 	commission: 'Commission',
+	commission_amount: 'Montant commission',
+	commission_paid: 'Statut paiement',
 	actions: 'Actions'
 }
 
@@ -133,6 +135,61 @@ const columns: TableColumn<User>[] = [{
 		return h('div', { class: 'space-x-2' }, defaultActions)
 	}
 }]
+
+// Colonnes de commission pour les collaborateurs et commerciaux (non-superadmin staff)
+if (auth.user?.is_staff && !auth.user?.is_superuser) {
+	const isCollaborator = auth.user?.role === 'collaborator'
+	const isSales = auth.user?.role === 'sales'
+	
+	// Colonne montant de commission (selon le rôle)
+	const commissionAmountColumn: TableColumn<User> = {
+		accessorKey: 'commission_amount',
+		header: 'Montant commission',
+		cell: ({ row }) => {
+			const installation = row.original.last_installation
+			if (!installation) return '—'
+			
+			// Collaborateur/Client: afficher commission_amount
+			// Commercial: afficher sales_commission_amount
+			const amount = isCollaborator 
+				? installation.commission_amount 
+				: isSales 
+					? installation.sales_commission_amount 
+					: 0
+			
+			return amount ? `${amount} €` : '—'
+		}
+	}
+	
+	// Colonne statut paiement (selon le rôle)
+	const commissionPaidColumn: TableColumn<User> = {
+		accessorKey: 'commission_paid',
+		header: 'Statut paiement',
+		cell: ({ row }) => {
+			const installation = row.original.last_installation
+			if (!installation) return h(UBadge, { color: 'neutral', label: 'N/A', variant: 'subtle' })
+			
+			// Collaborateur/Client: afficher commission_paid
+			// Commercial: afficher sales_commission_paid
+			const isPaid = isCollaborator 
+				? installation.commission_paid 
+				: isSales 
+					? installation.sales_commission_paid 
+					: false
+			
+			return h(UBadge, {
+				color: isPaid ? 'success' : 'warning',
+				label: isPaid ? 'Payée' : 'En attente',
+				variant: 'subtle'
+			})
+		}
+	}
+	
+	// Insérer après la colonne 'status' et avant 'actions'
+	const actionsIndex = columns.findIndex(c => (c as any).id === 'actions')
+	const insertIndex = actionsIndex >= 0 ? actionsIndex : columns.length
+	columns.splice(insertIndex, 0, commissionAmountColumn, commissionPaidColumn)
+}
 
 // Colonne 'installer' ajoutée uniquement pour les superadmins, juste après 'status'
 if (auth.user?.is_superuser) {

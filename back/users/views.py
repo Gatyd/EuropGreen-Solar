@@ -59,10 +59,16 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         if user.is_superuser:
             queryset = base_qs
         elif user.is_staff:
-            # Pour un staff/installeur: ne voir que ses clients
+            # Pour un staff (collaborateur/commercial): voir les clients dont la demande a source ou assigned_to = user
+            # OU les clients qui lui sont affectés en tant qu'installateur
+            from django.db.models import Q
             queryset = (
                 base_qs
-                .filter(installations__affected_user=user)
+                .filter(
+                    Q(installations__offer__request__source=user) |  # Source = collaborateur/client apporteur
+                    Q(installations__offer__request__assigned_to=user) |  # Assigned_to = commercial
+                    Q(installations__affected_user=user)  # Installateur affecté
+                )
                 .filter(role=User.UserRoles.CUSTOMER)
                 .distinct()
             )

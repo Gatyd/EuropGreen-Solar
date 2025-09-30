@@ -74,7 +74,9 @@ class ProspectRequestViewSet(
 			qs = ProspectRequest.objects.select_related("assigned_to", "offer").filter(email=user.email)
 		else:
 			# Staff non-admin: ne voir que les demandes qui lui sont assignées
-			qs = ProspectRequest.objects.select_related("assigned_to", "offer").filter(Q(assigned_to_id=user.id) | Q(created_by_id=user.id))
+			qs = ProspectRequest.objects.select_related("assigned_to", "offer").filter(
+					Q(assigned_to_id=user.id) | Q(created_by_id=user.id) | Q(source_id=user.id)
+				)
 
 		# Filtres additionnels
 		status_param = self.request.query_params.get("status")

@@ -57,7 +57,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
             return 0
 
     def get_last_installation(self, obj: User):
-        """Dernière installation (id, status, installer) pour les non-staff."""
+        """Dernière installation (id, status, installer, commissions) pour les non-staff."""
         try:
             if obj.is_staff:
                 return None
@@ -70,7 +70,14 @@ class AdminUserSerializer(serializers.ModelSerializer):
             last = last_qs.first()
             if not last:
                 return None
-            payload = { 'id': str(last.id), 'status': last.status }
+            payload = { 
+                'id': str(last.id), 
+                'status': last.status,
+                'commission_amount': float(last.commission_amount) if last.commission_amount else 0,
+                'commission_paid': last.commission_paid,
+                'sales_commission_amount': float(last.sales_commission_amount) if last.sales_commission_amount else 0,
+                'sales_commission_paid': last.sales_commission_paid,
+            }
             if last.affected_user_id and last.affected_user:
                 payload['installer'] = {
                     'id': str(last.affected_user.id),

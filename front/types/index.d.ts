@@ -53,5 +53,13 @@ export interface User{
     commission?: Commission;
     // Champs calculés (clients uniquement)
     installations_count?: number;
-    last_installation?: { id: string; status: InstallationStatus; installer?: { id: string; first_name: string; last_name: string } } | null;
+    last_installation?: { 
+        id: string; 
+        status: InstallationStatus; 
+        installer?: { id: string; first_name: string; last_name: string };
+        commission_amount?: number;
+        commission_paid?: boolean;
+        sales_commission_amount?: number;
+        sales_commission_paid?: boolean;
+    } | null;
 }
