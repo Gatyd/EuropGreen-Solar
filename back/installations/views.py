@@ -205,14 +205,28 @@ class FormViewSet(viewsets.ModelViewSet):
 		return base_qs
 
 	def get_permissions(self):
-		if getattr(self, 'action', None) == 'retrieve':
-			return [permissions.AllowAny()]
+		action = getattr(self, 'action', None)
 		user = getattr(self.request, 'user', None)
-		if user and user.is_authenticated and user.is_staff:
-			permission_classes = [HasInstallationAccess]
-		else:
-			permission_classes = [permissions.IsAuthenticated]
-		return [p() for p in permission_classes]
+		
+		# retrieve est public (AllowAny)
+		if action == 'retrieve':
+			return [permissions.AllowAny()]
+		
+		# Si l'utilisateur est staff ou superuser : permissions normales avec HasInstallationAccess
+		if user and user.is_authenticated and (user.is_staff or user.is_superuser):
+			return [HasInstallationAccess()]
+		
+		# Si l'utilisateur est un client (authentifié mais pas staff) : 
+		# limiter aux actions autorisées (list, retrieve, sign_document)
+		if user and user.is_authenticated:
+			allowed_client_actions = ['list', 'retrieve', 'sign_document']
+			if action not in allowed_client_actions:
+				# Retourner une permission qui refuse toujours l'accès
+				return [permissions.IsAdminUser()]
+			return [permissions.IsAuthenticated()]
+		
+		# Par défaut : utilisateur non authentifié
+		return [permissions.IsAuthenticated()]
 
 	def perform_create(self, serializer):
 		serializer.save(created_by=self.request.user)
