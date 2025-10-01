@@ -38,6 +38,7 @@ urlpatterns = [
     path('', include('invoices.urls')),
     path('', include('installations.urls')),
     path('', include('administrative.urls')),
+    path('', include('planning.urls')),
     path('auth/', include('authentication.urls')),
 ]
 
