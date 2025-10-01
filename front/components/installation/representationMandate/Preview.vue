@@ -31,7 +31,7 @@ const civ = (v: MandateDraft['client_civility']) => v || '—'
 const fullName = computed(() => {
 	const f = props.form
 	if (!f) return '—'
-	return `${f.client_last_name ?? ''} ${f.client_first_name ?? ''}`.trim() || '—'
+	return `${f.client?.last_name ?? ''} ${f.client?.first_name ?? ''}`.trim() || '—'
 })
 </script>
 

@@ -385,11 +385,11 @@ const steps = computed(() => {
                 </template>
             </div>
             <InstallationTechnicalVisitModal v-model="openTechnicalVisit" :form-id="item?.id" @submit="fetchOne"
-                :action="technicalVisitAction" :technical-visit="item?.technical_visit" />
+                :action="technicalVisitAction" :technical-visit="item?.technical_visit" :form="item" />
             <InstallationRepresentationMandateModal v-model="openMandate" :form-id="item?.id" @submit="fetchOne"
                 :action="mandateAction" :form="item" :mandate="item?.representation_mandate" />
             <InstallationCompletedModal v-model="openCompleted" :form-id="item?.id" @submit="fetchOne"
-                :action="completedAction" :installation-completed="item?.installation_completed" />
+                :action="completedAction" :installation-completed="item?.installation_completed" :form="item" />
         </div>
     </div>
 </template>

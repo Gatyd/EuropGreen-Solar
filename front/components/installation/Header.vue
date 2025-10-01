@@ -126,7 +126,7 @@ watch([actionParam, () => props.item, () => props.item?.enedis_mandate], () => {
 }, { immediate: true })
 </script>
 <template>
-    <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form-id="item?.id" @submit="emit('submit')" />
+    <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form="item" :cerfa16702="item?.cerfa16702" :form-id="item?.id" @submit="emit('submit')" />
     <AdministrativeCerfa16702AttachmentsModal v-model="openCerfa16702Attachments" :cerfa16702="item?.cerfa16702"
         :form-id="item?.id" @submit="emit('submit')" />
     <AdministrativeElectricalDiagramModal v-model="openElectricalDiagram" :form-id="item?.id"

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { InstallationForm } from '~/types/installations'
+
 const model = defineModel({ type: Boolean })
 
 const props = defineProps<{
@@ -11,6 +13,8 @@ const props = defineProps<{
     action?: 'full' | 'signature' | 'preview'
     // Visite technique existante pour pré-remplir le brouillon
     technicalVisit?: any
+    // Données pour pré-remplissage
+    form?: InstallationForm | null
 }>()
 const emit = defineEmits<{
     (e: 'submit'): void
@@ -39,8 +43,18 @@ const draft = reactive({
     meter_location_photo_url: null as string | null,
     extra_required: false,
     extra_materials: '',
-    client_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
-    installer_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
+    client_signature: { 
+        signer_name: '', 
+        method: 'draw' as 'draw' | 'upload', 
+        dataUrl: '', 
+        file: null as File | null 
+    },
+    installer_signature: { 
+        signer_name: '', 
+        method: 'draw' as 'draw' | 'upload', 
+        dataUrl: '', 
+        file: null as File | null 
+    },
     // Métadonnées pour l'aperçu
     generated_at: new Date().toISOString(),
     client_signature_image_url: null as string | null,

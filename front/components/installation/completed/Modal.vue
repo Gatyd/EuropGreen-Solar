@@ -1,11 +1,15 @@
 <script setup lang="ts">
+import type { InstallationForm } from '~/types/installations'
+
 const model = defineModel({ type: Boolean })
 
 const props = defineProps<{
     formId?: string
     action?: 'full' | 'signature' | 'preview'
-    // Visite technique existante pour pré-remplir le brouillon
+    // Installation effectuée existante pour pré-remplir le brouillon
     installationCompleted?: any
+    // Données pour pré-remplissage
+    form?: InstallationForm | null
 }>()
 const emit = defineEmits<{
     (e: 'submit'): void
@@ -34,7 +38,7 @@ const draft = reactive({
     installer_signature_signed_at: null as string | null,
 })
 
-// Hydrate le brouillon si une visite technique est fournie
+// Hydrate le brouillon si une installation effectuée est fournie
 watch(
     () => props.installationCompleted,
     (ic: any) => {

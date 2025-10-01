@@ -42,8 +42,8 @@ watch(
   () => props.mandate,
   (rm: any) => {
     if (!rm) return
-  // Les valeurs backend sont probablement 'mme' | 'mr'
-  draft.client_civility = (rm.client_civility === 'mr' ? 'Monsieur' : rm.client_civility === 'mme' ? 'Madame' : '') as any
+    // Les valeurs backend sont probablement 'mme' | 'mr'
+    draft.client_civility = (rm.client_civility === 'mr' ? 'Monsieur' : rm.client_civility === 'mme' ? 'Madame' : '') as any
     draft.client_birth_date = rm.client_birth_date || ''
     draft.client_birth_place = rm.client_birth_place || ''
     draft.client_address = rm.client_address || (props.form?.client_address || '')
@@ -72,10 +72,32 @@ watch(
   { immediate: true }
 )
 
-// Si la fiche change (pré-remplissage adresse client)
+// Pré-remplissage des informations depuis l'offre si pas de mandat existant
 watch(() => props.form, (f) => {
   if (!f) return
-  if (!draft.client_address) draft.client_address = f.client_address || ''
+  
+  // Adresse client
+  if (!draft.client_address) {
+    draft.client_address = f.client_address || f.offer?.address || ''
+  }
+  
+  // Si pas de mandat existant, pré-remplir depuis l'offre
+  if (!props.mandate) {
+    const offer = f.offer
+    const client = f.client
+    
+    // Informations client depuis offer
+    if (offer) {
+      if (!draft.client_address) draft.client_address = offer.address || f.client_address || ''
+      
+      // Pré-remplir le nom du signataire client
+      if (!draft.client_signature.signer_name) {
+        draft.client_signature.signer_name = `${offer.first_name} ${offer.last_name}`.trim()
+      }
+    } else if (client && !draft.client_signature.signer_name) {
+      draft.client_signature.signer_name = `${client.first_name} ${client.last_name}`.trim()
+    }
+  }
 }, { immediate: true })
 
 const onSubmit = () => {
