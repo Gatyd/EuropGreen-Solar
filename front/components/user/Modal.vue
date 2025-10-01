@@ -38,6 +38,42 @@ const validate = (state: any) => {
 const selectedRole = ref<Role | null>(null)
 const ACCESS_KEYS = ['installation', 'offers', 'requests', 'administrative_procedures'] as const
 
+// Rôles disponibles (seront remplis par l'événement du RoleSelect)
+const availableRoles = ref<Role[]>([])
+
+// Fonction pour créer un objet Role à partir des données utilisateur
+const createRoleFromUser = (user: User): Role | null => {
+    const roleName = user.role
+    
+    // Chercher le rôle par son nom dans tous les rôles disponibles
+    const foundRole = availableRoles.value.find(r => r.name === roleName)
+    if (foundRole) {
+        return foundRole
+    }
+    
+    // Fallback: créer un rôle temporaire avec les accès de l'utilisateur
+    return {
+        id: 'native:' + roleName,
+        name: roleName,
+        installation: !!(user.useraccess?.installation ?? (roleName === 'admin')),
+        offers: !!(user.useraccess?.offers ?? (roleName === 'admin')),
+        requests: !!(user.useraccess?.requests ?? (roleName === 'admin')),
+        administrative_procedures: !!(user.useraccess?.administrative_procedures ?? (roleName === 'admin')),
+        created_at: '',
+        updated_at: ''
+    }
+}
+
+// Gérer la réception des rôles depuis le RoleSelect
+const handleRolesLoaded = (roles: Role[]) => {
+    availableRoles.value = roles
+    
+    // Si on a un utilisateur en attente, on peut maintenant assigner son rôle
+    if (props.user) {
+        selectedRole.value = createRoleFromUser(props.user)
+    }
+}
+
 watch(selectedRole, (val) => {
     if (val) {
         state.role = val.name as UserRoles
@@ -96,16 +132,12 @@ watch(() => props.user, (newUser) => {
         state.useraccess = Object.entries(newUser.useraccess || {})
             .filter(([_, value]) => value)
             .map(([key]) => key)
-        selectedRole.value = {
-            id: 'prefill:' + newUser.role,
-            name: newUser.role,
-            installation: !!(newUser.useraccess?.installation ?? (newUser.role === 'admin')),
-            offers: !!(newUser.useraccess?.offers ?? (newUser.role === 'admin')),
-            requests: !!(newUser.useraccess?.requests ?? (newUser.role === 'admin')),
-            administrative_procedures: !!(newUser.useraccess?.administrative_procedures ?? (newUser.role === 'admin')),
-            created_at: '',
-            updated_at: ''
+        
+        // Si les rôles sont déjà chargés, assigner immédiatement
+        if (availableRoles.value.length > 0) {
+            selectedRole.value = createRoleFromUser(newUser)
         }
+        // Sinon, ce sera fait dans handleRolesLoaded
     } else {
         resetForm()
         selectedRole.value = null
@@ -186,7 +218,7 @@ const trySubmit = async () => {
                             placeholder="Entrez le numéro de téléphone" />
                     </UFormField>
                     <UFormField class="col-span-12 md:col-span-4" label="Rôle" name="role" required>
-                        <RoleSelect v-model="selectedRole" />
+                        <RoleSelect v-model="selectedRole" @roles-loaded="handleRolesLoaded" />
                     </UFormField>
                     <UAlert v-if="state.role === 'admin'" class="col-span-12 md:col-span-8" title="Accès administrateur"
                         variant="subtle"

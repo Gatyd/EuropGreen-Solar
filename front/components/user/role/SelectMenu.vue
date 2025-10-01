@@ -6,6 +6,10 @@ const model = defineModel<Role | null>({
     default: null
 })
 
+const emit = defineEmits<{
+    (e: 'rolesLoaded', roles: Role[]): void
+}>()
+
 const toast = useToast()
 const loading = ref(false)
 // Map interne id -> rôle
@@ -113,7 +117,9 @@ async function fetchDynamicRoles() {
         () => $fetch('/api/roles/', { credentials: 'include' }),
         toast
     )
+    const allRoles = [...nativeRoles, ...(result || [])]
     buildItems(result || [])
+    emit('rolesLoaded', allRoles)
     loading.value = false
 }
 
