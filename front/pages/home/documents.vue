@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
 
-definePageMeta({ middleware: 'admin' })
+// definePageMeta({ middleware: 'admin' })
 
 type DocItem = { id: string; pdf: string }
 type DocsPayload = {

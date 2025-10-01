@@ -293,7 +293,8 @@ const steps = computed(() => {
                                     <InstallationAdministrativeValidationPopover :form-id="item?.id" @submit="fetchOne"
                                         v-if="((item?.representation_mandate && !item?.administrative_validation) ||
                                             (item?.representation_mandate && item?.administrative_validation &&
-                                                !item?.administrative_validation.is_validated)) && auth.user?.is_staff" />
+                                                !item?.administrative_validation.is_validated)) && (auth.user?.is_superuser ||
+                                                    (auth.user?.is_staff && auth.user.useraccess?.administrative_procedures))" />
                                 </div>
                             </div>
                         </template>
@@ -355,20 +356,19 @@ const steps = computed(() => {
                                 </div>
                             </div>
                         </template>
-                        
+
                         <!-- Slots personnalisés pour la validation du raccordement ENEDIS -->
                         <template #enedis-connection-title="{ item: s }">
                             <div class="flex flex-col md:flex-row md:items-center justify-between md:gap-4">
                                 <span class="font-medium">{{ s.title }}</span>
                                 <div class="flex items-center py-2 md:py-0 gap-2">
-                                    <InstallationEnedisConnectionPopover :form-id="item?.id" @submit="fetchOne"
-                                        v-if="((item?.consuel_visit && !item?.enedis_connection) ||
-                                            (item?.consuel_visit && item?.enedis_connection &&
-                                                !item?.enedis_connection.is_validated)) && auth.user?.is_staff" />
+                                    <InstallationEnedisConnectionPopover :form-id="item?.id" @submit="fetchOne" v-if="((item?.consuel_visit && !item?.enedis_connection) ||
+                                        (item?.consuel_visit && item?.enedis_connection &&
+                                            !item?.enedis_connection.is_validated)) && auth.user?.is_staff" />
                                 </div>
                             </div>
                         </template>
-                        
+
                         <!-- Slots personnalisés pour la validation du raccordement ENEDIS -->
                         <template #commissioning-title="{ item: s }">
                             <div class="flex flex-col md:flex-row md:items-center justify-between md:gap-4">

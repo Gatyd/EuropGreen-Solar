@@ -126,7 +126,8 @@ watch([actionParam, () => props.item, () => props.item?.enedis_mandate], () => {
 }, { immediate: true })
 </script>
 <template>
-    <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form="item" :cerfa16702="item?.cerfa16702" :form-id="item?.id" @submit="emit('submit')" />
+    <AdministrativeCerfa16702Modal v-model="openCerfa16702" :form="item" :cerfa16702="item?.cerfa16702"
+        :form-id="item?.id" @submit="emit('submit')" />
     <AdministrativeCerfa16702AttachmentsModal v-model="openCerfa16702Attachments" :cerfa16702="item?.cerfa16702"
         :form-id="item?.id" @submit="emit('submit')" />
     <AdministrativeElectricalDiagramModal v-model="openElectricalDiagram" :form-id="item?.id"
@@ -221,19 +222,19 @@ watch([actionParam, () => props.item, () => props.item?.enedis_mandate], () => {
                                                     <UIcon name="i-heroicons-document-text"
                                                         class="mb-1 h-6 w-6 text-gray-500 group-hover:text-primary-500" />
                                                     <span class="truncate max-w-[8rem]">{{ item.invoice?.number
-                                                    }}</span>
+                                                        }}</span>
                                                 </a>
                                             </div>
                                         </div>
                                     </template>
                                 </UPopover>
                             </div>
-                            <div
+                            <div v-if="(!auth.user?.is_staff && item?.invoice?.pdf) || auth.user?.is_staff"
                                 class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
-                                <UButton v-if="!auth.user?.is_staff" :color="item?.invoice ? 'primary' : 'neutral'"
-                                    variant="subtle" :to="item?.invoice?.pdf || undefined" target="_blank"
-                                    :icon="item?.invoice ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
-                                    label="Facture" block :loading="invoiceLoading" @click="manageInvoice" />
+                                <UButton v-if="!auth.user?.is_staff && item?.invoice?.pdf" color="primary"
+                                    variant="subtle" :to="item?.invoice.pdf" target="_blank"
+                                    icon="i-heroicons-document-check" label="Facture" block :loading="invoiceLoading"
+                                    @click="manageInvoice" />
                                 <UButton v-if="auth.user?.is_staff" block
                                     :color="props.item?.cerfa16702?.pdf ? 'primary' : 'neutral'" variant="subtle"
                                     :icon="props.item?.cerfa16702?.pdf ? 'i-heroicons-document-check' : 'i-heroicons-plus'"
@@ -294,7 +295,6 @@ watch([actionParam, () => props.item, () => props.item?.enedis_mandate], () => {
                                 :icon="`i-heroicons-${(auth.user?.is_staff && !item?.enedis_mandate?.installer_signature) || (!auth.user?.is_staff && !item?.enedis_mandate?.client_signature) ? 'pencil-square' : 'eye'}`"
                                 :label="(auth.user?.is_staff && !item?.enedis_mandate?.installer_signature) || (!auth.user?.is_staff && !item?.enedis_mandate?.client_signature) ? 'Signer ENEDIS' : 'Aperçu ENEDIS'"
                                 variant="subtle" @click="signEnedisMandate" />
-
                         </div>
                     </div>
                 </div>

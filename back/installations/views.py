@@ -174,7 +174,10 @@ class FormViewSet(viewsets.ModelViewSet):
 		if user.is_superuser:
 			base_qs = qs
 		elif user.is_staff:
-			base_qs = qs.filter(Q(created_by=user) | Q(affected_user=user))
+			base_qs = qs.filter(
+				Q(created_by=user) | Q(affected_user=user) |
+				Q(offer__request__source=user) | Q(offer__request__assigned_to=user)
+			)
 		else:
 			base_qs = qs.filter(client=user)
 

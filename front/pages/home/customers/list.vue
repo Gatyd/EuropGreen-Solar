@@ -22,7 +22,6 @@ const router = useRouter()
 const auth = useAuthStore()
 const commissionModal = ref(false)
 const selectedUser = ref<User | undefined>(undefined)
-const creating = ref(false)
 
 const links: NavigationMenuItem[][] = [[{
 	icon: 'i-heroicons-user-plus',
@@ -58,16 +57,6 @@ async function fetchUsers() {
 	)
 	users.value = result || undefined
 	loading.value = false
-}
-
-const newClient = () => {
-	creating.value = true
-	selectedUser.value = undefined
-}
-
-const submitFromModal = async () => {
-	creating.value = false
-	await fetchUsers()
 }
 
 const columns: TableColumn<User>[] = [{
@@ -257,11 +246,7 @@ onMounted(fetchUsers)
 	<div>
 		<div class="sticky top-0 z-50 bg-white">
 			<UDashboardNavbar title="Clients" class="lg:text-2xl font-semibold"
-				:ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">
-				<template #right>
-					<UButton color="primary" icon="i-heroicons-plus" label="Nouveau client" @click="newClient" />
-				</template>
-			</UDashboardNavbar>
+				:ui="{ root: 'h-12 lg:h-(--ui-header-height)' }" />
 
 			<UDashboardToolbar class="py-0 px-1.5 overflow-x-auto md:block">
 				<UNavigationMenu :items="links" />
@@ -269,11 +254,6 @@ onMounted(fetchUsers)
 		</div>
 
 		<UserCommissionModal v-if="selectedUser && auth.user?.is_superuser" v-model="commissionModal" :user="selectedUser" @submit="fetchUsers" />
-		
-		<ClientOnly>
-			<UserModal :model-value="creating" :user="selectedUser" @update:model-value="v => creating = v"
-				@submit="submitFromModal" />
-		</ClientOnly>
 
 		<UDashboardToolbar class="lg:mt-4 lg:ps-3">
 			<template #left>
