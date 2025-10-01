@@ -169,7 +169,14 @@ class Cerfa16702ViewSet(GenericViewSet):
 
         # Mettre à jour les champs
         for field in field_list:
-            setattr(cerfa, field, payload.get(field))
+            value = payload.get(field)
+            # Nettoyer les champs de date: remplacer espaces/valeurs vides par None
+            if field in ['birth_date', 'engagement_date']:
+                if value and isinstance(value, str):
+                    value = value.strip().replace('\xa0', '')  # Supprimer espaces insécables
+                if not value or value == '':
+                    value = None
+            setattr(cerfa, field, value)
 
         # Gérer les pièces jointes
         for i in range(1, 9):
