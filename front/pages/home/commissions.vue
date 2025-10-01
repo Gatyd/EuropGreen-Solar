@@ -153,7 +153,7 @@ const columns: TableColumn<Commission>[] = [{
     }
 }, {
     accessorKey: 'source_commission',
-    header: 'Commission collaborateur',
+    header: 'Commission',
     cell: ({ row }) => {
         const amount = row.original.commission_amount
         const isPaid = row.original.commission_paid
@@ -194,7 +194,7 @@ const columns: TableColumn<Commission>[] = [{
         // Bouton payer commission collaborateur
         if (row.original.commission_amount > 0 && !row.original.commission_paid) {
             items.push({
-                label: 'Payer commission collaborateur',
+                label: 'Payer commission',
                 icon: 'i-heroicons-check-circle',
                 color: 'success',
                 onSelect: () => paySourceCommission(row.original.id)

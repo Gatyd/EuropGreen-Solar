@@ -8,6 +8,7 @@ const model = defineModel({
 
 const props = defineProps<{
     roleFilter?: string // 'sales', 'customer', 'collaborator'
+    staffOnly?: boolean // Si true, filtre uniquement les utilisateurs staff
 }>()
 
 const users = ref<Item[]>([])
@@ -26,14 +27,24 @@ const addNewUser = async (e?: Event) => {
 const fetchUsers = async () => {
     loading.value = true
     let endpoint = '/api/users/'
+    const params: string[] = []
     
     // Filtrage par rôle
     if (props.roleFilter === 'sales') {
-        endpoint += '?role=sales'
+        params.push('role=sales')
     } else if (props.roleFilter === 'customer') {
-        endpoint += '?role=customer'
+        params.push('role=customer')
     } else if (props.roleFilter === 'collaborator') {
-        endpoint += '?role=collaborator'
+        params.push('role=collaborator')
+    }
+    
+    // Filtrage staff uniquement
+    if (props.staffOnly) {
+        params.push('is_staff=true')
+    }
+    
+    if (params.length > 0) {
+        endpoint += '?' + params.join('&')
     }
     
     const response = await apiRequest<User[]>(
@@ -57,8 +68,8 @@ const selectNewUser = (user: User) => {
     model.value = user.id
 }
 
-// Refetch quand le roleFilter change
-watch(() => props.roleFilter, () => {
+// Refetch quand le roleFilter ou staffOnly change
+watch(() => [props.roleFilter, props.staffOnly], () => {
     fetchUsers()
 }, { immediate: false })
 

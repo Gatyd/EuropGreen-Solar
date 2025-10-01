@@ -21,6 +21,15 @@ const links = [
         },
     },
     {
+        id: "calendar",
+        label: "Calendrier",
+        icon: "i-heroicons-calendar-days",
+        to: "/home/calendar",
+        tooltip: {
+            text: "Calendrier et planification",
+        },
+    },
+    {
         id: "products",
         label: "Produits / Services",
         icon: "i-heroicons-cube",
@@ -170,6 +179,7 @@ const accessLink = links.map((link: any) => {
         if (link.id === "referrals") return null
     }
     if (!user.value?.is_staff && !user.value?.is_superuser) {
+        // Les clients ne voient que certains onglets, calendrier est réservé au staff
         if (!["settings", "installations", "sav", "referrals"].includes(link.id)) return null
     }
 
