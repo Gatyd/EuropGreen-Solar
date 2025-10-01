@@ -100,6 +100,8 @@ class UserMiniSerializer(serializers.Serializer):
 
 class FormSerializer(serializers.ModelSerializer):
 	client = UserMiniSerializer(read_only=True)
+	offer = OfferBaseSerializer(read_only=True)
+	
 	class Meta:
 		model = Form
 		fields = [

@@ -3,11 +3,18 @@ from .models import Offer
 from billing.serializers import QuoteSerializer
 from request.models import ProspectRequest
 
+class ProspectRequestMiniSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = ProspectRequest
+		fields = ['id', 'first_name', 'last_name', 'address']
+
 class OfferBaseSerializer(serializers.ModelSerializer):
+	request = ProspectRequestMiniSerializer(read_only=True)
+	
 	class Meta:
 		model = Offer
 		fields = [
-			'id', 'last_name', 'first_name', 'email', 'phone', 'address', 'project_details'
+			'id', 'request', 'last_name', 'first_name', 'email', 'phone', 'address', 'project_details'
 		]
 		read_only_fields = ['id']
 

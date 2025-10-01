@@ -64,11 +64,12 @@
     {% if task.related_installation %}
     <!-- Installation liée -->
     <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-        <div style="display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
             <span style="color: #6b7280; font-size: 13px; font-weight: 500; margin-right: 8px;">🔧 Installation liée :</span>
-            <span style="color: #1f2937; font-size: 14px;">
-                #{{ task.related_installation.id|slice:":8" }}
-            </span>
+            <a href="{{ frontend_url }}/home/installations/{{ task.related_installation.id }}" 
+               style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;">
+                Voir l'installation
+            </a>
         </div>
     </div>
     {% endif %}
