@@ -165,7 +165,7 @@ const agrivoltaicYN = computed<string>({
 
 <template>
     <UForm :state="state" :validate="validate" class="space-y-3" @submit.prevent="onSubmit">
-        <div class="space-y-3">
+        <div class="space-y-3 p-2">
             <!-- 1. Identité du déclarant -->
             <UCard>
                 <template #header>
@@ -439,7 +439,7 @@ const agrivoltaicYN = computed<string>({
         <!-- Signature -->
         <!-- Section signature supprimée: le backend construit signer_name à partir du nom/prénom -->
 
-        <div class="flex justify-end pt-2">
+        <div class="flex justify-end pt-2 pe-6">
             <UButton :loading="loading" icon="i-heroicons-check-circle" type="submit" label="Enregistrer" />
         </div>
     </UForm>

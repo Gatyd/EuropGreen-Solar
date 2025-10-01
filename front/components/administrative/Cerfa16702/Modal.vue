@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DeclarantType, InstallationForm } from '~/types/installations'
+import { useAuthStore } from '~/store/auth'
 
 const model = defineModel({ type: Boolean })
 
@@ -10,6 +11,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{ (e: 'submit'): void }>()
+
+const auth = useAuthStore()
 
 // État partagé du brouillon du mandat
 const draft = reactive({
@@ -157,6 +160,43 @@ watch(
     },
     { immediate: true }
 )
+
+// Pré-remplissage des informations de l'installateur (déclarant) si pas de CERFA existant
+watch(() => props.form, (f) => {
+    if (!f || props.cerfa16702) return // Ne pas pré-remplir si CERFA existe déjà
+    
+    const mandate = f.representation_mandate
+    const user = auth.user
+    
+    // Déterminer le type de déclarant et pré-remplir en conséquence
+    if (mandate) {
+        // Si mandat existe → type entreprise avec infos du mandat
+        draft.declarant_type = 'company'
+        if (!draft.company_denomination) draft.company_denomination = mandate.company_name || ''
+        if (!draft.company_siret) draft.company_siret = mandate.company_siret || ''
+        if (!draft.address_street) draft.address_street = mandate.company_head_office_address || ''
+        if (!draft.first_name) draft.first_name = mandate.represented_by || ''
+        // Note: Le mandat n'a pas de nom/prénom séparés pour le représentant
+    } else if (user && user.is_staff) {
+        // Si pas de mandat → type individu avec infos de l'utilisateur connecté
+        draft.declarant_type = 'individual'
+        if (!draft.first_name) draft.first_name = user.first_name || ''
+        if (!draft.last_name) draft.last_name = user.last_name || ''
+        if (!draft.email) draft.email = user.email || ''
+        if (!draft.phone) draft.phone = user.phone_number || ''
+    }
+    
+    // Adresse du terrain (adresse du client) - priorité: mandate > form.client_address > offer.address
+    if (!draft.land_street) {
+        if (mandate && mandate.client_address) {
+            draft.land_street = mandate.client_address
+        } else if (f.client_address) {
+            draft.land_street = f.client_address
+        } else if (f.offer && f.offer.address) {
+            draft.land_street = f.offer.address
+        }
+    }
+}, { immediate: true })
 
 const onSubmit = () => {
     emit('submit')

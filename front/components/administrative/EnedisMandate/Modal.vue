@@ -109,12 +109,59 @@ watch(
     { immediate: true }
 )
 
+// Pré-remplissage des informations depuis form et documents existants
 watch(() => props.form, (f) => {
-    if (!f) return
-    if (!draft.client_name) draft.client_name = `${f.client_last_name ?? ''} ${f.client_first_name ?? ''}`.trim() || ''
+    if (!f || props.enedisMandate) return // Ne pas pré-remplir si mandat ENEDIS existe déjà
+    
+    const client = f.client
+    const mandate = props.representationMandate || f.representation_mandate
+    const cerfa = f.cerfa16702
+    
+    // === INFORMATIONS CLIENT ===
+    // Nom client - priorité: client > offer (form.client a first_name/last_name)
+    if (!draft.client_name) {
+        if (client) {
+            draft.client_name = `${client.first_name} ${client.last_name}`.trim()
+        } else if (f.offer) {
+            draft.client_name = `${f.offer.first_name} ${f.offer.last_name}`.trim()
+        }
+    }
+    
+    // Adresse client - priorité: mandate > cerfa > form.client_address > offer
+    if (!draft.client_address) {
+        if (mandate && mandate.client_address) {
+            draft.client_address = mandate.client_address
+        } else if (cerfa && cerfa.address_street) {
+            draft.client_address = cerfa.address_street
+        } else if (f.client_address) {
+            draft.client_address = f.client_address
+        } else if (f.offer && f.offer.address) {
+            draft.client_address = f.offer.address
+        }
+    }
+    
+    // Civilité client depuis mandate
+    if (!draft.client_civility && mandate && mandate.client_civility) {
+        draft.client_civility = mandate.client_civility
+    }
+    
+    // === INFORMATIONS INSTALLATEUR (ENTREPRISE EN CHARGE) ===
+    // Priorité: mandate > cerfa
+    if (mandate) {
+        if (!draft.contractor_company_name) draft.contractor_company_name = mandate.company_name || ''
+        if (!draft.contractor_company_siret) draft.contractor_company_siret = mandate.company_siret || ''
+        if (!draft.contractor_company_represented_by_name) draft.contractor_company_represented_by_name = mandate.represented_by || ''
+        if (!draft.contractor_company_represented_by_role) draft.contractor_company_represented_by_role = mandate.representative_role || ''
+        if (!draft.contractor_address) draft.contractor_address = mandate.company_head_office_address || ''
+    } else if (cerfa && cerfa.declarant_type === 'company') {
+        // Si pas de mandat mais CERFA avec type entreprise
+        if (!draft.contractor_company_name) draft.contractor_company_name = cerfa.company_denomination || ''
+        if (!draft.contractor_company_siret) draft.contractor_company_siret = cerfa.company_siret || ''
+        if (!draft.contractor_address) draft.contractor_address = cerfa.address_street || ''
+    }
 }, { immediate: true })
 
-// Si la fiche change (pré-remplissage adresse client)
+// Si la fiche change (pré-remplissage adresse client) - ANCIEN CODE CONSERVÉ POUR COMPATIBILITÉ
 watch(() => props.representationMandate, (rm) => {
     if (!rm) return
     if (!draft.client_civility) draft.client_civility = rm.client_civility || '' as Civility

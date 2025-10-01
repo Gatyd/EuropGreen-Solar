@@ -92,6 +92,63 @@ const draft = reactive<any>({
     h_type_courant_protection_groupe_1: "", h_type_courant_protection_groupe_2: "", h_type_courant_protection_groupe_3: "", h_type_courant_protection_groupe_4: "", h_type_courant_protection_groupe_5: ""
 })
 
+// Pré-remplissage des informations depuis form et documents existants
+watch(() => props.form, (f) => {
+    if (!f) return
+    
+    const client = f.client
+    const mandate = f.representation_mandate
+    const cerfa = f.cerfa16702
+    
+    // === INFORMATIONS CLIENT ===
+    // Nom du client - priorité: client > offer
+    if (!draft.client_name) {
+        if (client) {
+            draft.client_name = `${client.first_name} ${client.last_name}`.trim()
+        } else if (f.offer) {
+            draft.client_name = `${f.offer.first_name} ${f.offer.last_name}`.trim()
+        }
+    }
+    
+    // Téléphone client - priorité: client > offer
+    if (!draft.client_phone) {
+        if (client && client.phone_number) {
+            draft.client_phone = client.phone_number
+        } else if (f.offer && f.offer.phone) {
+            draft.client_phone = f.offer.phone
+        }
+    }
+    
+    // Adresse du site - priorité: mandate > cerfa > form.client_address > offer
+    if (!draft.site_address_line1) {
+        if (mandate && mandate.client_address) {
+            draft.site_address_line1 = mandate.client_address
+        } else if (cerfa && cerfa.land_street) {
+            // CERFA a land_street pour l'adresse du terrain
+            draft.site_address_line1 = cerfa.land_street
+        } else if (f.client_address) {
+            draft.site_address_line1 = f.client_address
+        } else if (f.offer && f.offer.address) {
+            draft.site_address_line1 = f.offer.address
+        }
+    }
+    
+    // === INFORMATIONS INSTALLATEUR ===
+    // Priorité: mandate > cerfa
+    if (mandate) {
+        if (!draft.installer_company_name) draft.installer_company_name = mandate.company_name || ''
+        if (!draft.installer_address) draft.installer_address = mandate.company_head_office_address || ''
+        if (!draft.installer_name) draft.installer_name = mandate.represented_by || ''
+        // Note: Le mandat n'a pas d'email ni de téléphone installateur
+    } else if (cerfa && cerfa.declarant_type === 'company') {
+        // Si pas de mandat mais CERFA avec type entreprise
+        if (!draft.installer_company_name) draft.installer_company_name = cerfa.company_denomination || ''
+        if (!draft.installer_address) draft.installer_address = cerfa.address_street || ''
+        if (!draft.installer_email) draft.installer_email = cerfa.email || ''
+        if (!draft.installer_phone) draft.installer_phone = cerfa.phone || ''
+    }
+}, { immediate: true })
+
 const onSubmit = () => {
     emit('submit')
     model.value = false
