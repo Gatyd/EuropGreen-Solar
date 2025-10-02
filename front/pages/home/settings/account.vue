@@ -135,6 +135,6 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         </div>
 
         <!-- Modal de suppression de compte -->
-        <SettingAccountDelete v-model="showDeleteModal" />
+        <!-- <SettingAccountDelete v-model="showDeleteModal" /> -->
     </div>
 </template>

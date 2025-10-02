@@ -30,15 +30,6 @@ const links = [
         },
     },
     {
-        id: "products",
-        label: "Produits / Services",
-        icon: "i-heroicons-cube",
-        to: "/home/products",
-        tooltip: {
-            text: "Produits / Services",
-        },
-    },
-    {
         id: "requests",
         label: "Demandes",
         icon: "i-heroicons-document-text",
@@ -66,36 +57,6 @@ const links = [
         },
     },
     {
-        id: "commissions",
-        label: "Commissions",
-        icon: "i-heroicons-currency-euro",
-        to: "/home/commissions",
-        tooltip: {
-            text: "Commissions",
-        },
-    },
-    {
-        id: "users",
-        label: "Utilisateurs",
-        icon: "i-heroicons-users",
-        defaultOpen: true,
-        children: [
-            {
-                icon: 'i-heroicons-shield-check',
-                label: "Rôles",
-                to: "/home/users/roles",
-            },
-            {
-                icon: 'i-heroicons-users',
-                label: "Utilisateurs",
-                to: "/home/users/list",
-            }
-        ],
-        tooltip: {
-            text: "Utilisateurs",
-        },
-    },
-    {
         id: "customers",
         label: "Prospects / Clients",
         icon: "i-heroicons-user-group",
@@ -114,6 +75,37 @@ const links = [
         ],
         tooltip: {
             text: "Clients",
+        },
+    },
+    {
+        id: "admin",
+        label: "Administration",
+        icon: "i-heroicons-shield-check",
+        defaultOpen: true,
+        children: [
+            {
+                label: "Produits / Services",
+                icon: "i-heroicons-cube",
+                to: "/home/products",
+            },
+            {
+                label: "Commissions",
+                icon: "i-heroicons-currency-euro",
+                to: "/home/commissions",
+            },
+            {
+                icon: 'i-heroicons-shield-check',
+                label: "Rôles",
+                to: "/home/users/roles",
+            },
+            {
+                icon: 'i-heroicons-users',
+                label: "Utilisateurs",
+                to: "/home/users/list",
+            }
+        ],
+        tooltip: {
+            text: "Administration",
         },
     },
     {
@@ -137,7 +129,6 @@ const links = [
     {
         id: "settings",
         label: "Paramètres",
-        defaultOpen: true,
         icon: "i-heroicons-cog-8-tooth",
         children: [
             {
@@ -159,10 +150,8 @@ const links = [
 
 const accessLink = links.map((link: any) => {
     if (!user.value?.is_superuser) {
-        if (link.id === "users") return null
-        if (link.id === "products") return null
+        if (link.id === "admin") return null
         if (link.id === "home") return null
-        if (link.id === "commissions") return null
     }
     if (!user.value?.is_superuser && user.value?.is_staff) {
         const useraccess = user.value?.useraccess;
