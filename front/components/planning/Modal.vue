@@ -98,8 +98,8 @@ const submit = async () => {
 
                 <!-- Assigné à -->
                 <UFormField label="Assigné à" name="assigned_to" required>
-                    <UserSelectMenu :staff-only="true" v-model="state.assigned_to" placeholder="Sélectionner un utilisateur"
-                        class="w-full" />
+                    <UserSelectMenu :staff-only="true" v-model="state.assigned_to"
+                        placeholder="Sélectionner un utilisateur" class="w-full" />
                 </UFormField>
 
                 <!-- Priorité -->

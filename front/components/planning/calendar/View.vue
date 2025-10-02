@@ -220,6 +220,6 @@ onMounted(() => {
     </div>
 
     <!-- Modal de détails de la tâche -->
-    <PlanningTaskDetailModal v-if="selectedTask" v-model="showTaskDetail" :task="selectedTask"
-        @updated="handleTaskUpdated" @deleted="loadTasks" />
+    <PlanningDetailModal v-if="selectedTask" v-model="showTaskDetail" :task="selectedTask" @updated="handleTaskUpdated"
+        @deleted="loadTasks" />
 </template>

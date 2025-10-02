@@ -18,7 +18,7 @@ const { user } = storeToRefs(useAuthStore())
 const toast = useToast()
 const loading = ref(false)
 const showEditModal = ref(false)
-const showDeleteConfirm = ref(false)
+const showDeleteModal = ref(false)
 
 // Statut local pour l'utilisateur assigné
 const currentStatus = ref(props.task?.status || 'pending')
@@ -82,35 +82,18 @@ const updateStatus = async (newStatus: string) => {
     loading.value = false
 }
 
-// Supprimer la tâche (admin uniquement)
-const deleteTask = async () => {
-    loading.value = true
-    const res = await apiRequest<any>(
-        () => $fetch(`/api/tasks/${props.task.id}/`, {
-            method: 'DELETE',
-            credentials: 'include'
-        }),
-        toast
-    )
-
-    if (res !== null) {
-        toast.add({
-            title: 'Tâche supprimée',
-            color: 'success',
-            icon: 'i-heroicons-trash'
-        })
-        showDeleteConfirm.value = false
-        emit('deleted')
-        emit('update:modelValue', false)
-    }
-    loading.value = false
-}
-
 // Gérer la fermeture du modal d'édition
 const handleEditSubmit = () => {
     showEditModal.value = false
     // Recharger les données de la tâche
     emit('updated')
+}
+
+// Gérer la suppression de la tâche
+const handleTaskDeleted = () => {
+    showDeleteModal.value = false
+    emit('deleted')
+    emit('update:modelValue', false)
 }
 
 // Fermer le modal
@@ -244,7 +227,7 @@ watch(() => props.task, (newTask) => {
                     <UButton icon="i-heroicons-pencil" label="Modifier" color="secondary" variant="outline" size="sm"
                         @click="showEditModal = true" />
                     <UButton icon="i-heroicons-trash" label="Supprimer" color="error" variant="outline" size="sm"
-                        @click="showDeleteConfirm = true" />
+                        @click="showDeleteModal = true" />
                 </div>
             </div>
         </template>
@@ -253,18 +236,6 @@ watch(() => props.task, (newTask) => {
     <!-- Modal d'édition -->
     <PlanningModal v-if="showEditModal" v-model="showEditModal" :task="task" @submit="handleEditSubmit" />
 
-    <!-- Confirmation de suppression -->
-    <UModal v-model:open="showDeleteConfirm" title="Confirmer la suppression"
-        :ui="{ content: 'max-w-md', footer: 'justify-end gap-4' }">
-        <template #body>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-                Êtes-vous sûr de vouloir supprimer la tâche "{{ task.title }}" ?
-                Cette action est irréversible.
-            </p>
-        </template>
-        <template #footer>
-            <UButton label="Annuler" color="neutral" variant="ghost" @click="showDeleteConfirm = false" />
-            <UButton label="Supprimer" variant="soft" color="error" icon="i-heroicons-trash" :loading="loading" @click="deleteTask" />
-        </template>
-    </UModal>
+    <!-- Modal de suppression -->
+    <PlanningDeleteModal v-if="showDeleteModal" v-model="showDeleteModal" :task="task" @deleted="handleTaskDeleted" />
 </template>
