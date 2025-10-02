@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'invoices',
     'administrative',
     'planning',
+    'admin_platform',
 ]
 
 MIDDLEWARE = [

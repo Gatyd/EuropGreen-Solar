@@ -53,6 +53,7 @@ def send_mail(
     text_template: Optional[str] = None,
     timeout: int = 30,
     attachments: Optional[Iterable[Union[str, Tuple[str, bytes, str]]]] = None,
+    save_to_log: bool = True,
 ) -> Tuple[bool, str]:
     """
     Envoie un email en tentant d'abord Mailgun puis SMTP en fallback.
@@ -65,6 +66,9 @@ def send_mail(
     - from_email: optionnel, expéditeur (peut être au format "Nom <email>").
     - text_template: optionnel, template texte; sinon dérivé du HTML via strip_tags.
     - timeout: délai (s) pour les appels réseau (Mailgun).
+    - attachments: optionnel, liste de pièces jointes (chemins ou tuples).
+    - save_to_log: si True (défaut), enregistre l'email dans EmailLog après envoi réussi.
+                   Passer False pour les emails contenant des données sensibles.
 
     Retourne: (success: bool, message: str)
     """
@@ -80,6 +84,32 @@ def send_mail(
         plain_message = render_to_string(text_template, ctx)
     else:
         plain_message = strip_tags(html_message)
+
+    # Variables pour tracking
+    send_method = None
+    success = False
+    message = ""
+    final_from_email = None
+    attachments_info_for_log = []
+
+    # Préparer les infos sur les pièces jointes pour le log
+    if attachments and save_to_log:
+        for att in attachments:
+            if isinstance(att, str):
+                fname = att.split('/')[-1] or att.split('\\')[-1]
+                attachments_info_for_log.append({
+                    'filename': fname,
+                    'mimetype': 'application/octet-stream'
+                })
+            else:
+                try:
+                    fname, _, mtype = att
+                    attachments_info_for_log.append({
+                        'filename': fname,
+                        'mimetype': mtype
+                    })
+                except Exception:
+                    pass
 
     # 1) Tentative via Mailgun
     mailgun_configured = (
@@ -130,43 +160,76 @@ def send_mail(
             )
 
             if response.status_code in (200, 202):
-                return True, "Email envoyé via Mailgun"
+                send_method = 'mailgun'
+                success = True
+                message = "Email envoyé via Mailgun"
+                final_from_email = mg_from
+                # Pas de return ici, on continue pour enregistrer le log
             else:
                 # Log simple et fallback
                 print(f"Mailgun a renvoyé une erreur: {response.status_code} - {response.text}")
         except Exception as e:
             print(f"Erreur lors de l'envoi via Mailgun: {e}")
 
-    # 2) Fallback SMTP (Django)
-    try:
-        django_from = _build_from_display(False, from_email)
-        # Préparer les attachements sous forme de tuples (name, content_bytes, mimetype)
-        django_attachments = []
-        if attachments:
-            for att in attachments:
-                if isinstance(att, str):
-                    try:
-                        with open(att, 'rb') as f:
-                            content = f.read()
-                        fname = att.split('/')[-1] or att.split('\\')[-1]
-                        django_attachments.append((fname, content, 'application/pdf'))
-                    except Exception as e:
-                        print(f"Impossible d'attacher le fichier {att}: {e}")
-                else:
-                    try:
-                        fname, content, mtype = att
-                        django_attachments.append((fname, content, mtype))
-                    except Exception as e:
-                        print(f"Pièce jointe invalide (tuple attendu): {e}")
+    # 2) Fallback SMTP (Django) - seulement si Mailgun n'a pas réussi
+    if not success:
+        try:
+            django_from = _build_from_display(False, from_email)
+            # Préparer les attachements sous forme de tuples (name, content_bytes, mimetype)
+            django_attachments = []
+            if attachments:
+                for att in attachments:
+                    if isinstance(att, str):
+                        try:
+                            with open(att, 'rb') as f:
+                                content = f.read()
+                            fname = att.split('/')[-1] or att.split('\\')[-1]
+                            django_attachments.append((fname, content, 'application/pdf'))
+                        except Exception as e:
+                            print(f"Impossible d'attacher le fichier {att}: {e}")
+                    else:
+                        try:
+                            fname, content, mtype = att
+                            django_attachments.append((fname, content, mtype))
+                        except Exception as e:
+                            print(f"Pièce jointe invalide (tuple attendu): {e}")
 
-        # Construire un message multi-part avec HTML et pièces jointes
-        msg = EmailMultiAlternatives(subject=subject, body=plain_message, from_email=django_from, to=to_list)
-        msg.attach_alternative(html_message, "text/html")
-        for fname, content, mtype in django_attachments:
-            msg.attach(fname, content, mtype)
-        sent_count = msg.send(fail_silently=False)
-        if sent_count > 0:
-            return True, "Email envoyé via SMTP"
-        return False, "Aucun email n'a été envoyé via SMTP"
-    except Exception as e:
-        return False, f"Erreur SMTP: {e}"
+            # Construire un message multi-part avec HTML et pièces jointes
+            msg = EmailMultiAlternatives(subject=subject, body=plain_message, from_email=django_from, to=to_list)
+            msg.attach_alternative(html_message, "text/html")
+            for fname, content, mtype in django_attachments:
+                msg.attach(fname, content, mtype)
+            sent_count = msg.send(fail_silently=False)
+            if sent_count > 0:
+                send_method = 'smtp'
+                success = True
+                message = "Email envoyé via SMTP"
+                final_from_email = django_from
+            else:
+                success = False
+                message = "Aucun email n'a été envoyé via SMTP"
+        except Exception as e:
+            success = False
+            message = f"Erreur SMTP: {e}"
+    
+    # 3) Enregistrement dans EmailLog si l'envoi a réussi et save_to_log est True
+    if success and save_to_log:
+        try:
+            from admin_platform.models import EmailLog
+            
+            EmailLog.objects.create(
+                recipients=to_list,
+                subject=subject,
+                html_content=html_message,
+                plain_content=plain_message,
+                from_email=final_from_email or from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', ''),
+                template_used=template,
+                send_method=send_method,
+                attachments_info=attachments_info_for_log if attachments_info_for_log else None,
+            )
+        except Exception as e:
+            # En cas d'erreur lors de l'enregistrement, on continue quand même
+            # car l'email a été envoyé avec succès
+            print(f"Erreur lors de l'enregistrement du log d'email: {e}")
+    
+    return success, message

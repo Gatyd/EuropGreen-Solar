@@ -45,7 +45,7 @@ class FormViewSet(viewsets.ModelViewSet):
 		last = getattr(form, 'client_last_name', '')
 		return f"{first} {last}".strip()
 
-	def _send_mail_safe(self, *, template: str, context: dict, subject: str, to: str, attachments=None):
+	def _send_mail_safe(self, *, template: str, context: dict, subject: str, to: str, attachments=None, save_to_log=True):
 		try:
 			if to:
 				send_mail(
@@ -54,6 +54,7 @@ class FormViewSet(viewsets.ModelViewSet):
 					subject=subject,
 					to=to,
 					attachments=attachments,
+					save_to_log=save_to_log,
 				)
 		except Exception:
 			# best-effort: ne pas bloquer le flux en cas d'erreur d'email
@@ -306,6 +307,7 @@ class FormViewSet(viewsets.ModelViewSet):
 				subject=subject,
 				to=client_email,
 				attachments=attachments,
+				save_to_log=False,  # Ne pas enregistrer car contient un mot de passe
 			)
 		headers = self.get_success_headers(self.get_serializer(form).data)
 		return Response(self.get_serializer(form).data, status=status.HTTP_201_CREATED, headers=headers)
