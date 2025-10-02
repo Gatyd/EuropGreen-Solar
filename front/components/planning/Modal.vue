@@ -26,10 +26,10 @@ const state = reactive({
 
 // Options de priorité
 const priorityOptions = [
-    { value: 'low', label: '⚪ Basse' },
-    { value: 'normal', label: '🔵 Normale' },
-    { value: 'high', label: '🟠 Haute' },
-    { value: 'urgent', label: '🔴 Urgente' },
+    { value: 'low', label: 'Basse', color: 'gray' },
+    { value: 'normal', label: 'Normale', color: 'blue' },
+    { value: 'high', label: 'Haute', color: 'orange' },
+    { value: 'urgent', label: 'Urgente', color: 'red' },
 ]
 
 watch(() => props.task, (v) => {
@@ -61,8 +61,15 @@ const submit = async () => {
         : '/api/tasks/'
     const method = props.task?.id ? 'PATCH' : 'POST'
 
+    // Nettoyer les champs optionnels vides (convertir '' en null)
+    const payload = {
+        ...state,
+        due_time: state.due_time || null,
+        related_installation: state.related_installation || null,
+    }
+
     const res = await apiRequest<any>(
-        () => $fetch(endpoint, { method, body: state, credentials: 'include' }),
+        () => $fetch(endpoint, { method, body: payload, credentials: 'include' }),
         toast
     )
 
