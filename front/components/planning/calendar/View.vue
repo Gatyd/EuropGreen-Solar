@@ -2,6 +2,11 @@
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Émettre des événements vers le parent
+const emit = defineEmits<{
+    (e: 'createTask', date: string): void
+}>()
+
 // État du calendrier
 const currentDate = ref(new Date());
 const tasks = ref<any[]>([]);
@@ -120,6 +125,13 @@ const handleDayMouseLeave = () => {
     hoveredDay.value = null;
 };
 
+// Gérer la création d'une tâche avec date préfillée
+const handleCreateTask = (date: Date) => {
+    // Formater la date au format YYYY-MM-DD pour le champ date HTML
+    const formattedDate = format(date, 'yyyy-MM-dd');
+    emit('createTask', formattedDate);
+};
+
 // Charger les tâches au montage
 onMounted(() => {
     loadTasks();
@@ -193,7 +205,7 @@ onMounted(() => {
                     <PlanningCalendarDay v-for="(date, index) in daysInMonth" :key="index" :date="date"
                         :current-date="currentDate" :tasks="tasks" :selected-day="selectedDay" :hovered-day="hoveredDay"
                         :is-small-screen="isSmallScreen" @click="handleDayClick" @mouseenter="handleDayMouseEnter"
-                        @mouseleave="handleDayMouseLeave" @open-task="openTaskDetail" />
+                        @mouseleave="handleDayMouseLeave" @open-task="openTaskDetail" @create-task="handleCreateTask" />
                 </div>
             </div>
         </div>

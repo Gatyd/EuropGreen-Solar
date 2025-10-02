@@ -6,10 +6,20 @@ const { user } = storeToRefs(useAuthStore())
 
 // État du modal
 const showModal = ref(false)
+const prefilledDate = ref<string | null>(null)
 
 // Fonction pour ouvrir le modal (seulement pour les admins)
 const openModal = () => {
     if (user.value?.is_superuser) {
+        prefilledDate.value = null
+        showModal.value = true
+    }
+}
+
+// Ouvrir le modal avec une date préfillée
+const openModalWithDate = (date: string) => {
+    if (user.value?.is_superuser) {
+        prefilledDate.value = date
         showModal.value = true
     }
 }
@@ -18,6 +28,7 @@ const openModal = () => {
 const calendarRef = ref()
 const handleTaskCreated = () => {
     showModal.value = false
+    prefilledDate.value = null
     if (calendarRef.value?.loadTasks) {
         calendarRef.value.loadTasks()
     }
@@ -36,8 +47,8 @@ const handleTaskCreated = () => {
             </UDashboardNavbar>
         </div>
 
-        <PlanningCalendarView ref="calendarRef" />
+        <PlanningCalendarView ref="calendarRef" @create-task="openModalWithDate" />
 
-        <PlanningModal v-model="showModal" @submit="handleTaskCreated" />
+        <PlanningModal v-model="showModal" :prefilled-date="prefilledDate" @submit="handleTaskCreated" />
     </div>
 </template>

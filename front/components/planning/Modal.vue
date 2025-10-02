@@ -4,6 +4,7 @@ import apiRequest from '~/utils/apiRequest'
 const props = defineProps<{
     modelValue: boolean
     task?: any | null
+    prefilledDate?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -13,7 +14,7 @@ const emit = defineEmits<{
 
 const loading = ref(false)
 
-const state = reactive({
+const initialState = {
     title: '',
     description: '',
     assigned_to: '',
@@ -22,7 +23,9 @@ const state = reactive({
     priority: 'normal',
     related_installation: '',
     notes: ''
-})
+}
+
+const state = reactive({ ...initialState })
 
 // Options de priorité
 const priorityOptions = [
@@ -32,9 +35,32 @@ const priorityOptions = [
     { value: 'urgent', label: 'Urgente', color: 'red' },
 ]
 
-watch(() => props.task, (v) => {
-    if (v) {
-        Object.assign(state, v)
+// Réinitialiser le formulaire
+const resetForm = () => {
+    Object.assign(state, initialState)
+}
+
+// Watcher pour gérer l'ouverture/fermeture du modal
+watch(() => props.modelValue, (isOpen) => {
+    if (isOpen) {
+        // Quand le modal s'ouvre
+        if (props.task) {
+            // Mode édition : charger les données de la tâche
+            Object.assign(state, props.task)
+        } else {
+            // Mode création : réinitialiser et appliquer la date préfillée si fournie
+            resetForm()
+            if (props.prefilledDate) {
+                state.due_date = props.prefilledDate
+            }
+        }
+    } else {
+        // Quand le modal se ferme : réinitialiser après un court délai
+        setTimeout(() => {
+            if (!props.modelValue) {
+                resetForm()
+            }
+        }, 300)
     }
 }, { immediate: true })
 
