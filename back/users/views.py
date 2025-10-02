@@ -170,6 +170,108 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         return Response(payload, status=status.HTTP_200_OK)
     
     @extend_schema(
+        summary="Fiche client détaillée",
+        description=(
+            "Récupère les informations essentielles d'un client : "
+            "informations personnelles, dernière installation, dernier mandat, commission et filleuls"
+        )
+    )
+    @action(detail=True, methods=['get'], url_path='fiche')
+    def fiche_client(self, request, pk=None):
+        """Récupère la fiche client complète avec toutes les informations associées"""
+        user = self.get_object()
+        
+        # Autorisations: l'admin/staff peut tout voir. Un client peut voir sa propre fiche.
+        if not request.user.is_staff and request.user.id != user.id:
+            return Response({"detail": "Accès refusé."}, status=status.HTTP_403_FORBIDDEN)
+        
+        from installations.models import RepresentationMandate
+        
+        # Informations de base de l'utilisateur
+        user_data = UserSerializer(user).data
+        
+        # Nombre total d'installations
+        installations_count = user.installations.count()
+        
+        # Dernière installation
+        last_installation = user.installations.order_by('-created_at').first()
+        last_installation_data = None
+        if last_installation:
+            last_installation_data = {
+                'id': str(last_installation.id),
+                'status': last_installation.status,
+                'client_address': last_installation.client_address,
+                'installation_power': str(last_installation.installation_power),
+                'installation_type': last_installation.installation_type,
+                'commission_amount': str(last_installation.commission_amount),
+                'commission_paid': last_installation.commission_paid,
+                'sales_commission_amount': str(last_installation.sales_commission_amount),
+                'sales_commission_paid': last_installation.sales_commission_paid,
+                'created_at': last_installation.created_at.isoformat(),
+            }
+        
+        # Dernier mandat de représentation
+        last_mandate = None
+        if last_installation:
+            try:
+                mandate = last_installation.representation_mandate
+                last_mandate = {
+                    'client_civility': mandate.client_civility,
+                    'client_birth_date': mandate.client_birth_date.isoformat() if mandate.client_birth_date else None,
+                    'client_birth_place': mandate.client_birth_place,
+                    'client_address': mandate.client_address,
+                }
+            except RepresentationMandate.DoesNotExist:
+                pass
+        
+        # Commission du client
+        commission_data = None
+        try:
+            commission_data = CommissionSerializer(user.commission).data
+        except Commission.DoesNotExist:
+            pass
+        
+        # Filleuls (clients dont l'utilisateur est la source dans la demande prospect)
+        filleuls_count = 0
+        filleuls_data = []
+        if request.user.is_superuser:  # Uniquement pour l'admin
+            from request.models import ProspectRequest
+            # Récupérer les demandes où l'utilisateur est la source
+            filleul_requests = ProspectRequest.objects.filter(
+                source=user,
+                offer__isnull=False
+            ).select_related('offer__installations_form__client').distinct()
+            
+            filleuls = []
+            for req in filleul_requests:
+                if req.offer and hasattr(req.offer, 'installations_form') and req.offer.installations_form.client:
+                    client = req.offer.installations_form.client
+                    if client not in filleuls:
+                        filleuls.append(client)
+            
+            filleuls_count = len(filleuls)
+            for filleul in filleuls:
+                filleuls_data.append({
+                    'id': str(filleul.id),
+                    'first_name': filleul.first_name,
+                    'last_name': filleul.last_name,
+                    'email': filleul.email,
+                })
+        
+        # Construire la réponse
+        response_data = {
+            'user': user_data,
+            'installations_count': installations_count,
+            'last_installation': last_installation_data,
+            'last_mandate': last_mandate,
+            'commission': commission_data,
+            'filleuls_count': filleuls_count,
+            'filleuls': filleuls_data,
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+    @extend_schema(
         summary="Désactiver un utilisateur",
         description="Désactive un utilisateur (ne le supprime pas définitivement)"
     )

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
+import type { TableColumn, TableRow } from '@nuxt/ui'
 import type { User } from '~/types'
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import { useAuthStore } from '~/store/auth'
@@ -152,7 +152,7 @@ const columns: TableColumn<User>[] = [{
 if (auth.user?.is_staff && !auth.user?.is_superuser) {
 	const isCollaborator = auth.user?.role === 'collaborator'
 	const isSales = auth.user?.role === 'sales'
-	
+
 	// Colonne montant de commission (selon le rôle)
 	const commissionAmountColumn: TableColumn<User> = {
 		accessorKey: 'commission_amount',
@@ -160,19 +160,19 @@ if (auth.user?.is_staff && !auth.user?.is_superuser) {
 		cell: ({ row }) => {
 			const installation = row.original.last_installation
 			if (!installation) return '—'
-			
+
 			// Collaborateur/Client: afficher commission_amount
 			// Commercial: afficher sales_commission_amount
-			const amount = isCollaborator 
-				? installation.commission_amount 
-				: isSales 
-					? installation.sales_commission_amount 
+			const amount = isCollaborator
+				? installation.commission_amount
+				: isSales
+					? installation.sales_commission_amount
 					: 0
-			
+
 			return amount ? `${amount} €` : '—'
 		}
 	}
-	
+
 	// Colonne statut paiement (selon le rôle)
 	const commissionPaidColumn: TableColumn<User> = {
 		accessorKey: 'commission_paid',
@@ -180,15 +180,15 @@ if (auth.user?.is_staff && !auth.user?.is_superuser) {
 		cell: ({ row }) => {
 			const installation = row.original.last_installation
 			if (!installation) return h(UBadge, { color: 'neutral', label: 'N/A', variant: 'subtle' })
-			
+
 			// Collaborateur/Client: afficher commission_paid
 			// Commercial: afficher sales_commission_paid
-			const isPaid = isCollaborator 
-				? installation.commission_paid 
-				: isSales 
-					? installation.sales_commission_paid 
+			const isPaid = isCollaborator
+				? installation.commission_paid
+				: isSales
+					? installation.sales_commission_paid
 					: false
-			
+
 			return h(UBadge, {
 				color: isPaid ? 'success' : 'warning',
 				label: isPaid ? 'Payée' : 'En attente',
@@ -196,7 +196,7 @@ if (auth.user?.is_staff && !auth.user?.is_superuser) {
 			})
 		}
 	}
-	
+
 	// Insérer après la colonne 'status' et avant 'actions'
 	const actionsIndex = columns.findIndex(c => (c as any).id === 'actions')
 	const insertIndex = actionsIndex >= 0 ? actionsIndex : columns.length
@@ -253,7 +253,8 @@ onMounted(fetchUsers)
 			</UDashboardToolbar>
 		</div>
 
-		<UserCommissionModal v-if="selectedUser && auth.user?.is_superuser" v-model="commissionModal" :user="selectedUser" @submit="fetchUsers" />
+		<UserCommissionModal v-if="selectedUser && auth.user?.is_superuser" v-model="commissionModal"
+			:user="selectedUser" @submit="fetchUsers" />
 
 		<UDashboardToolbar class="lg:mt-4 lg:ps-3">
 			<template #left>
@@ -283,10 +284,11 @@ onMounted(fetchUsers)
 		</UDashboardToolbar>
 
 		<div class="w-full px-2 sm:px-6 space-y-4 pb-4">
-			<UTable ref="table" :data="users" :columns="columns" v-model:global-filter="q"
-				:ui="{ tr: 'data-[expanded=true]:bg-(--ui-bg-elevated)/50' }" class="flex-1" :loading="loading"
-				:pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
-				v-model:pagination="pagination">
+			<UTable ref="table" :data="users" :columns="columns" v-model:global-filter="q" :ui="{
+				tr: 'data-[expanded=true]:bg-(--ui-bg-elevated)/50 cursor-pointer hover:bg-gray-50 transition-colors',
+			}" class="flex-1" :loading="loading" :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
+				v-model:pagination="pagination"
+				@select="(row: TableRow<User>) => router.push({ path: `/home/customers/${row.original.id}`, query: { id: row.original.id } })">
 			</UTable>
 
 			<div
