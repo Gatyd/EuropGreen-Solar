@@ -63,7 +63,7 @@ onMounted(fetchEmails)
 <template>
     <div class="overflow-hidden h-full">
         <!-- Header -->
-        <div class="sticky top-0 z-50 bg-white border-b">
+        <div class="sticky top-0 z-50 bg-white">
             <UDashboardNavbar class="lg:text-2xl font-semibold"
                 :ui="{ root: 'h-12 lg:h-(--ui-header-height)', title: 'text-lg lg:text-2xl lg:gap-4' }">
                 <template #title>
@@ -83,7 +83,7 @@ onMounted(fetchEmails)
         <div v-else class="flex h-[calc(100vh-var(--ui-header-height))]">
 
             <!-- Liste des emails (gauche / plein écran mobile) -->
-            <div class="w-full lg:w-96 xl:w-[500px] border-r overflow-y-auto">
+            <div class="w-full lg:w-96 xl:w-[500px] border-r border-default overflow-y-auto">
                 <div v-if="emails.length === 0" class="text-center py-12 text-gray-500">
                     <UIcon name="i-heroicons-inbox" class="text-6xl mb-4 mx-auto" />
                     <p>Aucun email trouvé</p>

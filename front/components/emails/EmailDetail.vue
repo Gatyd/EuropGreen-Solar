@@ -11,7 +11,7 @@ const props = defineProps<Props>()
 <template>
     <div class="flex flex-col h-full">
         <!-- En-tête minimaliste -->
-        <div class="px-6 py-3 border-b bg-white">
+        <div class="px-6 py-3 border-b border-default bg-white">
             <div class="flex items-center justify-between mb-1">
                 <h2 class="text-xl font-bold">{{ email.subject }}</h2>
                 <UButton icon="i-lucide-x" color="neutral" variant="ghost" @click="emit('close')" />
@@ -56,7 +56,7 @@ const props = defineProps<Props>()
         </div>
 
         <!-- Contenu HTML de l'email (non-cliquable) -->
-        <div class="flex-1 overflow-y-auto p-6 bg-white">
+        <div class="flex-1 overflow-y-auto bg-white">
             <div class="email-content" style="pointer-events: none; user-select: text;" v-html="email.html_content">
             </div>
         </div>

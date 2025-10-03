@@ -43,7 +43,7 @@ function getEmailPreview(email: any): string {
 </script>
 
 <template>
-    <div class="p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors" :class="{
+    <div class="p-4 border-b border-default cursor-pointer hover:bg-gray-50 transition-colors" :class="{
         'bg-primary-50 border-l-4 border-l-primary-500': isSelected
     }" @click="emit('select')">
         <div class="flex justify-between items-start mb-1">
