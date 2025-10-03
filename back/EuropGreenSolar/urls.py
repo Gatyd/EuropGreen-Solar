@@ -40,6 +40,7 @@ urlpatterns = [
     path('', include('administrative.urls')),
     path('', include('planning.urls')),
     path('auth/', include('authentication.urls')),
+    path('admin-platform/', include('admin_platform.urls')),
 ]
 
 # Serving media files during development
