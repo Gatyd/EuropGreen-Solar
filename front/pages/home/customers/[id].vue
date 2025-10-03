@@ -74,7 +74,12 @@ function handleViewDocuments() {
 }
 
 function handleEmailHistory() {
-    toast.add({ title: 'Historique des emails', description: 'Fonctionnalité à venir', color: 'info' })
+    if (ficheClient.value?.user?.email) {
+        router.push({
+            path: '/home/email-history',
+            query: { email: ficheClient.value.user.email }
+        })
+    }
 }
 
 function handleInteractionHistory() {
@@ -188,7 +193,7 @@ onMounted(fetchFicheClient)
                         <div class="space-y-1">
                             <p class="text-sm text-gray-600">Étape</p>
                             <UBadge :color="ficheClient.last_installation?.status ? 'primary' : 'error'" variant="subtle">
-                                {{ ficheClient.last_installation?.status ? ficheClient.last_installation.status : 'Inconnue' }}
+                                {{ ficheClient.last_installation?.status ? statusLabels[ficheClient.last_installation.status] || ficheClient.last_installation.status : 'Aucune installation' }}
                             </UBadge>
                         </div>
                     </div>
