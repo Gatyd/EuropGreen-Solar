@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_spectacular',
     'drf_spectacular_sidecar',
+    'auditlog',  # django-auditlog
     
     'authentication',
     'users',
@@ -70,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'auditlog.middleware.AuditlogMiddleware',  # django-auditlog (APRÈS AuthenticationMiddleware)
 ]
 
 ROOT_URLCONF = 'EuropGreenSolar.urls'
