@@ -83,7 +83,10 @@ function handleEmailHistory() {
 }
 
 function handleInteractionHistory() {
-    toast.add({ title: 'Historique des interactions', description: 'Fonctionnalité à venir', color: 'info' })
+    router.push({
+        path: '/home/interaction-history',
+        query: { user_id: clientId.value }
+    })
 }
 
 onMounted(fetchFicheClient)

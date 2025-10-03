@@ -71,7 +71,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'auditlog.middleware.AuditlogMiddleware',  # django-auditlog (APRÈS AuthenticationMiddleware)
+    'authentication.auditlog_middleware.AuditlogActorMiddleware',  # CUSTOM: définit l'actor pour auditlog
+    'auditlog.middleware.AuditlogMiddleware',  # django-auditlog (APRÈS AuditlogActorMiddleware)
 ]
 
 ROOT_URLCONF = 'EuropGreenSolar.urls'

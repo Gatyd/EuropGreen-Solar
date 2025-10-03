@@ -4,10 +4,11 @@ URLs pour la plateforme d'administration.
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import EmailLogViewSet
+from .views import EmailLogViewSet, AuditLogViewSet
 
 router = DefaultRouter()
 router.register(r'email-logs', EmailLogViewSet, basename='email-log')
+router.register(r'audit-logs', AuditLogViewSet, basename='audit-log')
 
 urlpatterns = [
     path('', include(router.urls)),
