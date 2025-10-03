@@ -79,5 +79,5 @@ auditlog.register(Consuel)
 auditlog.register(Task)
 
 # Admin Platform
-auditlog.register(EmailLog)
+# auditlog.register(EmailLog)
 
