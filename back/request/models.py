@@ -55,4 +55,4 @@ class ProspectRequest(models.Model):
 		verbose_name_plural = "Demandes"
 
 	def __str__(self) -> str:
-		return f"{self.last_name} {self.first_name} - {self.get_status_display()}"
+		return f"{self.last_name} {self.first_name} - {self.get_status_display}"
