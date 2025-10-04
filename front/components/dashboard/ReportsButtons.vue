@@ -8,22 +8,22 @@ const toast = useToast()
 
 // Modals
 const accountingExportModal = ref(false)
-
-type ReportColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+const salesReportModal = ref(false)
+const commissionsReportModal = ref(false)
+const prospectsReportModal = ref(false)
 
 interface Report {
     id: string
     label: string
     icon: string
-    color: ReportColor
 }
 
 // Rapports implémentés
 const activeReports: Report[] = [
-    { id: 'sales', label: 'Rapport des ventes', icon: 'i-heroicons-document-chart-bar', color: 'primary' },
-    { id: 'accounting', label: 'Export comptable', icon: 'i-heroicons-document-arrow-down', color: 'success' },
-    { id: 'commissions', label: 'Rapport des commissions', icon: 'i-heroicons-banknotes', color: 'warning' },
-    { id: 'prospects', label: 'Rapport des prospects', icon: 'i-heroicons-user-group', color: 'info' }
+    { id: 'sales', label: 'Rapport des ventes', icon: 'i-heroicons-document-chart-bar' },
+    { id: 'accounting', label: 'Export comptable', icon: 'i-heroicons-document-arrow-down' },
+    { id: 'commissions', label: 'Rapport des commissions', icon: 'i-heroicons-banknotes' },
+    { id: 'prospects', label: 'Rapport des prospects', icon: 'i-heroicons-user-group' }
 ]
 
 // Rapports futurs (commentés)
@@ -37,8 +37,23 @@ async function handleReportClick(reportId: string) {
         accountingExportModal.value = true
         return
     }
+    
+    if (reportId === 'sales') {
+        salesReportModal.value = true
+        return
+    }
+    
+    if (reportId === 'commissions') {
+        commissionsReportModal.value = true
+        return
+    }
+    
+    if (reportId === 'prospects') {
+        prospectsReportModal.value = true
+        return
+    }
 
-    // TODO: Implémenter les autres rapports
+    // Fallback pour rapports non implémentés
     toast.add({
         title: 'Génération en cours...',
         description: `Le rapport "${reportId}" sera bientôt disponible`,
@@ -58,14 +73,20 @@ async function handleReportClick(reportId: string) {
         </template>
 
         <!-- Vertical sur grands écrans (lg:flex-col), horizontal sur petits (flex-row) -->
-        <div class="flex flex-row lg:flex-col gap-3">
+        <div class="flex flex-row flex-wrap lg:flex-col gap-3">
             <UButton v-for="report in activeReports" :key="report.id" :icon="report.icon" :label="report.label"
-                :color="report.color" variant="outline" size="sm" class="justify-start flex-1 lg:flex-none"
+                color="neutral" variant="outline" size="sm" class="justify-start flex-1 lg:flex-none"
                 @click="handleReportClick(report.id)" />
         </div>
 
         <!-- Modals -->
         <ReportsAccountingExportModal v-model="accountingExportModal" :selected-period="selectedPeriod"
+            :custom-range="customRange" />
+        <ReportsSalesReportModal v-model="salesReportModal" :selected-period="selectedPeriod"
+            :custom-range="customRange" />
+        <ReportsCommissionsReportModal v-model="commissionsReportModal" :selected-period="selectedPeriod"
+            :custom-range="customRange" />
+        <ReportsProspectsReportModal v-model="prospectsReportModal" :selected-period="selectedPeriod"
             :custom-range="customRange" />
     </UCard>
 </template>
