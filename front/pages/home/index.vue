@@ -48,7 +48,7 @@ function handleRefresh() {
                 <DashboardProductsChart :key="`products-${refreshKey}`" :query-params="queryParams" />
             </div>
             <div class="lg:col-span-1">
-                <DashboardReportsButtons />
+                <DashboardReportsButtons :selected-period="selectedPeriod" :custom-range="customRange" />
             </div>
         </div>
     </div>
