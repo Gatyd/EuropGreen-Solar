@@ -73,13 +73,29 @@ function getRowItems(row: Row<User>) {
                 const id = row.original.id as string
                 navigateTo({ path: '/home/documents', query: { user: id } })
             }
+        },
+        { type: 'separator' },
+        {
+            label: 'Historique des emails',
+            icon: 'i-heroicons-envelope',
+            onSelect() {
+                const email = row.original.email as string
+                navigateTo({ path: '/home/email-history', query: { email: email } })
+            }
+        },
+        {
+            label: 'Historique des interactions',
+            icon: 'i-heroicons-clock',
+            onSelect() {
+                const id = row.original.id as string
+                navigateTo({ path: '/home/interaction-history', query: { user_id: id } })
+            }
         }
     ]
 
     // Ajouter l'action de commission pour les rôles éligibles
     if (['sales', 'collaborator', 'customer'].includes(row.original.role)) {
         items.push(
-            { type: 'separator' },
             {
                 label: 'Commission',
                 icon: 'i-heroicons-percent-badge',
