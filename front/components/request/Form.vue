@@ -88,39 +88,22 @@ const state = reactive<ProspectRequestPayload>({
     // notes: ''
 })
 
-console.log('🎬 State initialisé:', {
-    source_type: state.source_type,
-    source_id: state.source_id,
-    assigned_to_id: state.assigned_to_id,
-    user_role: auth.user?.role
-})
-
 // Réinitialiser le formulaire quand le modal s'ouvre pour une nouvelle demande
 watch([() => auth.user, () => props.modelValue], ([user, model]) => {
-    console.log('🔍 Watcher déclenché:', { 
-        user: user?.role, 
-        hasModel: !!model,
-        userRoleSourceType: userRoleSourceType.value,
-        currentSourceType: state.source_type,
-        currentSourceId: state.source_id
-    })
     
     // Si c'est une édition, le watcher modelValue s'en occupe
     if (model) {
-        console.log('📝 Mode édition - le watcher modelValue va gérer')
         return
     }
     
     // Pour une nouvelle demande, réappliquer les valeurs par défaut selon le rôle
     if (!model && user && userRoleSourceType.value) {
-        console.log('✅ Réinitialisation pour nouvelle demande, rôle:', user.role)
         
         state.source_type = userRoleSourceType.value as ProspectSource
         
         // Auto-remplir source_id pour collaborator et customer (client)
         if (user.role === 'collaborator' || user.role === 'customer') {
             state.source_id = user.id
-            console.log('📝 Source ID réinitialisé:', user.id)
         } else {
             state.source_id = undefined
         }
@@ -128,16 +111,10 @@ watch([() => auth.user, () => props.modelValue], ([user, model]) => {
         // Auto-remplir assigned_to_id pour sales
         if (user.role === 'sales') {
             state.assigned_to_id = user.id
-            console.log('📝 Assigned to ID réinitialisé:', user.id)
         } else if (!user.is_superuser) {
             state.assigned_to_id = undefined
         }
         
-        console.log('🎯 State après réinitialisation:', {
-            source_type: state.source_type,
-            source_id: state.source_id,
-            assigned_to_id: state.assigned_to_id
-        })
     }
 })
 
@@ -183,7 +160,8 @@ const validate = (st: any) => {
     if (!st.address) errors.push({ name: 'address', message: 'Adresse obligatoire.' })
     if (!st.source_type) errors.push({ name: 'source_type', message: 'Source obligatoire.' })
     else if (st.source_type === 'call_center' && !st.appointment_date) errors.push({ name: 'appointment_date', message: 'Date de rendez-vous obligatoire.' })
-    else if ((st.source_type === 'client' || st.source_type === 'collaborator' || st.source_type === 'commercial') && !st.source_id && showSourceField.value) errors.push({ name: 'source_id', message: 'Source utilisateur obligatoire.' })
+    else if ((st.source_type === 'client' || st.source_type === 'collaborator') && !st.source_id && showSourceField.value) errors.push({ name: 'source_id', message: 'Source utilisateur obligatoire.' })
+    else if (st.source_type === 'commercial' && !st.assigned_to_id && showAssignedToField.value) errors.push({ name: 'assigned_to_id', message: 'Chargé d\'affaire obligatoire.' })
     return errors
 }
 
@@ -191,13 +169,6 @@ const submit = async () => {
     loading.value = true
     const form = new FormData()
     const toast = useToast()
-    
-    console.log('📤 Soumission du formulaire - State actuel:', {
-        source_type: state.source_type,
-        source_id: state.source_id,
-        assigned_to_id: state.assigned_to_id,
-        user_role: auth.user?.role
-    })
     
     form.append('last_name', state.last_name)
     form.append('first_name', state.first_name)
@@ -215,12 +186,6 @@ const submit = async () => {
     form.append('source_type', state.source_type)
     if (state.source_id) form.append('source_id', state.source_id)
     if (state.assigned_to_id) form.append('assigned_to_id', state.assigned_to_id)
-    
-    console.log('📦 FormData construit - Valeurs envoyées:', {
-        source_type: form.get('source_type'),
-        source_id: form.get('source_id'),
-        assigned_to_id: form.get('assigned_to_id')
-    })
     
     // if (state.notes) form.append('notes', state.notes)
     const res = await apiRequest<ProspectRequest>(
@@ -278,7 +243,7 @@ const submit = async () => {
                 </UFormField>
 
                 <!-- Employé chargé d'affaire : uniquement pour admin -->
-                <UFormField v-if="showAssignedToField" label="Employé chargé d'affaire" name="assigned_to_id">
+                <UFormField v-if="showAssignedToField" label="Employé chargé d'affaire" name="assigned_to_id" :required="state.source_type === 'commercial'">
                     <UserSelectMenu v-model="state.assigned_to_id" role-filter="sales" class="w-full" />
                 </UFormField>
 

@@ -3,7 +3,7 @@ import type { TableColumn } from '@nuxt/ui'
 import { h, resolveComponent } from 'vue'
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import apiRequest from '~/utils/apiRequest'
-import type { ProspectRequest, ProspectStatus } from '~/types/requests'
+import type { ProspectRequest, ProspectSource, ProspectStatus } from '~/types/requests'
 import { useAuthStore } from '~/store/auth'
 import type { NavigationMenuItem } from '@nuxt/ui'
 
@@ -63,6 +63,14 @@ const offerStatusLabel: Record<OfferStatus, string> = {
 	quote_signed: 'Devis signé'
 }
 
+const prospectSourceLabel: Record<ProspectSource, string> = {
+	call_center: 'Centre d\'appels',
+	web_form: 'Formulaire web',
+	client: 'Client',
+	collaborator: 'Collaborateur',
+	commercial: 'Commercial'
+}
+
 const fetchProspects = async () => {
 	loading.value = true
 	const data = await apiRequest<ProspectRequest[]>(
@@ -85,7 +93,7 @@ const submitFromModal = async (form: FormData) => {
 	await fetchProspects()
 }
 
-const columns: TableColumn<any>[] = [
+const columns: TableColumn<ProspectRequest>[] = [
 	{ accessorKey: 'last_name', header: 'Nom', cell: ({ row }) => row.original.last_name },
 	{ accessorKey: 'first_name', header: 'Prénom', cell: ({ row }) => row.original.first_name },
 	{ accessorKey: 'email', header: 'Email', cell: ({ row }) => row.original.email },
@@ -111,10 +119,18 @@ const columns: TableColumn<any>[] = [
 	}
 ]
 if (auth.user?.is_superuser) {
-	columns.push({
+	columns.push(
+		{
+			accessorKey: 'source_type', header: "Type de source",
+			cell: ({ row }) => prospectSourceLabel[row.original.source_type] || 'Inconnu'
+		}, {
+		accessorKey: 'source', header: "Source",
+		cell: ({ row }) => row.original.source ? `${row.original.source.first_name} ${row.original.source.last_name}` : '—'
+		}, {
 		accessorKey: 'assigned_to', header: "Chargé d'affaire",
 		cell: ({ row }) => row.original.assigned_to ? `${row.original.assigned_to.first_name} ${row.original.assigned_to.last_name}` : 'Non assigné'
-	})
+		}
+	)
 }
 
 const pagination = ref({ pageIndex: 0, pageSize: 10 })
@@ -149,7 +165,8 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 	</ClientOnly>
 
 	<div class="w-full px-2 sm:px-6 space-y-4 pb-4">
-		<UTable sticky ref="table" :data="items" :columns="columns" v-model:global-filter="q" class="flex-1 max-h-[400px] lg:max-h-[500px]" :loading="loading"
+		<UTable sticky ref="table" :data="items" :columns="columns" v-model:global-filter="q"
+			class="flex-1 max-h-[400px] lg:max-h-[500px]" :loading="loading"
 			:pagination-options="{ getPaginationRowModel: getPaginationRowModel() }" v-model:pagination="pagination" />
 		<div
 			class="flex flex-col md:flex-row justify-center gap-4 md:gap-0 items-center md:justify-between border-t border-(--ui-border) pt-4">
