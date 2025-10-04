@@ -75,7 +75,7 @@ onMounted(fetchData)
 </script>
 
 <template>
-    <UCard>
+    <UCard v-bind="$attrs">
         <template #header>
             <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-funnel" class="text-xl text-primary-500" />

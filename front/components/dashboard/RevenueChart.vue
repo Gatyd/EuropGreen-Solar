@@ -45,7 +45,7 @@ async function fetchData() {
                 borderColor: 'rgb(16, 185, 129)',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 tension: 0.4,
-                fill: true
+                // fill: true
             }]
         }
     }
@@ -71,7 +71,7 @@ onMounted(fetchData)
 </script>
 
 <template>
-    <UCard>
+    <UCard v-bind="$attrs">
         <template #header>
             <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-chart-bar-square" class="text-xl text-green-500" />

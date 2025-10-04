@@ -37,7 +37,7 @@ onMounted(fetchData)
 </script>
 
 <template>
-    <UCard>
+    <UCard v-bind="$attrs">
         <template #header>
             <span class="font-semibold text-sm">Performance Produits</span>
         </template>

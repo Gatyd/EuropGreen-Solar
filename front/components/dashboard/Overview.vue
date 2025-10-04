@@ -42,7 +42,7 @@ onMounted(fetchData)
 </script>
 
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div v-bind="$attrs" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Card 1: Projets actifs -->
         <UCard>
             <template #header>

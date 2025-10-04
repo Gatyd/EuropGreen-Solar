@@ -25,7 +25,7 @@ function handleRefresh() {
 </script>
 
 <template>
-    <div class="flex items-center justify-between gap-4 mb-6">
+    <div v-bind="$attrs" class="flex items-center justify-between gap-4 mb-6">
         <div class="flex items-center gap-3">
             <p class="text-sm text-gray-600">Vue d'ensemble de l'activité</p>
         </div>
