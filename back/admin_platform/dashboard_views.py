@@ -29,6 +29,24 @@ class DashboardViewSet(viewsets.ViewSet):
     
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     
+    def _validate_date_string(self, date_str):
+        """
+        Valide une chaîne de date pour éviter les dates absurdes comme '12121-01-01'.
+        
+        Retourne la date si valide, None sinon.
+        """
+        try:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            # Vérifier que l'année est raisonnable (entre 1900 et 2100)
+            if date_obj.year < 1900 or date_obj.year > 2100:
+                return None
+            # Vérifier que la date n'est pas dans le futur
+            if date_obj > datetime.now():
+                return None
+            return date_obj
+        except (ValueError, TypeError):
+            return None
+    
     def _get_date_range(self, request):
         """
         Extrait la période demandée depuis les paramètres de requête.
@@ -47,8 +65,16 @@ class DashboardViewSet(viewsets.ViewSet):
             start_str = request.query_params.get('start_date')
             end_str = request.query_params.get('end_date')
             if start_str and end_str:
-                start_date = timezone.make_aware(datetime.strptime(start_str, '%Y-%m-%d'))
-                end_date = timezone.make_aware(datetime.strptime(end_str, '%Y-%m-%d'))
+                # Valider les dates avant de les parser
+                start_parsed = self._validate_date_string(start_str)
+                end_parsed = self._validate_date_string(end_str)
+                
+                if start_parsed and end_parsed:
+                    start_date = timezone.make_aware(start_parsed)
+                    end_date = timezone.make_aware(end_parsed)
+                else:
+                    # Fallback sur 1 an par défaut si validation échoue
+                    start_date = end_date - timedelta(days=365)
             else:
                 # Fallback sur 30 jours par défaut
                 start_date = end_date - timedelta(days=30)

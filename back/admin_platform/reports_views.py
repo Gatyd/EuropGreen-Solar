@@ -41,14 +41,47 @@ class ReportsViewSet(viewsets.GenericViewSet):
     queryset = Invoice.objects.none()
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     
+    def _validate_date_string(self, date_str):
+        """
+        Valide et nettoie une chaîne de date.
+        Empêche les dates invalides comme '12121-01-01'.
+        """
+        if not date_str:
+            return None
+        
+        try:
+            # Parser la date
+            parsed_date = datetime.strptime(date_str, '%Y-%m-%d')
+            
+            # Vérifier que l'année est raisonnable (entre 1900 et 2100)
+            if parsed_date.year < 1900 or parsed_date.year > 2100:
+                return None
+            
+            # Vérifier que la date n'est pas dans le futur
+            if parsed_date > datetime.now():
+                return None
+            
+            return parsed_date
+        except (ValueError, OverflowError):
+            return None
+    
     def _get_date_range(self, request):
         """Extrait la période depuis les paramètres de requête."""
         start_str = request.query_params.get('start_date')
         end_str = request.query_params.get('end_date')
         
         if start_str and end_str:
-            start_date = timezone.make_aware(datetime.strptime(start_str, '%Y-%m-%d'))
-            end_date = timezone.make_aware(datetime.strptime(end_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
+            start_date_parsed = self._validate_date_string(start_str)
+            end_date_parsed = self._validate_date_string(end_str)
+            
+            # Si les dates sont valides, les utiliser
+            if start_date_parsed and end_date_parsed:
+                start_date = timezone.make_aware(start_date_parsed)
+                end_date = timezone.make_aware(end_date_parsed.replace(hour=23, minute=59, second=59))
+            else:
+                # Dates invalides, utiliser la période par défaut
+                end_date = timezone.now()
+                start_date = end_date.replace(year=end_date.year - 1)
         else:
             # Par défaut : 1 an
             end_date = timezone.now()

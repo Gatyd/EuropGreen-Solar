@@ -7,6 +7,7 @@ const props = defineProps<{
 }>()
 
 const { downloadFile } = useFileDownload()
+const { handleDateBlur: validateDateBlur } = useDateValidation()
 const loading = ref(false)
 
 // Formulaire
@@ -59,6 +60,22 @@ function updateDatesFromPeriod() {
     }
 }
 
+// Valider les dates avec le composable
+function handleDateBlur(field: 'start_date' | 'end_date') {
+    const fieldMap = { start_date: 'start', end_date: 'end' } as const
+    const mappedField = fieldMap[field]
+    
+    const adjustedRange = validateDateBlur(
+        mappedField,
+        form[field],
+        form.start_date,
+        form.end_date
+    )
+    
+    form.start_date = adjustedRange.start
+    form.end_date = adjustedRange.end
+}
+
 async function handleExport() {
     loading.value = true
 
@@ -96,10 +113,12 @@ async function handleExport() {
                     <!-- Formulaire -->
                     <div class="grid grid-cols-2 gap-5">
                         <UFormField label="Date début" required>
-                            <UInput v-model="form.start_date" type="date" class="w-full" />
+                            <UInput v-model="form.start_date" type="date" class="w-full" 
+                                @blur="handleDateBlur('start_date')" />
                         </UFormField>
                         <UFormField label="Date fin" required>
-                            <UInput v-model="form.end_date" type="date" class="w-full" />
+                            <UInput v-model="form.end_date" type="date" class="w-full" 
+                                @blur="handleDateBlur('end_date')" />
                         </UFormField>
                     </div>
 

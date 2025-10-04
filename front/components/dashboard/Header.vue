@@ -13,6 +13,8 @@ const emit = defineEmits<{
     'refresh': []
 }>()
 
+const { handleDateBlur } = useDateValidation()
+
 const showCustomDatePicker = computed(() => props.selectedPeriod === 'custom')
 
 function handlePeriodChange(value: string) {
@@ -21,6 +23,23 @@ function handlePeriodChange(value: string) {
 
 function handleRefresh() {
     emit('refresh')
+}
+
+// Valider et ajuster les dates après saisie complète
+function onDateBlur(field: 'start' | 'end', value: string) {
+    const adjustedRange = handleDateBlur(
+        field,
+        value,
+        props.customRange.start,
+        props.customRange.end
+    )
+    emit('update:customRange', adjustedRange)
+}
+
+// Mise à jour immédiate pendant la saisie (sans validation)
+function handleDateInput(field: 'start' | 'end', value: string) {
+    const newRange = { ...props.customRange, [field]: value }
+    emit('update:customRange', newRange)
 }
 </script>
 
@@ -39,11 +58,13 @@ function handleRefresh() {
             <!-- Date picker pour période personnalisée -->
             <div v-if="showCustomDatePicker" class="flex items-center gap-2">
                 <input type="date" :value="customRange.start"
-                    @input="emit('update:customRange', { ...customRange, start: ($event.target as HTMLInputElement).value })"
+                    @input="handleDateInput('start', ($event.target as HTMLInputElement).value)"
+                    @blur="onDateBlur('start', ($event.target as HTMLInputElement).value)"
                     class="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                 <span class="text-gray-500">→</span>
                 <input type="date" :value="customRange.end"
-                    @input="emit('update:customRange', { ...customRange, end: ($event.target as HTMLInputElement).value })"
+                    @input="handleDateInput('end', ($event.target as HTMLInputElement).value)"
+                    @blur="onDateBlur('end', ($event.target as HTMLInputElement).value)"
                     class="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
             </div>
 
