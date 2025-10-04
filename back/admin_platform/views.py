@@ -7,10 +7,21 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from auditlog.models import LogEntry
 from .models import EmailLog
 from .serializers import EmailLogSerializer, AuditLogSerializer
+
+
+class TimelinePagination(PageNumberPagination):
+    """
+    Pagination spécifique pour la timeline des utilisateurs.
+    20 événements par page pour une UX optimale.
+    """
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 @extend_schema_view(
@@ -156,15 +167,17 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     ViewSet en lecture seule pour consulter les logs d'audit (django-auditlog).
     
     Permet de :
-    - Lister tous les logs d'audit
+    - Lister tous les logs d'audit (NON PAGINÉ)
     - Filtrer par utilisateur (objet ou acteur)
     - Filtrer par type de modèle
     - Filtrer par type d'action
-    - Récupérer la timeline complète d'un utilisateur
+    - Récupérer la timeline complète d'un utilisateur (PAGINÉ - 20/page)
     """
     
     serializer_class = AuditLogSerializer
     permission_classes = [permissions.IsAuthenticated]
+    # Pas de pagination par défaut, uniquement pour user_timeline
+    pagination_class = None
     
     def get_queryset(self):
         """Filtre les logs selon les paramètres de requête."""
@@ -198,7 +211,7 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     
     @extend_schema(
         summary="Timeline complète d'un utilisateur",
-        description="Récupère tous les logs liés à un utilisateur : user lui-même, ses demandes, offres, devis, installations, factures, etc.",
+        description="Récupère tous les logs liés à un utilisateur : user lui-même, ses demandes, offres, devis, installations, factures, etc. Paginé (20 items par page).",
         parameters=[
             OpenApiParameter(
                 name='user_id',
@@ -207,12 +220,19 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
                 type=str,
                 location=OpenApiParameter.PATH
             ),
+            OpenApiParameter(
+                name='page',
+                description='Numéro de page (défaut: 1)',
+                required=False,
+                type=int,
+                location=OpenApiParameter.QUERY
+            ),
         ]
     )
     @action(detail=False, methods=['get'], url_path='user-timeline/(?P<user_id>[^/.]+)')
     def user_timeline(self, request, user_id=None):
         """
-        Timeline complète d'un utilisateur.
+        Timeline complète d'un utilisateur avec pagination.
         
         Agrège TOUS les logs liés à :
         1. L'utilisateur lui-même (objet User modifié)
@@ -223,8 +243,13 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
         6. Ses factures (Invoice liées aux installations)
         7. TOUS les logs où il est l'acteur (peu importe l'objet)
         
-        GET /api/admin-platform/audit-logs/user-timeline/{user_id}/
+        GET /api/admin-platform/audit-logs/user-timeline/{user_id}/?page=1
+        
+        Retourne une réponse paginée avec count, next, previous, results.
         """
+        # Activer la pagination pour cette action uniquement
+        self.pagination_class = TimelinePagination
+        
         from users.models import User
         from request.models import ProspectRequest
         from offers.models import Offer
@@ -277,12 +302,26 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
         
         logs = LogEntry.objects.filter(query).select_related('actor', 'content_type').order_by('-timestamp')
         
+        # Appliquer la pagination
+        page = self.paginate_queryset(logs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response = self.get_paginated_response(serializer.data)
+            # Ajouter les infos utilisateur à la réponse paginée
+            response.data['user'] = {
+                'id': str(user.id),
+                'email': user.email,
+                'full_name': user.get_full_name(),
+            }
+            return response
+        
+        # Fallback sans pagination (ne devrait pas arriver)
         serializer = self.get_serializer(logs, many=True)
         return Response({
             'user': {
                 'id': str(user.id),
                 'email': user.email,
-                'full_name': f"{user.first_name} {user.last_name}",
+                'full_name': user.get_full_name(),
             },
             'logs': serializer.data,
             'count': logs.count(),

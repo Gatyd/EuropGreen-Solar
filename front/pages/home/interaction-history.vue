@@ -4,39 +4,19 @@ import type { TimelineItem } from '@nuxt/ui'
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
-const loading = ref(true)
 
 // ID de l'utilisateur depuis l'URL
 const userId = computed(() => route.query.user_id as string)
 
-// Données de la timeline
-const timelineData = ref<any>(null)
-
-// Récupération de la timeline
-async function fetchTimeline() {
-    if (!userId.value) {
-        toast.add({
-            title: 'Erreur',
-            description: 'ID utilisateur manquant',
-            color: 'error'
-        })
-        router.back()
-        return
-    }
-
-    loading.value = true
-    const result = await apiRequest<any>(
-        () => $fetch(`/api/admin-platform/audit-logs/user-timeline/${userId.value}/`, {
-            credentials: 'include'
-        }),
-        toast
-    )
-
-    if (result) {
-        timelineData.value = result
-    }
-    loading.value = false
-}
+// Utiliser le composable de pagination
+const {
+    data: timelineData,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore: handleLoadMore,
+    initialize
+} = usePaginatedTimeline(userId)
 
 // Icône selon le type d'action
 function getActionIcon(action: number): string {
@@ -72,7 +52,19 @@ const timelineItems = computed<TimelineItem[]>(() => {
     }))
 })
 
-onMounted(fetchTimeline)
+// Initialisation au montage
+onMounted(async () => {
+    if (!userId.value) {
+        toast.add({
+            title: 'Erreur',
+            description: 'ID utilisateur manquant',
+            color: 'error'
+        })
+        router.back()
+        return
+    }
+    await initialize()
+})
 </script>
 
 <template>
@@ -90,8 +82,28 @@ onMounted(fetchTimeline)
         </div>
 
         <!-- Loading -->
-        <div v-if="loading" class="flex justify-center items-center py-20">
-            <UIcon name="i-heroicons-arrow-path" class="animate-spin text-4xl" />
+        <div v-if="loading" class="w-full px-2 sm:px-6 py-6">
+            <!-- Header skeleton -->
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-default">
+                <div class="space-y-2">
+                    <USkeleton class="h-7 w-48" />
+                    <USkeleton class="h-4 w-64" />
+                </div>
+                <USkeleton class="h-5 w-32" />
+            </div>
+
+            <!-- Timeline skeleton -->
+            <div class="space-y-6">
+                <div v-for="i in 3" :key="i" class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <USkeleton class="h-10 w-10 rounded-full" />
+                        <USkeleton class="h-full w-0.5 mt-2" style="min-height: 80px;" />
+                    </div>
+                    <div class="flex-1">
+                        <USkeleton class="h-20 w-full rounded-lg" />
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Contenu principal -->
@@ -107,7 +119,12 @@ onMounted(fetchTimeline)
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 mt-2">
-                        <span class="font-semibold">{{ timelineData.count }}</span> événements enregistrés
+                        <span class="font-semibold">{{ timelineData.count }}</span> événement{{ timelineData.count > 1 ?
+                        's' :
+                        '' }} enregistré{{ timelineData.count > 1 ? 's' : '' }}
+                    </p>
+                    <p v-if="timelineData.count > timelineItems.length" class="text-xs text-gray-400 mt-1">
+                        {{ timelineItems.length }} affichés
                     </p>
                 </div>
             </div>
@@ -118,11 +135,28 @@ onMounted(fetchTimeline)
                 <p class="text-lg">Aucun événement enregistré</p>
             </div>
 
-            <UTimeline v-else :items="timelineItems">
-                <template #description="{ item }">
-                    <InteractionsInteractionCard :log="item as any" />
-                </template>
-            </UTimeline>
+            <div v-else>
+                <UTimeline :items="timelineItems">
+                    <template #description="{ item }">
+                        <InteractionsInteractionCard :log="item as any" />
+                    </template>
+                </UTimeline>
+
+                <!-- Bouton Charger plus / État de fin -->
+                <div class="mt-8 flex justify-center">
+                    <UButton v-if="hasMore" @click="handleLoadMore" :loading="loadingMore" :disabled="loadingMore"
+                        size="lg" color="primary" variant="outline" icon="i-heroicons-arrow-down-circle"
+                        class="shadow-sm">
+                        {{ loadingMore ? 'Chargement...' : 'Charger plus d\'événements' }}
+                    </UButton>
+
+                    <div v-else class="text-center text-gray-500 py-4">
+                        <UIcon name="i-heroicons-check-circle" class="text-3xl mb-2 mx-auto text-green-500" />
+                        <p class="text-sm font-medium">Fin de l'historique</p>
+                        <p class="text-xs text-gray-400 mt-1">Tous les événements ont été chargés</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
