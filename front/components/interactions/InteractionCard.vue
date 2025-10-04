@@ -20,13 +20,23 @@ const props = defineProps<{
 }>()
 
 // Badge variant selon le type d'action
-function getActionBadgeColor(action: number): 'success' | 'primary' | 'error' | 'neutral' {
-    const colors: Record<number, 'success' | 'primary' | 'error' | 'neutral'> = {
+function getActionBadgeColor(action: number): 'success' | 'secondary' | 'error' | 'neutral' {
+    const colors: Record<number, 'success' | 'secondary' | 'error' | 'neutral'> = {
         0: 'success',
-        1: 'primary',
+        1: 'secondary',
         2: 'error',
     }
     return colors[action] || 'neutral'
+}
+
+// Traduction des actions
+function getActionLabel(actionDisplay: string): string {
+    const labels: Record<string, string> = {
+        'create': 'Création',
+        'update': 'Mise à jour',
+        'delete': 'Suppression',
+    }
+    return labels[actionDisplay.toLowerCase()] || actionDisplay
 }
 
 // Icône selon le type d'objet
@@ -122,7 +132,7 @@ function translateField(field: string): string {
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
                             <UBadge :color="getActionBadgeColor(log.action)" variant="subtle" size="sm">
-                                {{ log.action_display }}
+                                {{ getActionLabel(log.action_display) }}
                             </UBadge>
                             <span class="text-sm font-medium text-gray-700">
                                 {{ getObjectTypeLabel(log.object_type) }}

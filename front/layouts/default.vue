@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/store/auth';
-import apiRequest from '~/utils/apiRequest'
 
 useSeoMeta({
     title: "Europ'Green Solar Application",
