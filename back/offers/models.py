@@ -46,4 +46,4 @@ class Offer(models.Model):
 		verbose_name_plural = "Offres"
 
 	def __str__(self) -> str:
-		return f"Offre {self.last_name} {self.first_name} - {self.get_status_display()}"
+		return f"Offre pour {self.first_name} {self.last_name} - {self.get_status_display()}"

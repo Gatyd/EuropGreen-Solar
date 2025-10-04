@@ -30,7 +30,8 @@ class Signature(models.Model):
         verbose_name_plural = "Signatures"
 
     def __str__(self) -> str:
-        return f"Signature {self.id}"
+        signer = self.signer_name or "Sans nom"
+        return f"Signature de {signer} - {self.signed_at.strftime('%d/%m/%Y')}"
 
 class Form(models.Model):
     class Status(models.TextChoices):
@@ -89,7 +90,8 @@ class Form(models.Model):
         verbose_name_plural = "Fiches d'installation"
 
     def __str__(self) -> str:
-        return f"Fiche {self.id} - {self.created_at.strftime('%Y-%m-%d')}"
+        client_name = self.client.get_full_name() if self.client else "Client inconnu"
+        return f"Fiche d'installation - {client_name} - {self.get_status_display()}"
     
 class TechnicalVisit(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -192,6 +194,10 @@ class TechnicalVisit(models.Model):
         verbose_name = "Visite technique"
         verbose_name_plural = "Visites techniques"
 
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        return f"Visite technique - {client_name} - {self.visit_date.strftime('%d/%m/%Y')}"
+
     def clean(self):
         errors = {}
         if self.roof_access == self.RoofAccess.OTHER and not self.roof_access_other:
@@ -255,6 +261,10 @@ class RepresentationMandate(models.Model):
         verbose_name = "Mandat de représentation"
         verbose_name_plural = "Mandats de représentation"
 
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        return f"Mandat de représentation - {client_name}"
+
 class AdministrativeValidation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     form = models.OneToOneField(Form, on_delete=models.CASCADE, related_name="administrative_validation")
@@ -272,6 +282,11 @@ class AdministrativeValidation(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Validation administrative"
         verbose_name_plural = "Validations administratives"
+
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        status = "Validée" if self.is_validated else "En attente"
+        return f"Validation administrative - {client_name} - {status}"
 
     def save(self, *args, **kwargs):
         if self.is_validated and self.validated_at is None:
@@ -314,6 +329,10 @@ class InstallationCompleted(models.Model):
         verbose_name = "Installation terminée"
         verbose_name_plural = "Installations terminées"
 
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        return f"Installation terminée - {client_name}"
+
 class ConsuelVisit(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     form = models.OneToOneField(Form, on_delete=models.CASCADE, related_name="consuel_visit")
@@ -331,6 +350,11 @@ class ConsuelVisit(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Visite CONSUEL"
         verbose_name_plural = "Visites CONSUEL"
+
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        status = "Validée" if self.passed else ("Refusée" if self.passed is False else "En attente")
+        return f"Visite CONSUEL - {client_name} - {status}"
 
     def clean(self):
         if self.passed is False and not self.refusal_reason:
@@ -354,6 +378,11 @@ class EnedisConnection(models.Model):
         verbose_name = "Connexion ENEDIS"
         verbose_name_plural = "Connexions ENEDIS"
 
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        status = "Connectée" if self.is_validated else "En attente"
+        return f"Connexion ENEDIS - {client_name} - {status}"
+
     def save(self, *args, **kwargs):
         if self.is_validated and self.validated_at is None:
             from django.utils import timezone
@@ -376,6 +405,11 @@ class Commissioning(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Mise en service"
         verbose_name_plural = "Mises en service"
+
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        status = "PV remis" if self.handover_receipt_given else "En attente"
+        return f"Mise en service - {client_name} - {status}"
 
 
 # ==============================

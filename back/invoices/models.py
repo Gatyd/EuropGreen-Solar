@@ -64,7 +64,8 @@ class Invoice(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"Facture {self.number or self.id}"
+        client_name = self.installation.client.get_full_name() if self.installation.client else "Client inconnu"
+        return f"Facture {self.number} - {client_name}"
 
     @property
     def amount_paid(self) -> Decimal:
@@ -133,6 +134,9 @@ class InvoiceLine(models.Model):
         verbose_name = "Ligne de facture"
         verbose_name_plural = "Lignes de facture"
 
+    def __str__(self) -> str:
+        return f"Ligne: {self.name} x{self.quantity}"
+
 
 class Installment(models.Model):
     """Échéance planifiée (acompte ou échéancier)."""
@@ -162,6 +166,11 @@ class Installment(models.Model):
         verbose_name = "Échéance"
         verbose_name_plural = "Échéances"
 
+    def __str__(self) -> str:
+        label = self.label or self.get_type_display()
+        status = "Payée" if self.is_paid else "En attente"
+        return f"Échéance: {label} - {status}"
+
 
 class Payment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -182,6 +191,9 @@ class Payment(models.Model):
         ordering = ["-date", "-created_at"]
         verbose_name = "Paiement"
         verbose_name_plural = "Paiements"
+
+    def __str__(self) -> str:
+        return f"Paiement de {self.amount}€ - {self.date.strftime('%d/%m/%Y')} ({self.method or 'Non précisé'})"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

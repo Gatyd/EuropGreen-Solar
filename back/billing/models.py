@@ -33,7 +33,7 @@ class Product(models.Model):
 		verbose_name_plural = "Produits/Services"
 
 	def __str__(self) -> str:
-		return f"{self.sku} - {self.name}"
+		return f"{self.name} ({self.get_type_display()})"
 
 
 class Quote(models.Model):
@@ -91,7 +91,7 @@ class Quote(models.Model):
 		]
 
 	def __str__(self) -> str:
-		return f"Devis {self.offer_id} v{self.version} - {self.get_status_display()}"
+		return f"Devis {self.number} - {self.get_status_display()}"
 
 	@property
 	def is_latest(self) -> bool:
@@ -158,7 +158,7 @@ class QuoteLine(models.Model):
 		verbose_name_plural = "Lignes de devis"
 
 	def __str__(self) -> str:
-		return f"{self.name} x{self.quantity}"
+		return f"Ligne: {self.name} x{self.quantity}"
 
 	def save(self, *args, **kwargs):
 		# Calcul simple du total de ligne
@@ -191,5 +191,6 @@ class QuoteSignature(models.Model):
 		verbose_name_plural = "Signatures de devis"
 
 	def __str__(self) -> str:
-		return f"Signature devis {self.quote_id}"
+		signer = self.signer_name or "Inconnu"
+		return f"Signature de {signer} pour devis {self.quote.number}"
 

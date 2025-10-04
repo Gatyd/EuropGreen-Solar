@@ -115,6 +115,10 @@ class Cerfa16702(models.Model):
         verbose_name = "CERFA 16702"
         verbose_name_plural = "CERFA 16702"
 
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        return f"CERFA 16702 - {client_name}"
+
 
 class Cerfa16702Attachment(models.Model):
     """Pièce jointe multiple pour un CERFA 16702 (remplace dpc1..dpc8, dpc11 en mode multi-fichiers).
@@ -153,8 +157,8 @@ class Cerfa16702Attachment(models.Model):
             models.UniqueConstraint(fields=["cerfa", "dpc_key", "ordering"], name="uniq_cerfa_dpc_ordering"),
         ]
 
-    def __str__(self) -> str:  # pragma: no cover - simple
-        return f"Attachment {self.dpc_key} #{self.ordering} for {self.cerfa_id}"
+    def __str__(self) -> str:
+        return f"Pièce jointe {self.get_dpc_key_display()} #{self.ordering} - CERFA de {self.cerfa.form.client.get_full_name() if self.cerfa.form.client else 'Client inconnu'}"
 
 
 class ElectricalDiagram(models.Model):
@@ -174,6 +178,10 @@ class ElectricalDiagram(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Schéma électrique"
         verbose_name_plural = "Schémas électriques"
+
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        return f"Schéma électrique - {client_name}"
 
 
 class EnedisMandate(models.Model):
@@ -275,6 +283,10 @@ class EnedisMandate(models.Model):
         verbose_name = "Mandat Enedis"
         verbose_name_plural = "Mandats Enedis"
 
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        return f"Mandat Enedis - {client_name}"
+
     def clean(self):
         errors = {}
         if self.client_type in {self.ClientType.COMPANY, self.ClientType.COLLECTIVITY}:
@@ -319,6 +331,10 @@ class Consuel(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Consuel"
         verbose_name_plural = "Consuels"
+
+    def __str__(self) -> str:
+        client_name = self.form.client.get_full_name() if self.form.client else "Client inconnu"
+        return f"Consuel {self.number or self.get_template_display()} - {client_name}"
 
     def save(self, *args, **kwargs):
         if not self.number:

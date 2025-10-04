@@ -49,7 +49,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
+        return self.get_full_name() or self.email
+    
+    def get_full_name(self):
+        """Retourne le nom complet de l'utilisateur"""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        elif self.last_name:
+            return self.last_name
+        return ""
     
     def is_native_role(self):
         """Vérifie si le rôle de l'utilisateur est un rôle natif du système"""
@@ -70,6 +80,9 @@ class UserAccess(models.Model):
     offers = models.BooleanField(default=False)
     requests = models.BooleanField(default=False)
     administrative_procedures = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Accès de {self.user.get_full_name() or self.user.email}"
 
 
 class Role(models.Model):
@@ -116,9 +129,10 @@ class Commission(models.Model):
         verbose_name_plural = "Commissions"
     
     def __str__(self):
+        user_display = self.user.get_full_name() or self.user.email
         if self.type == self.CommissionType.PERCENTAGE:
-            return f"{self.user.email} - {self.value}%"
-        return f"{self.user.email} - {self.value}€"
+            return f"Commission de {user_display} - {self.value}%"
+        return f"Commission de {user_display} - {self.value}€"
 
 
 class PasswordResetToken(models.Model):

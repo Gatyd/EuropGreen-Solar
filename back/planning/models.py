@@ -87,7 +87,8 @@ class Task(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.title} - {self.get_status_display()}"
+        assigned_name = self.assigned_to.get_full_name() if self.assigned_to else "Non assigné"
+        return f"{self.title} - {assigned_name} - {self.due_date.strftime('%d/%m/%Y')}"
 
     def mark_as_completed(self):
         """Marque la tâche comme terminée."""
