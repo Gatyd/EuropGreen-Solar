@@ -39,26 +39,26 @@ const currentSize = sizeConfig[props.size]
 </script>
 
 <template>
-    <div v-bind="$attrs" class="flex items-center justify-center" :class="currentSize.container">
-        <!-- Icône : place logo_icon.png dans src/assets/ -->
-        <img src="/logo_icon.png" alt="Europ' Green Solar" :class="currentSize.icon" />
+  <div v-bind="$attrs" class="flex items-center justify-center" :class="currentSize.container">
+    <!-- Icône : place logo_icon.png dans src/assets/ -->
+    <img src="/logo_icon.png" alt="Europ' Green Solar" :class="currentSize.icon" />
 
-        <!-- Texte (colonne) -->
-        <div class="flex flex-col" :class="currentSize.text">
-            <!-- EUROP' en bleu du drapeau français -->
-            <span class="text-blue-500 tracking-tight" :class="currentSize.europ">
-                EUROP'
-            </span>
+    <!-- Texte (colonne) -->
+    <div class="flex flex-col" :class="currentSize.text">
+      <!-- EUROP' en bleu du drapeau français -->
+      <span class="text-blue-500 tracking-tight" :class="currentSize.europ">
+        EUROP'
+      </span>
 
-            <!-- GREEN en vert -->
-            <span class="text-green-500 tracking-tight" :class="currentSize.green">
-                GREEN
-            </span>
+      <!-- GREEN en vert -->
+      <span class="text-green-500 tracking-tight" :class="currentSize.green">
+        GREEN
+      </span>
 
-            <!-- SOLAR en bleu du drapeau français (plus petit) -->
-            <span class="text-blue-500 tracking-tight" :class="currentSize.solar">
-                SOLAR
-            </span>
-        </div>
+      <!-- SOLAR en bleu du drapeau français (plus petit) -->
+      <span class="text-blue-500 tracking-tight" :class="currentSize.solar">
+        SOLAR
+      </span>
     </div>
+  </div>
 </template>

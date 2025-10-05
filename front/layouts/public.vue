@@ -12,15 +12,25 @@ const { user } = storeToRefs(useAuthStore());
 
 const items = computed<NavigationMenuItem[]>(() => [
     {
-        label: 'Acceuil',
-        to: '/',
-        active: route.path === '/'
+        label: 'Installation',
+        to: '/#installation',
+        active: route.hash === '#installation'
     },
     {
-        label: 'Evolution',
-        to: '/evolution',
-        active: route.path.startsWith('/evolution')
-    }
+        label: 'Service Après-Vente',
+        to: '/#sav',
+        active: route.hash === '#sav'
+    },
+    {
+        label: 'Parrainage',
+        to: '/#parrainage',
+        active: route.hash === '#parrainage'
+    },
+    {
+        label: 'Collaborateur',
+        to: '/collaborateur',
+        active: route.path === '/collaborateur'
+    },
 ])
 
 const logout = async () => {
@@ -41,14 +51,14 @@ const dropdownItems: DropdownMenuItem[] = [
     ],
     [
         {
+            label: user.value?.is_superuser ? 'Tableau de bord' : user.value?.is_staff ? 'Calendrier' : 'Installation',
+            to: `/home${user.value?.is_superuser ? '' : user.value?.is_staff ? '/calendar' : '/installations'}`,
+            icon: 'i-heroicons-question-mark-circle'
+        },
+        {
             label: 'Paramètres',
             to: '/home/settings/account',
             icon: 'i-heroicons-cog-8-tooth'
-        },
-        {
-            label: 'Aide & Support',
-            to: '#',
-            icon: 'i-heroicons-question-mark-circle'
         },
         {
             label: 'Déconnexion',
@@ -64,16 +74,16 @@ const dropdownItems: DropdownMenuItem[] = [
 ]
 
 const footerItems: NavigationMenuItem[] = [
-  {
-    label: 'Conditions Générales',
-    to: '/terms',
-    target: '_blank'
-  },
-  {
-    label: 'Politique de Confidentialité',
-    to: '/privacy',
-    target: '_blank'
-  }
+    {
+        label: 'Conditions Générales',
+        to: '/terms',
+        target: '_blank'
+    },
+    {
+        label: 'Politique de Confidentialité',
+        to: '/privacy',
+        target: '_blank'
+    }
 ]
 
 </script>
@@ -81,7 +91,9 @@ const footerItems: NavigationMenuItem[] = [
 <template>
     <UHeader>
         <template #left>
-            <Logo size="sm" />
+            <NuxtLink to="/">
+                <Logo size="sm" />
+            </NuxtLink>
         </template>
 
         <UNavigationMenu :items="items" />

@@ -82,19 +82,16 @@ export const useAuthStore = defineStore("auth", {
           return "/home";
         }
         if (user.is_staff) {
-          if (user.useraccess?.installation) {
-            return "/home/installations";
+          if (user.useraccess?.requests) {
+            return "/home/requests";
           }
           if (user.useraccess?.offers) {
             return "/home/offers";
           }
-          if (user.useraccess?.requests) {
-            return "/home/requests";
+          if (user.useraccess?.installation) {
+            return "/home/installations";
           }
-          // if (user.useraccess?.administrative_procedures) {
-          //   return "/home/administrative_procedures";
-          // }
-          return "/home/settings/account";
+          return "/home/calendar";
         }
         return "/home/installations";
       }
