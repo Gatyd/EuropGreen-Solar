@@ -1,0 +1,37 @@
+{% extends 'emails/base.html' %}
+{% block content %}
+  <h2 style="margin:0 0 12px 0; font-size:18px;">Nouvelle candidature collaborateur</h2>
+  <p style="margin:0 0 12px 0;">Vous avez reçu une nouvelle candidature pour rejoindre l'équipe EuropGreen Solar.</p>
+  
+  <table style="width:100%; margin:12px 0; border-collapse:collapse;">
+    <tr>
+      <td style="padding:8px; color:#555;">Nom complet</td>
+      <td style="padding:8px; font-weight:600;">{{ first_name }} {{ last_name }}</td>
+    </tr>
+    <tr>
+      <td style="padding:8px; color:#555;">Email</td>
+      <td style="padding:8px;">
+        <a href="mailto:{{ email }}" style="color:#2563eb; text-decoration:none;">{{ email }}</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px; color:#555;">Téléphone</td>
+      <td style="padding:8px;">
+        <a href="tel:{{ phone }}" style="color:#2563eb; text-decoration:none;">{{ phone }}</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px; color:#555;">Rôle souhaité</td>
+      <td style="padding:8px; font-weight:600;">{{ role }}</td>
+    </tr>
+  </table>
+  
+  <div style="background:#f7f7f7; padding:12px; border-radius:6px;">
+    <div style="font-weight:600; margin-bottom:6px;">Message / Motivations</div>
+    <div style="white-space:pre-wrap; line-height:1.5;">{{ message }}</div>
+  </div>
+  
+  <div style="margin-top:16px;">
+    <a href="mailto:{{ email }}" style="display:inline-block; background:#2563eb; color:#fff; padding:10px 14px; border-radius:6px; text-decoration:none;">Répondre au candidat</a>
+  </div>
+{% endblock %}
