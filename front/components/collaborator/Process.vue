@@ -35,21 +35,54 @@ const steps = [
     }
 ]
 
+const active = ref(0)
+
 onMounted(() => {
     if (!sectionRef.value) return
 
-    gsap.from(sectionRef.value.querySelectorAll('.animate-item'), {
+    // Animation pour le header
+    gsap.from(sectionRef.value.querySelector('.header-animate'), {
         scrollTrigger: {
             trigger: sectionRef.value,
             start: 'top 70%',
             toggleActions: 'play none none none'
         },
         opacity: 0,
-        y: 40,
-        stagger: 0.15,
+        y: 30,
         duration: 0.8,
         ease: 'power3.out'
     })
+
+    // Animation pour la timeline
+    gsap.from(sectionRef.value.querySelector('.timeline-animate'), {
+        scrollTrigger: {
+            trigger: sectionRef.value.querySelector('.timeline-animate'),
+            start: 'top 70%',
+            toggleActions: 'play none none none'
+        },
+        opacity: 0,
+        y: 40,
+        duration: 0.8,
+        ease: 'power3.out'
+    })
+
+    // Animation pour la card finale
+    gsap.from(sectionRef.value.querySelector('.final-card-animate'), {
+        scrollTrigger: {
+            trigger: sectionRef.value.querySelector('.final-card-animate'),
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+        },
+        opacity: 0,
+        y: 30,
+        duration: 0.8,
+        ease: 'power3.out'
+    })
+
+    // Auto-cycle pour la timeline
+    setInterval(() => {
+        active.value = (active.value + 1) % steps.length
+    }, 3000)
 })
 </script>
 
@@ -57,8 +90,9 @@ onMounted(() => {
     <section ref="sectionRef" class="py-20 sm:py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Header -->
-            <div class="text-center mb-16 animate-item">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold mb-6">
+            <div class="text-center mb-16 header-animate">
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold mb-6">
                     <UIcon name="i-heroicons-clipboard-document-list" class="w-4 h-4" />
                     <span>Comment ça fonctionne</span>
                 </div>
@@ -72,42 +106,10 @@ onMounted(() => {
                 </p>
             </div>
 
-            <!-- Timeline -->
-            <div class="animate-item max-w-4xl mx-auto">
-                <UTimeline :items="steps" />
-            </div>
-
-            <!-- Info complémentaire -->
-            <div class="mt-16 animate-item">
-                <div class="max-w-4xl mx-auto">
-                    <UCard class="bg-white border-2 border-gray-200">
-                        <div class="grid md:grid-cols-3 gap-8 p-6">
-                            <div class="text-center space-y-2">
-                                <div class="text-3xl font-bold text-primary-600">
-                                    <UIcon name="i-heroicons-clock" class="inline w-8 h-8" />
-                                </div>
-                                <p class="text-lg font-semibold text-gray-900">Flexibilité totale</p>
-                                <p class="text-sm text-gray-600">Travaillez à votre rythme, selon vos disponibilités</p>
-                            </div>
-
-                            <div class="text-center space-y-2">
-                                <div class="text-3xl font-bold text-primary-600">
-                                    <UIcon name="i-heroicons-map-pin" class="inline w-8 h-8" />
-                                </div>
-                                <p class="text-lg font-semibold text-gray-900">Sans contrainte géographique</p>
-                                <p class="text-sm text-gray-600">Développez votre réseau partout en France</p>
-                            </div>
-
-                            <div class="text-center space-y-2">
-                                <div class="text-3xl font-bold text-primary-600">
-                                    <UIcon name="i-heroicons-arrow-trending-up" class="inline w-8 h-8" />
-                                </div>
-                                <p class="text-lg font-semibold text-gray-900">Évolution constante</p>
-                                <p class="text-sm text-gray-600">Plus vous développez, plus vous gagnez</p>
-                            </div>
-                        </div>
-                    </UCard>
-                </div>
+            <!-- Timeline avec animation -->
+            <div class="timeline-animate max-w-4xl mx-auto">
+                <UTimeline v-model="active" size="3xl" :items="steps"
+                    :ui="{ title: 'text-lg', description: 'text-md' }" />
             </div>
         </div>
     </section>
