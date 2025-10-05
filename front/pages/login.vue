@@ -109,11 +109,11 @@ async function onSubmit(event: any) {
             <div class="text-center space-y-4">
                 <div class="text-sm text-gray-600 font-poppins">
                     En vous connectant, vous acceptez nos
-                    <ULink to="/terms" class="text-primary hover:text-secondary font-medium">
+                    <ULink to="/terms" target="_blank" class="text-primary hover:text-secondary font-medium">
                         Conditions d'utilisation
                     </ULink>
                     et notre
-                    <ULink to="/privacy" class="text-primary hover:text-secondary font-medium">
+                    <ULink to="/privacy" target="_blank" class="text-primary hover:text-secondary font-medium">
                         Politique de confidentialité
                     </ULink>
                 </div>

@@ -63,6 +63,19 @@ const dropdownItems: DropdownMenuItem[] = [
     ]
 ]
 
+const footerItems: NavigationMenuItem[] = [
+  {
+    label: 'Conditions Générales',
+    to: '/terms',
+    target: '_blank'
+  },
+  {
+    label: 'Politique de Confidentialité',
+    to: '/privacy',
+    target: '_blank'
+  }
+]
+
 </script>
 
 <template>
@@ -125,15 +138,13 @@ const dropdownItems: DropdownMenuItem[] = [
 
     <UFooter>
         <template #left>
-            <p class="text-muted text-sm">Copyright © {{ new Date().getFullYear() }}</p>
+            <p class="text-muted text-sm">© {{ new Date().getFullYear() }} EUROP' GREEN SOLAR - Tous droits réservés</p>
         </template>
 
         <!-- <UNavigationMenu :items="footerItems" variant="link" /> -->
 
         <template #right>
-            <UButton icon="i-simple-icons-facebook" variant="ghost" to="#" target="_blank" aria-label="Discord" />
-            <UButton icon="i-simple-icons-instagram" variant="ghost" to="#" target="_blank" aria-label="X" />
-            <UButton icon="i-simple-icons-tiktok" variant="ghost" to="#" target="_blank" aria-label="GitHub" />
+            <UNavigationMenu :items="footerItems" variant="link" />
         </template>
     </UFooter>
 </template>
