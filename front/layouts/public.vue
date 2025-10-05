@@ -40,7 +40,7 @@ const showHeader = () => {
 const handleScroll = () => {
     const currentScrollPosition = window.scrollY
 
-    if (currentScrollPosition > lastScrollPosition.value && currentScrollPosition > 64) {
+    if (currentScrollPosition > lastScrollPosition.value && currentScrollPosition > 80) {
         hideHeader()
     } else if (currentScrollPosition < lastScrollPosition.value - 1) {
         showHeader()
@@ -112,7 +112,7 @@ const dropdownItems: DropdownMenuItem[] = [
         {
             label: user.value?.is_superuser ? 'Tableau de bord' : user.value?.is_staff ? 'Calendrier' : 'Installation',
             to: `/home${user.value?.is_superuser ? '' : user.value?.is_staff ? '/calendar' : '/installations'}`,
-            icon: 'i-heroicons-question-mark-circle'
+            icon: `i-heroicons-${user.value?.is_superuser ? 'chart-bar' : user.value?.is_staff ? 'calendar' : 'wrench-screwdriver'}`
         },
         {
             label: 'Paramètres',
@@ -149,14 +149,14 @@ const footerItems: NavigationMenuItem[] = [
 
 <template>
     <div ref="headerRef" class="fixed top-0 left-0 right-0 z-50">
-        <UHeader class="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm">
+        <UHeader class="bg-white/95 h-20 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm">
             <template #left>
                 <NuxtLink to="/">
                     <Logo size="sm" />
                 </NuxtLink>
             </template>
 
-            <UNavigationMenu :items="items" />
+            <UNavigationMenu :items="items" :ui="{link: 'text-md'}" />
 
             <template #body>
                 <UNavigationMenu :items="items" orientation="vertical" class="-mx-2.5" />
@@ -183,7 +183,7 @@ const footerItems: NavigationMenuItem[] = [
                         :items="dropdownItems" :ui="{
                             content: 'w-48',
                         }">
-                        <UUser :ui="{ root: 'cursor-pointer' }"
+                        <UUser :ui="{ root: 'cursor-pointer' }" size="md"
                             :name="`${user.first_name.split(' ')[0]} ${user.last_name.split(' ')[0][0]}.`"
                             :avatar="{ alt: `${user.first_name.split(' ')[0]} ${user.last_name}` }" />
                     </UDropdownMenu>
