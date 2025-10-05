@@ -35,7 +35,6 @@ onMounted(() => {
     // S'assurer que les éléments sont visibles par défaut
     gsap.set(sectionRef.value.querySelector('.header-animate'), { opacity: 1, y: 0 })
     gsap.set(sectionRef.value.querySelectorAll('.card-animate'), { opacity: 1, y: 0 })
-    gsap.set(sectionRef.value.querySelector('.final-card-animate'), { opacity: 1, y: 0 })
 
     // Animation pour le header
     gsap.fromTo(sectionRef.value.querySelector('.header-animate'),
@@ -65,22 +64,6 @@ onMounted(() => {
             opacity: 1,
             y: 0,
             stagger: 0.15,
-            duration: 0.8,
-            ease: 'power3.out'
-        }
-    )
-
-    // Animation pour la card finale
-    gsap.fromTo(sectionRef.value.querySelector('.final-card-animate'),
-        { opacity: 0, y: 30 },
-        {
-            scrollTrigger: {
-                trigger: sectionRef.value.querySelector('.final-card-animate'),
-                start: 'top 80%',
-                toggleActions: 'play none none none'
-            },
-            opacity: 1,
-            y: 0,
             duration: 0.8,
             ease: 'power3.out'
         }

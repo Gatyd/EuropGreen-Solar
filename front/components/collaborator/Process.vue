@@ -66,19 +66,6 @@ onMounted(() => {
         ease: 'power3.out'
     })
 
-    // Animation pour la card finale
-    gsap.from(sectionRef.value.querySelector('.final-card-animate'), {
-        scrollTrigger: {
-            trigger: sectionRef.value.querySelector('.final-card-animate'),
-            start: 'top 80%',
-            toggleActions: 'play none none none'
-        },
-        opacity: 0,
-        y: 30,
-        duration: 0.8,
-        ease: 'power3.out'
-    })
-
     // Auto-cycle pour la timeline
     setInterval(() => {
         active.value = (active.value + 1) % steps.length
