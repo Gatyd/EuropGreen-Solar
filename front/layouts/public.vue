@@ -85,11 +85,11 @@ const items = computed<NavigationMenuItem[]>(() => [
         to: '/#parrainage',
         active: route.hash === '#parrainage'
     },
-    // {
-    //     label: 'Collaborateur',
-    //     to: '/collaborateur',
-    //     active: route.path === '/collaborateur'
-    // },
+    {
+        label: 'Collaborateur',
+        to: '/collaborateur',
+        active: route.path === '/collaborateur'
+    },
 ])
 
 const logout = async () => {
