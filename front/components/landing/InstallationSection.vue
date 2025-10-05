@@ -3,147 +3,107 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 if (import.meta.client) {
-  gsap.registerPlugin(ScrollTrigger)
+    gsap.registerPlugin(ScrollTrigger)
 }
 
 const sectionRef = ref<HTMLElement>()
 
 const steps = [
-  {
-    icon: 'i-heroicons-clipboard-document-check',
-    title: 'Visite technique',
-    description: 'Validation sur site et signature électronique du rapport de visite par le client et l\'installateur.'
-  },
-  {
-    icon: 'i-heroicons-document-text',
-    title: 'Mandat de représentation',
-    description: 'Signature simplifiée du mandat pour faciliter vos démarches administratives.'
-  },
-  {
-    icon: 'i-heroicons-shield-check',
-    title: 'Validation administrative',
-    description: 'Suivi transparent de l\'avancement de vos démarches administratives.'
-  },
-  {
-    icon: 'i-heroicons-wrench-screwdriver',
-    title: 'Installation réalisée',
-    description: 'Pose du matériel et signature du procès-verbal de fin de travaux.'
-  },
-  {
-    icon: 'i-heroicons-check-badge',
-    title: 'Visite CONSUEL',
-    description: 'Vérification et certification de la conformité de votre installation.'
-  },
-  {
-    icon: 'i-heroicons-bolt',
-    title: 'Raccordement ENEDIS',
-    description: 'Connexion effective de votre installation au réseau électrique national.'
-  },
-  {
-    icon: 'i-heroicons-rocket-launch',
-    title: 'Mise en service',
-    description: 'Installation opérationnelle. Remise du procès-verbal de réception finale.'
-  }
+    {
+        icon: 'i-heroicons-clipboard-document-check',
+        title: 'Visite technique',
+        description: 'Notre technicien se déplace chez vous pour valider la faisabilité du projet. À l\'issue de cette visite, un rapport détaillé est généré et signé électroniquement par le client et l\'installateur.',
+        color: 'primary' as const
+    },
+    {
+        icon: 'i-heroicons-document-text',
+        title: 'Mandat de représentation',
+        description: 'Pour simplifier vos démarches administratives, nous créons ensemble un mandat de représentation. Ce document nous autorise à effectuer les démarches en votre nom.',
+        color: 'primary' as const
+    },
+    {
+        icon: 'i-heroicons-shield-check',
+        title: 'Validation administrative',
+        description: 'Nous nous occupons de toutes les démarches administratives nécessaires : déclaration préalable en mairie, demande de raccordement Enedis, dossier CONSUEL, etc. Vous suivez l\'avancement en temps réel.',
+        color: 'primary' as const
+    },
+    {
+        icon: 'i-heroicons-wrench-screwdriver',
+        title: 'Installation physique',
+        description: 'Nos équipes certifiées procèdent à l\'installation complète de votre système photovoltaïque. Un procès-verbal de fin de travaux est signé à l\'issue de l\'installation.',
+        color: 'primary' as const
+    },
+    {
+        icon: 'i-heroicons-check-badge',
+        title: 'Visite CONSUEL',
+        description: 'Le CONSUEL (Comité National pour la Sécurité des Usagers de l\'Électricité) vérifie la conformité de votre installation électrique. L\'attestation obtenue est indispensable pour le raccordement.',
+        color: 'primary' as const
+    },
+    {
+        icon: 'i-heroicons-bolt',
+        title: 'Raccordement Enedis',
+        description: 'Une fois la conformité CONSUEL validée, Enedis procède au raccordement physique de votre installation au réseau électrique national. Votre compteur est mis à jour ou remplacé.',
+        color: 'primary' as const
+    },
+    {
+        icon: 'i-heroicons-rocket-launch',
+        title: 'Mise en service',
+        description: 'Votre installation est opérationnelle ! Nous remettons le procès-verbal de réception et vous accompagnons pour la prise en main de votre système de production solaire.',
+        color: 'primary' as const
+    }
 ]
+const active = ref(0)
 
 onMounted(() => {
-  if (!sectionRef.value) return
+    if (!sectionRef.value) return
 
-  gsap.from(sectionRef.value.querySelectorAll('.animate-item'), {
-    scrollTrigger: {
-      trigger: sectionRef.value,
-      start: 'top 70%',
-      toggleActions: 'play none none none'
-    },
-    opacity: 0,
-    y: 40,
-    stagger: 0.15,
-    duration: 0.8,
-    ease: 'power3.out'
-  })
+    gsap.from(sectionRef.value.querySelectorAll('.animate-item'), {
+        scrollTrigger: {
+            trigger: sectionRef.value,
+            start: 'top 70%',
+            toggleActions: 'play none none none'
+        },
+        opacity: 0,
+        y: 40,
+        stagger: 0.2,
+        duration: 0.8,
+        ease: 'power3.out'
+    })
+
+    setInterval(() => {
+        active.value = (active.value + 1) % steps.length
+    }, 2000)
+
 })
 </script>
 
 <template>
-  <section id="installation" ref="sectionRef" class="py-20 sm:py-24 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Header -->
-      <div class="text-center mb-16 animate-item">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold mb-6">
-          <UIcon name="i-heroicons-rocket-launch" class="w-4 h-4" />
-          <span>Suivi d'installation</span>
-        </div>
-        <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-          Suivez votre projet
-          <span class="block sm:inline text-primary-600">étape par étape</span>
-        </h2>
-        <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          Visualisez en temps réel l'avancement de votre installation, signez électroniquement vos documents
-          et accédez à l'ensemble de vos pièces administratives 24h/24.
-        </p>
-      </div>
-
-      <!-- Timeline -->
-      <div class="max-w-4xl mx-auto space-y-6">
-        <div v-for="(step, index) in steps" :key="index" class="animate-item">
-          <div class="flex gap-6">
-            <!-- Icon -->
-            <div class="flex flex-col items-center">
-              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center ring-4 ring-white shadow-md">
-                <UIcon :name="step.icon" class="w-6 h-6" />
-              </div>
-              <div v-if="index < steps.length - 1" class="w-px bg-gray-200 flex-1 my-2"></div>
-            </div>
-            
-            <!-- Content -->
-            <div class="flex-1 pb-8">
-              <UCard class="hover:shadow-lg transition-shadow duration-300">
-                <div class="flex items-start gap-4 p-4">
-                  <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold text-sm">
-                    {{ index + 1 }}
-                  </div>
-                  <div class="flex-1">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ step.title }}</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed">{{ step.description }}</p>
-                  </div>
+    <section id="installation" ref="sectionRef" class="py-20 sm:py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="text-center mb-16 animate-item">
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold mb-6">
+                    <UIcon name="i-heroicons-wrench-screwdriver" class="w-4 h-4" />
+                    <span>Suivi d'installation</span>
                 </div>
-              </UCard>
+                <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+                    Suivez votre projet
+                    <span class="block sm:inline text-primary-600">étape par étape</span>
+                </h2>
+                <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                    Visualisez en temps réel l'avancement de votre installation photovoltaïque.
+                    De la visite technique à la mise en service, chaque étape est documentée et accessible dans votre
+                    espace personnel. <em class="text-secondary font-semibold">Vous recevez un email à chaque validation
+                        d'étape.</em>
+                </p>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Feature Card -->
-      <div class="mt-16 animate-item">
-        <UCard class="max-w-4xl mx-auto bg-gradient-to-br from-primary-50 to-secondary-50 border-2 border-primary-200">
-          <div class="flex flex-col md:flex-row items-center gap-6 p-6">
-            <div class="flex-shrink-0">
-              <div class="w-16 h-16 rounded-2xl bg-primary-600 text-white flex items-center justify-center">
-                <UIcon name="i-heroicons-finger-print" class="w-8 h-8" />
-              </div>
+            <!-- Timeline détaillée -->
+            <div class="animate-item max-w-4xl mx-auto">
+                <UTimeline v-model="active" size="3xl" :items="steps"
+                    :ui="{ title: 'text-lg', description: 'text-md' }" />
             </div>
-            <div class="flex-1 text-center md:text-left">
-              <h3 class="text-xl font-bold text-gray-900 mb-2">
-                Signature électronique sécurisée
-              </h3>
-              <p class="text-gray-700">
-                Signez tous vos documents depuis n'importe quel appareil. 
-                Valeur juridique identique à une signature manuscrite.
-              </p>
-            </div>
-            <UButton 
-              to="/login" 
-              size="lg" 
-              color="primary"
-              icon="i-heroicons-document-check"
-              trailing
-              class="flex-shrink-0"
-            >
-              Mes documents
-            </UButton>
-          </div>
-        </UCard>
-      </div>
-    </div>
-  </section>
+        </div>
+    </section>
 </template>
