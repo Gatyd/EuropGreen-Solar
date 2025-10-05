@@ -14,6 +14,7 @@ from administrative.serializers import Cerfa16702Serializer, ElectricalDiagramSe
 from invoices.serializers import InvoiceSerializer
 from billing.serializers import QuotePDFSerializer
 from offers.serializers import OfferBaseSerializer
+from offers.models import Offer
 
 class SignatureSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -101,6 +102,7 @@ class UserMiniSerializer(serializers.Serializer):
 class FormSerializer(serializers.ModelSerializer):
 	client = UserMiniSerializer(read_only=True)
 	offer = OfferBaseSerializer(read_only=True)
+	offer_id = serializers.PrimaryKeyRelatedField(source='offer', queryset=Offer.objects.all(), write_only=True)
 	
 	class Meta:
 		model = Form
@@ -109,7 +111,7 @@ class FormSerializer(serializers.ModelSerializer):
 			'installation_power', 'installation_type', 'status',
 			'commission_amount', 'commission_paid',
 			'sales_commission_amount', 'sales_commission_paid',
-			'created_by', 'created_at', 'updated_at',
+			'created_by', 'created_at', 'updated_at', 'offer_id'
 		]
 		read_only_fields = ['id', 'created_by', 'commission_amount', 'sales_commission_amount', 'created_at', 'updated_at']
 

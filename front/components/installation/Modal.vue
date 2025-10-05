@@ -45,7 +45,7 @@ const submit = async () => {
     const toast = useToast()
     loading.value = true
     const payload = {
-        offer: props.offer.id,
+        offer_id: props.offer.id,
         client_first_name: state.client_first_name,
         client_last_name: state.client_last_name,
         client_address: state.client_address,
