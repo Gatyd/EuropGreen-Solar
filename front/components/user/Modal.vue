@@ -71,6 +71,8 @@ const handleRolesLoaded = (roles: Role[]) => {
     // Si on a un utilisateur en attente, on peut maintenant assigner son rôle
     if (props.user) {
         selectedRole.value = createRoleFromUser(props.user)
+    } else {
+        selectedRole.value = null
     }
 }
 
@@ -138,17 +140,8 @@ watch(() => props.user, (newUser) => {
             selectedRole.value = createRoleFromUser(newUser)
         }
         // Sinon, ce sera fait dans handleRolesLoaded
-    } else {
-        resetForm()
-        selectedRole.value = null
     }
 }, { immediate: true })
-
-watch(() => props.modelValue, (newValue) => {
-    if (!newValue) {
-        resetForm()
-    }
-})
 
 const closeModal = () => {
     emit('update:modelValue', false)

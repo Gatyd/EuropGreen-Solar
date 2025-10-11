@@ -129,15 +129,15 @@ onMounted(() => {
                             <div class="grid sm:grid-cols-3 gap-4">
                                 <UFormField label="Prénom" required>
                                     <UInput v-model="firstName" placeholder="Jean" :disabled="sending"
-                                        icon="i-heroicons-user" class="w-full" />
+                                        icon="i-heroicons-user" class="w-full" size="lg" />
                                 </UFormField>
                                 <UFormField label="Nom" required>
                                     <UInput v-model="lastName" placeholder="Dupont" :disabled="sending"
-                                        icon="i-heroicons-user" class="w-full" />
+                                        icon="i-heroicons-user" class="w-full" size="lg" />
                                 </UFormField>
                                 <UFormField label="Téléphone" required>
                                     <UInput v-model="phone" type="tel" placeholder="06 12 34 56 78" :disabled="sending"
-                                        icon="i-heroicons-phone" class="w-full" />
+                                        icon="i-heroicons-phone" class="w-full" size="lg" />
                                 </UFormField>
                             </div>
 
@@ -145,11 +145,11 @@ onMounted(() => {
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <UFormField label="Email" required>
                                     <UInput v-model="email" type="email" placeholder="jean.dupont@exemple.fr"
-                                        :disabled="sending" icon="i-heroicons-envelope" class="w-full" />
+                                        :disabled="sending" icon="i-heroicons-envelope" class="w-full" size="lg" />
                                 </UFormField>
                                 <UFormField label="Rôle souhaité (optionnel)">
                                     <UInput v-model="role" placeholder="Ex: Commercial, Installateur, Collaborateur..."
-                                        :disabled="sending" icon="i-heroicons-briefcase" class="w-full" />
+                                        :disabled="sending" icon="i-heroicons-briefcase" class="w-full" size="lg" />
                                 </UFormField>
                             </div>
 
@@ -158,7 +158,7 @@ onMounted(() => {
                                 <UFormField label="Votre message / Motivations" required>
                                     <UTextarea v-model="message" :rows="10" :maxlength="charLimit"
                                         placeholder="Parlez-nous de votre parcours, vos compétences, et ce qui vous motive à rejoindre notre équipe..."
-                                        :disabled="sending" class="w-full" />
+                                        :disabled="sending" class="w-full" size="lg" />
                                 </UFormField>
                                 <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                                     <span>Décrivez précisément votre profil et vos motivations.</span>
@@ -172,11 +172,11 @@ onMounted(() => {
                             <div class="flex justify-end gap-2 pt-2">
                                 <UButton variant="ghost" color="neutral" label="Réinitialiser"
                                     :disabled="!firstName && !lastName && !email && !phone && !role && !message"
-                                    @click="resetForm" />
+                                    @click="resetForm" size="lg" />
                                 <UButton color="primary"
                                     :disabled="!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim() || !message.trim() || remaining < 0"
                                     :loading="sending" label="Envoyer ma candidature" icon="i-heroicons-paper-airplane"
-                                    @click="submit" />
+                                    @click="submit" size="lg" />
                             </div>
                         </div>
 
@@ -196,8 +196,8 @@ onMounted(() => {
                                 </p>
                             </div>
                             <div class="flex justify-center gap-3">
-                                <UButton variant="ghost" color="neutral" label="Retour" @click="$router.back()" />
-                                <UButton color="primary" label="Nouvelle candidature" @click="newApplication" />
+                                <UButton variant="ghost" size="lg" color="neutral" label="Retour" @click="$router.back()" />
+                                <UButton color="primary" size="lg" label="Nouvelle candidature" @click="newApplication" />
                             </div>
                         </div>
                     </transition>
@@ -210,9 +210,9 @@ onMounted(() => {
                     </p>
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <UButton to="mailto:contact@egs-solaire.fr" variant="outline" color="neutral"
-                            icon="i-heroicons-envelope" label="contact@egs-solaire.fr" external />
+                            icon="i-heroicons-envelope" label="contact@egs-solaire.fr" external size="lg" />
                         <UButton to="tel:+33123456789" variant="outline" color="neutral" icon="i-heroicons-phone"
-                            label="01 23 45 67 89" external />
+                            label="01 23 45 67 89" external size="lg" />
                     </div>
                 </div>
             </div>

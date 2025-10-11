@@ -29,6 +29,7 @@ class OfferViewSet(
 	permission_classes = [HasOfferAccess]
 
 	def get_queryset(self):
+		user = self.request.user
 		qs = Offer.objects.filter(installation_moved_at__isnull=True, returned_to_request_at__isnull=True).order_by('-created_at')
 		status_param = self.request.query_params.get('status')
 		if status_param:
@@ -50,6 +51,10 @@ class OfferViewSet(
 				| Q(email__icontains=s)
 				| Q(phone__icontains=s)
 				| Q(address__icontains=s)
+			)
+		if not user.is_superuser and user.is_staff:
+			qs = qs.filter(
+				Q(request__assigned_to_id=user.id) | Q(request__created_by_id=user.id) | Q(request__source_id=user.id)
 			)
 		return qs
 
