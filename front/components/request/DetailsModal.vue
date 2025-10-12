@@ -87,6 +87,15 @@ const getSourceLabel = (source: ProspectSource): string => {
                         <div class="text-sm text-blue-600">Rendez-vous</div>
                         <div class="font-medium">{{ new Date(item.appointment_date).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) }}</div>
                     </div>
+                    <!-- Commissions (superadmin only) -->
+                    <div v-if="auth.user?.is_superuser && item.commission_value && (item.source_type === 'collaborator' || item.source_type === 'client')">
+                        <div class="text-sm text-gray-500">Commission source</div>
+                        <div class="font-medium">{{ item.commission_type === 'percentage' ? `${item.commission_value}%` : `${item.commission_value}€` }}</div>
+                    </div>
+                    <div v-if="auth.user?.is_superuser && item.sales_commission_value && item.assigned_to">
+                        <div class="text-sm text-blue-600">Commission commercial</div>
+                        <div class="font-medium">{{ item.sales_commission_type === 'percentage' ? `${item.sales_commission_value}%` : `${item.sales_commission_value}€` }}</div>
+                    </div>
                     <div v-if="item.created_by && auth.user?.is_superuser">
                         <div class="text-sm text-gray-500">Créée par</div>
                         <div class="font-medium">{{ item.created_by.first_name }} {{ item.created_by.last_name }}</div>

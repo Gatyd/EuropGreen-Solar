@@ -37,6 +37,12 @@ export interface ProspectRequest {
   } | null;
   // Décision finale après clôture : true = converti, false = abandonné, null/undefined = non décidé
   converted_decision?: boolean | null;
+  // Commissions de la source (collaborateur/client)
+  commission_type?: 'percentage' | 'value';
+  commission_value?: number;
+  // Commissions du commercial
+  sales_commission_type?: 'percentage' | 'value';
+  sales_commission_value?: number;
   // Info minimale de l'offre liée (backend SerializerMethodField)
   offer?: { id: string; status: string } | null;
 //   notes?: string;
@@ -57,5 +63,11 @@ export interface ProspectRequestPayload {
   source_id?: string;
   appointment_date?: string | null;
   assigned_to_id?: string;
+  // Commissions de la source (collaborateur/client)
+  commission_type?: 'percentage' | 'value';
+  commission_value?: number;
+  // Commissions du commercial
+  sales_commission_type?: 'percentage' | 'value';
+  sales_commission_value?: number;
 //   notes?: string;
 }

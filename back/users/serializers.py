@@ -6,7 +6,7 @@ from django.conf import settings
 import requests
 import secrets
 import string
-from .models import User, UserAccess, Role, Commission
+from .models import User, UserAccess, Role
 from installations.models import Form as InstallationForm
 
 
@@ -17,14 +17,6 @@ class UserAccessSerializer(serializers.ModelSerializer):
         model = UserAccess
         fields = ['installation', 'offers', 'requests', 'administrative_procedures']
 
-
-class CommissionSerializer(serializers.ModelSerializer):
-    """Serializer pour la gestion des commissions"""
-    
-    class Meta:
-        model = Commission
-        fields = ['type', 'value', 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
 
 class UserSerializer(serializers.ModelSerializer):
     useraccess = UserAccessSerializer(read_only=True)
@@ -39,12 +31,11 @@ class AdminUserSerializer(serializers.ModelSerializer):
     useraccess = UserAccessSerializer()
     installations_count = serializers.SerializerMethodField(read_only=True)
     last_installation = serializers.SerializerMethodField(read_only=True)
-    commission = serializers.SerializerMethodField(read_only=True)
     # password = serializers.CharField(write_only=True, required=False)
     
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'role', 'accept_invitation', 'is_active', 'is_staff', 'is_superuser', 'useraccess', 'installations_count', 'last_installation', 'commission']
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'role', 'accept_invitation', 'is_active', 'is_staff', 'is_superuser', 'useraccess', 'installations_count', 'last_installation']
         read_only_fields = ['id', 'accept_invitation', 'is_staff', 'is_superuser']
 
     def get_installations_count(self, obj: User):
@@ -87,17 +78,6 @@ class AdminUserSerializer(serializers.ModelSerializer):
             return payload
         except Exception:
             return None
-    
-    def get_commission(self, obj: User):
-        """Retourne la commission pour les commerciaux, collaborateurs et clients."""
-        # Ne retourner la commission que pour ces rôles spécifiques
-        if obj.role in [User.UserRoles.SALES, User.UserRoles.COLLABORATOR, User.UserRoles.CUSTOMER]:
-            try:
-                commission = obj.commission
-                return CommissionSerializer(commission).data
-            except Commission.DoesNotExist:
-                return None
-        return None
         
     def _set_user_permissions(self, user):
         """Définit les permissions selon le rôle"""

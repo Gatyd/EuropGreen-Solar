@@ -17,6 +17,10 @@ class ProspectRequest(models.Model):
 		CLIENT = "client", "Client"
 		COLLABORATOR = "collaborator", "Collaborateur"
 		COMMERCIAL = "commercial", "Commercial"
+	
+	class CommissionType(models.TextChoices):
+		PERCENTAGE = "percentage", "Pourcentage"
+		VALUE = "value", "Valeur fixe"
 
 	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 	last_name = models.CharField(max_length=100)
@@ -44,6 +48,35 @@ class ProspectRequest(models.Model):
 		blank=True,
 		related_name="assigned_requests",
 	)
+	
+	# Commissions de la source (collaborateur/client)
+	commission_type = models.CharField(
+		max_length=20, 
+		choices=CommissionType.choices, 
+		default=CommissionType.VALUE,
+		help_text="Type de commission pour la source (collaborateur/client)"
+	)
+	commission_value = models.DecimalField(
+		max_digits=10, 
+		decimal_places=2, 
+		default=0,
+		help_text="Valeur de la commission : pourcentage (ex: 15.50) ou montant fixe en euros"
+	)
+	
+	# Commissions du commercial (assigned_to)
+	sales_commission_type = models.CharField(
+		max_length=20, 
+		choices=CommissionType.choices, 
+		default=CommissionType.VALUE,
+		help_text="Type de commission pour le commercial"
+	)
+	sales_commission_value = models.DecimalField(
+		max_digits=10, 
+		decimal_places=2, 
+		default=0,
+		help_text="Valeur de la commission commerciale : pourcentage (ex: 15.50) ou montant fixe en euros"
+	)
+	
 	# notes = models.TextField(blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)

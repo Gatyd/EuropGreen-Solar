@@ -620,27 +620,23 @@ class QuoteViewSet(viewsets.ModelViewSet):
             if prospect_request:
                 # 1. Commission du collaborateur/client (source)
                 if prospect_request.source_type in ('collaborator', 'client') and prospect_request.source:
-                    source_user = prospect_request.source
-                    if hasattr(source_user, 'commission') and source_user.commission:
-                        user_commission = source_user.commission
-                        if user_commission.type == 'value':
-                            # Montant fixe
-                            commission_amount = user_commission.value
-                        elif user_commission.type == 'percentage':
-                            # Pourcentage sur le montant HT (subtotal)
-                            commission_amount = (quote.subtotal * user_commission.value / Decimal('100')).quantize(Decimal('0.01'))
+                    # Calculer depuis les champs de commission de la demande
+                    if prospect_request.commission_type == 'value':
+                        # Montant fixe
+                        commission_amount = prospect_request.commission_value
+                    elif prospect_request.commission_type == 'percentage':
+                        # Pourcentage sur le montant HT (subtotal)
+                        commission_amount = (quote.subtotal * prospect_request.commission_value / Decimal('100')).quantize(Decimal('0.01'))
                 
                 # 2. Commission du commercial (assigned_to)
                 if prospect_request.assigned_to:
-                    sales_user = prospect_request.assigned_to
-                    if hasattr(sales_user, 'commission') and sales_user.commission:
-                        sales_user_commission = sales_user.commission
-                        if sales_user_commission.type == 'value':
-                            # Montant fixe
-                            sales_commission_amount = sales_user_commission.value
-                        elif sales_user_commission.type == 'percentage':
-                            # Pourcentage sur le montant HT (subtotal)
-                            sales_commission_amount = (quote.subtotal * sales_user_commission.value / Decimal('100')).quantize(Decimal('0.01'))
+                    # Calculer depuis les champs de commission commerciale de la demande
+                    if prospect_request.sales_commission_type == 'value':
+                        # Montant fixe
+                        sales_commission_amount = prospect_request.sales_commission_value
+                    elif prospect_request.sales_commission_type == 'percentage':
+                        # Pourcentage sur le montant HT (subtotal)
+                        sales_commission_amount = (quote.subtotal * prospect_request.sales_commission_value / Decimal('100')).quantize(Decimal('0.01'))
         except Exception as e:
             # En cas d'erreur, on laisse les commissions à 0 et on continue
             logger.warning(f"Erreur lors du calcul des commissions pour le devis {quote.id}: {e}")

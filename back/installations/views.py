@@ -15,7 +15,7 @@ from EuropGreenSolar.utils.helpers import get_client_ip, decode_data_url_image
 from billing.models import Quote
 from billing.views import render_quote_pdf
 from EuropGreenSolar.email_utils import send_mail
-from users.models import User, Commission
+from users.models import User
 import secrets, string
 from django.utils import timezone
 from authentication.permissions import HasInstallationAccess
@@ -287,8 +287,6 @@ class FormViewSet(viewsets.ModelViewSet):
 					role=User.UserRoles.CUSTOMER,
 					password=password_for_email,
 				)
-			if not hasattr(user, 'commission'):
-				Commission.objects.create(user=user, type=Commission.CommissionType.VALUE, value=150)
 			# Si le modèle a un champ client, lier l'utilisateur (optionnel)
 			if hasattr(form, 'client'):
 				form.client = user

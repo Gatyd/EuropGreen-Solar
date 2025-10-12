@@ -65,6 +65,15 @@ const convertToOffer = async () => {
         </div> -->
         <div v-if="auth.user?.is_superuser && item.assigned_to" class="mt-2 pt-2 border-t text-xs text-gray-500">
             Chargé d'affaire: {{ item.assigned_to.first_name }} {{ item.assigned_to.last_name }}
+            <span v-if="item.sales_commission_value && item.assigned_to">(Commission: {{ item.sales_commission_type ===
+                'percentage' ? `${item.sales_commission_value}%` : `${item.sales_commission_value}€` }})</span>
+        </div>
+        <div v-if="item.commission_value && (item.source_type === 'collaborator' || item.source_type === 'client')"
+            class="mt-2 pt-2 border-t text-xs space-y-1 text-gray-600">
+            <span class="font-medium">
+                Commission {{ !auth.user?.is_superuser ? '' : item.source_type === 'collaborator' ? 'collaborateur' : 'client'}}:
+                {{ item.commission_type === 'percentage' ? `${item.commission_value}%` : `${item.commission_value}€` }}
+            </span>
         </div>
         <div class="mt-2 flex flex-wrap gap-2 justify-end">
             <!-- Si fermé et pas encore de décision -->

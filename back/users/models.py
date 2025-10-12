@@ -107,32 +107,6 @@ class Role(models.Model):
         return self.name
 
 
-class Commission(models.Model):
-    """Commission associée à un utilisateur (commercial, collaborateur ou client).
-    
-    Permet de définir soit un pourcentage, soit une valeur fixe de commission.
-    """
-    
-    class CommissionType(models.TextChoices):
-        PERCENTAGE = "percentage", "Pourcentage"
-        VALUE = "value", "Valeur fixe"
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='commission', primary_key=True)
-    type = models.CharField(max_length=20, choices=CommissionType.choices, default=CommissionType.PERCENTAGE)
-    value = models.DecimalField(max_digits=10, decimal_places=2, help_text="Pourcentage (ex: 15.50) ou valeur fixe en euros")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'users_commission'
-        verbose_name = "Commission"
-        verbose_name_plural = "Commissions"
-    
-    def __str__(self):
-        user_display = self.user.get_full_name() or self.user.email
-        if self.type == self.CommissionType.PERCENTAGE:
-            return f"Commission de {user_display} - {self.value}%"
-        return f"Commission de {user_display} - {self.value}€"
 
 
 class PasswordResetToken(models.Model):

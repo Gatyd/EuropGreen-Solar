@@ -20,7 +20,6 @@ const users = ref<User[] | undefined>([])
 const table = useTemplateRef('table')
 const router = useRouter()
 const auth = useAuthStore()
-const commissionModal = ref(false)
 const selectedUser = ref<User | undefined>(undefined)
 
 const links: NavigationMenuItem[][] = [[{
@@ -41,7 +40,6 @@ const attributLabels: { [key: string]: string } = {
 	is_active: 'Compte',
 	status: 'Statut',
 	installer: 'Installateur',
-	commission: 'Commission',
 	commission_amount: 'Montant commission',
 	commission_paid: 'Statut paiement',
 	actions: 'Actions'
@@ -55,6 +53,7 @@ async function fetchUsers() {
 		}),
 		toast
 	)
+	console.log('Fetched users:', result)
 	users.value = result || undefined
 	loading.value = false
 }
@@ -132,16 +131,7 @@ const columns: TableColumn<User>[] = [{
 					onAssigned: async () => {
 						await fetchUsers()
 					}
-				}),
-				h(UTooltip, { text: 'Gérer la commission', delayDuration: 0 }, () =>
-					h(UButton, {
-						icon: 'i-heroicons-percent-badge', color: 'neutral', variant: 'ghost',
-						onClick() {
-							selectedUser.value = row.original
-							commissionModal.value = true
-						}
-					})
-				)
+				})
 			)
 		}
 		return h('div', { class: 'space-x-2' }, defaultActions)
@@ -216,21 +206,6 @@ if (auth.user?.is_superuser) {
 	const statusIndex = columns.findIndex(c => (c as any).accessorKey === 'status' || (c as any).id === 'status')
 	const insertIndex = statusIndex >= 0 ? statusIndex + 1 : columns.length - 1
 	columns.splice(Math.min(Math.max(insertIndex, 0), columns.length), 0, installerColumn)
-
-	// Colonne 'commission' ajoutée uniquement pour les superadmins, juste après 'installer'
-	const commissionColumn: TableColumn<User> = {
-		accessorKey: 'commission',
-		header: 'Commission',
-		cell: ({ row }) => {
-			if (!row.original.commission) return '—'
-			const value = row.original.commission.value
-			const type = row.original.commission.type
-			return type === 'percentage' ? `${value} %` : `${value} €`
-		}
-	}
-	const installerIndex = columns.findIndex(c => (c as any).accessorKey === 'installer')
-	const insertCommissionIndex = installerIndex >= 0 ? installerIndex + 1 : columns.length - 1
-	columns.splice(Math.min(Math.max(insertCommissionIndex, 0), columns.length), 0, commissionColumn)
 }
 
 const pagination = ref({
@@ -252,9 +227,6 @@ onMounted(fetchUsers)
 				<UNavigationMenu :items="links" />
 			</UDashboardToolbar>
 		</div>
-
-		<UserCommissionModal v-if="selectedUser && auth.user?.is_superuser" v-model="commissionModal"
-			:user="selectedUser" @submit="fetchUsers" />
 
 		<UDashboardToolbar class="lg:mt-4 lg:ps-3">
 			<template #left>

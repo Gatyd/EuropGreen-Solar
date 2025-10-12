@@ -30,6 +30,8 @@ class ProspectRequestSerializer(serializers.ModelSerializer):
             "electricity_bill", "status", "source_type", "source", "source_id", 
             "assigned_to", "assigned_to_id", # "notes",
             "converted_decision",
+            "commission_type", "commission_value", 
+            "sales_commission_type", "sales_commission_value",
             "created_at", "updated_at", "created_by", "appointment_date", "offer"
         ]
         read_only_fields = ["id", "created_at", "updated_at", "assigned_to", "created_by", "source"]

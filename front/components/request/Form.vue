@@ -85,36 +85,42 @@ const state = reactive<ProspectRequestPayload>({
     source_id: initialSourceId.value,
     appointment_date: null,
     assigned_to_id: initialAssignedToId.value,
+    // Commissions de la source (collaborateur/client)
+    commission_type: 'value',
+    commission_value: auth.user?.role === 'customer' ? 150 : 0,
+    // Commissions du commercial
+    sales_commission_type: 'value',
+    sales_commission_value: 0,
     // notes: ''
 })
 
 // Réinitialiser le formulaire quand le modal s'ouvre pour une nouvelle demande
 watch([() => auth.user, () => props.modelValue], ([user, model]) => {
-    
+
     // Si c'est une édition, le watcher modelValue s'en occupe
     if (model) {
         return
     }
-    
+
     // Pour une nouvelle demande, réappliquer les valeurs par défaut selon le rôle
     if (!model && user && userRoleSourceType.value) {
-        
+
         state.source_type = userRoleSourceType.value as ProspectSource
-        
+
         // Auto-remplir source_id pour collaborator et customer (client)
         if (user.role === 'collaborator' || user.role === 'customer') {
             state.source_id = user.id
         } else {
             state.source_id = undefined
         }
-        
+
         // Auto-remplir assigned_to_id pour sales
         if (user.role === 'sales') {
             state.assigned_to_id = user.id
         } else if (!user.is_superuser) {
             state.assigned_to_id = undefined
         }
-        
+
     }
 })
 
@@ -143,7 +149,11 @@ watch(() => props.modelValue, (v) => {
             status: v.status,
             source_type: v.source_type,
             appointment_date: v.appointment_date ? isoToLocalInput(v.appointment_date) : null,
-            electricity_bill: null
+            electricity_bill: null,
+            commission_type: v.commission_type || 'value',
+            commission_value: v.commission_value ?? 0,
+            sales_commission_type: v.sales_commission_type || 'value',
+            sales_commission_value: v.sales_commission_value ?? 0
         })
         state.assigned_to_id = v.assigned_to?.id
         state.source_id = v.source?.id
@@ -169,7 +179,7 @@ const submit = async () => {
     loading.value = true
     const form = new FormData()
     const toast = useToast()
-    
+
     form.append('last_name', state.last_name)
     form.append('first_name', state.first_name)
     form.append('email', state.email)
@@ -186,7 +196,13 @@ const submit = async () => {
     form.append('source_type', state.source_type)
     if (state.source_id) form.append('source_id', state.source_id)
     if (state.assigned_to_id) form.append('assigned_to_id', state.assigned_to_id)
-    
+
+    // Commissions
+    if (state.commission_type) form.append('commission_type', state.commission_type)
+    if (state.commission_value !== undefined) form.append('commission_value', state.commission_value.toString())
+    if (state.sales_commission_type) form.append('sales_commission_type', state.sales_commission_type)
+    if (state.sales_commission_value !== undefined) form.append('sales_commission_value', state.sales_commission_value.toString())
+
     // if (state.notes) form.append('notes', state.notes)
     const res = await apiRequest<ProspectRequest>(
         () => $fetch(`/api/requests/${props.modelValue ? `${props.modelValue.id}/` : ''}`,
@@ -204,7 +220,7 @@ const submit = async () => {
 
 <template>
     <UForm :state="state" :validate="validate" @submit="submit" class="w-full">
-        <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="grid grid-cols-3 gap-4 mb-6">
             <UFormField label="Nom" name="last_name" required>
                 <UInput v-model="state.last_name" class="w-full" />
             </UFormField>
@@ -220,9 +236,9 @@ const submit = async () => {
             <UFormField label="Adresse" name="address" required class="col-span-2">
                 <UInput v-model="state.address" class="w-full" />
             </UFormField>
-            <div class="space-y-4 col-span-2 md:col-span-1">
+            <div v-if="showSourceTypeSelect" class="space-y-4 col-span-3 md:col-span-1">
                 <!-- Source type : uniquement pour admin -->
-                <UFormField v-if="showSourceTypeSelect" label="Source de la demande" name="source_type" required>
+                <UFormField label="Source de la demande" name="source_type" required>
                     <USelect v-model="state.source_type" :items="sourceItems" class="w-full" />
                 </UFormField>
 
@@ -241,18 +257,40 @@ const submit = async () => {
                     name="source_id" required>
                     <UserSelectMenu v-model="state.source_id" role-filter="collaborator" class="w-full" />
                 </UFormField>
-
+                <div v-if="['collaborator', 'client'].includes(state.source_type)"
+                    class="grid grid-cols-7 gap-3 items-center">
+                    <UFormField class="col-span-4" label="Type de commission" name="commission_type">
+                        <USelect v-model="state.commission_type" :items="[
+                            { value: 'value', label: 'Montant fixe' },
+                            { value: 'percentage', label: 'Pourcentage' }
+                        ]" class="w-full" />
+                    </UFormField>
+                    <UFormField :label="state.commission_type === 'percentage' ? 'Pourcentage (%)' : 'Montant (€)'"
+                        name="commission_value" class="col-span-3">
+                        <UInput v-model.number="state.commission_value" type="number" step="0.01" min="0"
+                            :placeholder="state.commission_type === 'percentage' ? '15.50' : '500.00'" class="w-full" />
+                    </UFormField>
+                </div>
+            </div>
+            <div v-if="showAssignedToField" class="space-y-4 col-span-3 md:col-span-1">
                 <!-- Employé chargé d'affaire : uniquement pour admin -->
-                <UFormField v-if="showAssignedToField" label="Employé chargé d'affaire" name="assigned_to_id" :required="state.source_type === 'commercial'">
-                    <UserSelectMenu v-model="state.assigned_to_id" role-filter="sales" class="w-full" />
+                <UFormField v-if="showAssignedToField" label="Employé chargé d'affaire" name="assigned_to_id"
+                    :required="state.source_type === 'commercial'">
+                    <UserSelectMenu v-model="state.assigned_to_id" class="w-full" />
                 </UFormField>
-
-                <!-- Type de logement si pas admin -->
-                <UFormField v-if="!auth.user?.is_superuser" label="Type de logement (optionnel)" name="housing_type">
-                    <UInput v-model="state.housing_type" class="w-full" />
+                <UFormField label="Type de commission commercial" name="commission_type">
+                    <USelect v-model="state.sales_commission_type" :items="[
+                        { value: 'value', label: 'Montant fixe' },
+                        { value: 'percentage', label: 'Pourcentage' }
+                    ]" class="w-full" />
+                </UFormField>
+                <UFormField :label="state.sales_commission_type === 'percentage' ? 'Pourcentage commercial (%)' : 'Montant commercial (€)'"
+                    name="commission_value">
+                    <UInput v-model.number="state.sales_commission_value" type="number" step="0.01" min="0"
+                        :placeholder="state.sales_commission_type === 'percentage' ? '15.50' : '500.00'" class="w-full" />
                 </UFormField>
             </div>
-            <div class="space-y-3 col-span-2 md:col-span-1">
+            <div class="col-span-3" :class="auth.user?.is_superuser ? 'space-y-4 md:col-span-1' : 'grid grid-cols-2 gap-4'">
                 <UFormField label="Facture d'électricité (optionnelle)" description="JPG, PNG ou PDF"
                     name="electricity_bill">
                     <!-- Affichage du fichier existant en mode édition -->
@@ -267,13 +305,10 @@ const submit = async () => {
                     <UFileUpload icon="i-heroicons-arrow-up-tray-16-solid" v-model="state.electricity_bill"
                         class="w-full" />
                 </UFormField>
-                <UFormField v-if="auth.user?.is_superuser" label="Type de logement (optionnel)" name="housing_type">
+                <UFormField label="Type de logement (optionnel)" name="housing_type">
                     <UInput v-model="state.housing_type" class="w-full" />
                 </UFormField>
             </div>
-            <!-- <UFormField label="Notes" name="notes" class="col-span-2">
-				<UTextarea v-model="state.notes" :rows="3" />
-			</UFormField> -->
         </div>
         <div class="flex justify-center">
             <UButton type="submit" :loading="loading" icon="i-heroicons-check-circle" label="Valider" />

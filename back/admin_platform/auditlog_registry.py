@@ -19,7 +19,7 @@ from administrative.models import (
     EnedisMandate, Consuel
 )
 from planning.models import Task
-from users.models import UserAccess, Role, Commission, PasswordResetToken
+from users.models import UserAccess, Role, PasswordResetToken
 from admin_platform.models import EmailLog
 
 User = get_user_model()
@@ -36,7 +36,6 @@ auditlog.register(
 )
 auditlog.register(UserAccess)
 auditlog.register(Role)
-auditlog.register(Commission)
 # Pas besoin de logger PasswordResetToken (temporaire et sensible)
 
 # Requests (Prospects/Demandes)
