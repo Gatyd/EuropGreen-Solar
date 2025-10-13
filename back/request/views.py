@@ -134,7 +134,8 @@ class ProspectRequestViewSet(
 		return qs
 	
 	def perform_create(self, serializer):
-		instance = serializer.save(created_by=self.request.user)
+		user = self.request.user
+		instance = serializer.save(created_by=user)
 		# Envoi d'un email au chargé d'affaire (utilisateur assigné) s'il est défini
 		try:
 			success, msg = self._send_assignment_email(instance, instance.assigned_to)
@@ -147,7 +148,10 @@ class ProspectRequestViewSet(
 		try:
 			User = get_user_model()
             # On cible les superusers actifs avec un email défini
-			admins = list(User.objects.filter(is_superuser=True, is_active=True).exclude(email__isnull=True).exclude(email="").values_list('email', flat=True))
+			admins = list(
+				User.objects.filter(is_superuser=True, is_active=True).exclude(email__isnull=True)
+				.exclude(email="").exclude(email=user.email).values_list('email', flat=True)
+			)
 			if admins:
 				context = {
 					"prospect": instance,

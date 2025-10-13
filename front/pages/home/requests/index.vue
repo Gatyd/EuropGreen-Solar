@@ -69,7 +69,23 @@ const fetchAll = async () => {
     loading.value = false
 }
 
-onMounted(fetchAll)
+onMounted(async () => {
+    await fetchAll()
+    
+    // Vérifier si un prospect_id est dans l'URL
+    const route = useRoute()
+    const prospectId = route.query.prospect_id
+    if (prospectId) {
+        const prospect = allItems.value.find(p => String(p.id) === String(prospectId))
+        if (prospect) {
+            selected.value = prospect
+            detailsOpen.value = true
+            // Nettoyer l'URL sans recharger la page
+            const router = useRouter()
+            router.replace({ query: {} })
+        }
+    }
+})
 
 const onDrop = async (payload: { to: ProspectStatus, item: ProspectRequest }) => {
     const { to, item: card } = payload

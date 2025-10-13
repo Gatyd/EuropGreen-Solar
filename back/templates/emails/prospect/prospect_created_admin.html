@@ -59,8 +59,17 @@
     Créée par: {{ created_by.first_name }} {{ created_by.last_name }} ({{ created_by.email }})
   </p>
   {% endif %}
+
+  <!-- Bouton d'accès à la demande -->
+  <div style="text-align: center; margin: 24px 0;">
+    <a href="{{ frontend_url }}/home/requests?prospect_id={{ prospect.id }}" target="_blank"
+       style="display: inline-block; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-weight: 600; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-size: 16px; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);">
+      Voir la demande
+    </a>
+  </div>
+
   <p style="color:#374151; font-size:14px; line-height:1.6; margin:8px 0 0 0;">
-    Merci de consulter l’interface d’administration si une action est requise.
+    Merci de consulter l'interface d'administration si une action est requise.
   </p>
 {% endblock %}
 
