@@ -12,6 +12,39 @@ services:
       - .env
     depends_on:
       - db
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  celery-worker:
+    build: .
+    command: celery -A EuropGreenSolar worker -l info
+    volumes:
+      - .:/app
+      - /var/www/mon_projet/media:/app/media
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    build: .
+    command: celery -A EuropGreenSolar beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+      - /var/www/mon_projet/media:/app/media
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
 
   db:
     image: postgres:15
@@ -24,3 +57,4 @@ services:
 
 volumes:
   pgdata:
+  redis_data:

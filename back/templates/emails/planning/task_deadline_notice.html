@@ -1,0 +1,152 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Échéance atteinte : Tâche assignée - EuropGreen Solar{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 32px;">
+    <h1 style="color: #1f2937; font-size: 24px; font-weight: 600; margin: 0 0 8px 0;">
+        🔔 Échéance atteinte
+    </h1>
+    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+        La tâche que vous avez assignée à <strong>{{ task.assigned_to.first_name }} {{ task.assigned_to.last_name }}</strong> arrive à échéance
+    </p>
+</div>
+
+<!-- Carte de la tâche -->
+<div style="background-color: #f3f4f6; border-left: 4px solid #6366f1; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+    
+    <!-- Titre et priorité -->
+    <div style="margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <h2 style="color: #1f2937; font-size: 20px; font-weight: 600; margin: 0;">
+                {{ task.title }}
+            </h2>
+            {% if task.priority == 'urgent' %}
+            <span style="background-color: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                🔴 Urgente
+            </span>
+            {% elif task.priority == 'high' %}
+            <span style="background-color: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                🟠 Haute priorité
+            </span>
+            {% elif task.priority == 'normal' %}
+            <span style="background-color: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                🔵 Normale
+            </span>
+            {% else %}
+            <span style="background-color: #e5e7eb; color: #374151; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                ⚪ Basse
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if task.description %}
+    <!-- Description -->
+    <div style="margin-bottom: 16px;">
+        <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">{{ task.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Information sur l'assignation -->
+    <div style="background-color: #ffffff; border-radius: 6px; padding: 16px; margin-bottom: 12px;">
+        <div style="margin-bottom: 12px;">
+            <span style="color: #6b7280; font-size: 13px; font-weight: 500;">👤 Assignée à :</span>
+            <span style="color: #1f2937; font-size: 14px; font-weight: 600; margin-left: 8px;">
+                {{ task.assigned_to.first_name }} {{ task.assigned_to.last_name }}
+            </span>
+            <span style="color: #6b7280; font-size: 13px; margin-left: 4px;">
+                ({{ task.assigned_to.email }})
+            </span>
+        </div>
+        <div>
+            <span style="color: #6b7280; font-size: 13px; font-weight: 500;">⏰ Échéance :</span>
+            <span style="color: #1f2937; font-size: 14px; font-weight: 600; margin-left: 8px;">
+                {{ task.due_date|date:"d/m/Y" }}
+                {% if task.due_time %}
+                à {{ task.due_time|time:"H:i" }}
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Statut de la tâche -->
+    <div style="background-color: #fef3c7; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+        <span style="color: #92400e; font-size: 13px; font-weight: 500;">📊 Statut actuel :</span>
+        {% if task.status == 'completed' %}
+        <span style="color: #059669; font-size: 14px; font-weight: 600; margin-left: 8px;">✅ Terminée</span>
+        {% elif task.status == 'in_progress' %}
+        <span style="color: #2563eb; font-size: 14px; font-weight: 600; margin-left: 8px;">🔄 En cours</span>
+        {% elif task.status == 'cancelled' %}
+        <span style="color: #6b7280; font-size: 14px; font-weight: 600; margin-left: 8px;">❌ Annulée</span>
+        {% else %}
+        <span style="color: #dc2626; font-size: 14px; font-weight: 600; margin-left: 8px;">⏳ En attente</span>
+        {% endif %}
+    </div>
+
+    {% if task.related_installation %}
+    <!-- Installation liée -->
+    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #d1d5db;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <span style="color: #6b7280; font-size: 13px; font-weight: 500;">🏠 Installation liée</span>
+            <a href="{{ frontend_url }}/home/installations/{{ task.related_installation.id }}" 
+               style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; transition: background-color 0.2s;">
+                Voir l'installation
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Message pour le responsable -->
+<div style="background-color: #eff6ff; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+    <p style="color: #1e40af; font-size: 15px; line-height: 1.6; margin: 0 0 12px 0; font-weight: 600;">
+        📋 Suivi de la tâche
+    </p>
+    <p style="color: #4b5563; font-size: 14px; margin: 0; line-height: 1.6;">
+        Cette notification est envoyée pour vous informer que l'échéance de la tâche est atteinte. 
+        {% if task.status != 'completed' %}
+        <strong style="color: #dc2626;">La tâche n'est pas encore marquée comme terminée.</strong> 
+        Vous pouvez contacter {{ task.assigned_to.first_name }} pour faire un point sur l'avancement.
+        {% else %}
+        <strong style="color: #059669;">La tâche a été marquée comme terminée.</strong> Excellent travail !
+        {% endif %}
+    </p>
+</div>
+
+<!-- Bouton d'action -->
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ frontend_url }}/home/calendar" 
+       style="display: inline-block; background-color: #6366f1; color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);">
+        📅 Voir le calendrier
+    </a>
+</div>
+
+<!-- Informations supplémentaires -->
+<div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin-top: 24px; border-left: 4px solid #6b7280;">
+    <p style="color: #4b5563; font-size: 13px; line-height: 1.5; margin: 0;">
+        <strong>📌 Note :</strong> Cette notification est envoyée automatiquement aux créateurs de tâches lorsque l'échéance est atteinte. 
+        Elle vous permet de suivre l'avancement des tâches que vous avez assignées et de réagir si nécessaire.
+    </p>
+</div>
+
+{% endblock %}
+
+{% block footer_content %}
+<div style="margin-bottom: 16px;">
+    <p style="color: #1f2937; font-weight: 500; font-size: 14px; margin-bottom: 4px; margin-top: 0;">
+        EuropGreen Solar
+    </p>
+    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+        Système de suivi des tâches
+    </p>
+</div>
+
+<div style="border-top: 1px solid #d1d5db; padding-top: 16px;">
+    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+        Cette notification est envoyée automatiquement pour vous tenir informé(e) des échéances.<br>
+        Pour toute question, contactez votre administrateur.
+    </p>
+</div>
+{% endblock %}

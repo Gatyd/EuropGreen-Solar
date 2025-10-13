@@ -74,6 +74,11 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Créée le")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Modifiée le")
     
+    # Tracking des rappels (pour éviter les doublons)
+    reminder_3days_sent = models.BooleanField(default=False, verbose_name="Rappel 3 jours envoyé")
+    reminder_hours_sent = models.BooleanField(default=False, verbose_name="Rappel 3h envoyé")
+    reminder_deadline_sent = models.BooleanField(default=False, verbose_name="Notification échéance envoyée")
+    
     # Notes additionnelles
     notes = models.TextField(blank=True, verbose_name="Notes")
 

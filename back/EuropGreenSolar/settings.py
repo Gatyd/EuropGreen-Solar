@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'auditlog',  # django-auditlog
+    'django_celery_beat',  # Celery Beat pour tâches planifiées
     
     'authentication',
     'users',
@@ -223,3 +224,43 @@ CAREER_EMAIL = config('CAREER_EMAIL', default='')
 # Mailgun Configuration
 MAILGUN_API_KEY = config('MAILGUN_API_KEY', default='')
 MAILGUN_DOMAIN = config('MAILGUN_DOMAIN', default='')
+
+# ============================================================================
+# Celery Configuration
+# ============================================================================
+
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://redis:6379/0')
+
+# Sérialisation JSON pour plus de sécurité
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Fuseau horaire (doit correspondre à TIME_ZONE)
+CELERY_TIMEZONE = 'Europe/Paris'
+CELERY_ENABLE_UTC = False
+
+# Configuration pour Celery Beat (tâches planifiées)
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Timeout et retry policy
+CELERY_TASK_TIME_LIMIT = 300  # 5 minutes max par tâche
+CELERY_TASK_SOFT_TIME_LIMIT = 270  # Avertissement à 4m30
+CELERY_TASK_ACKS_LATE = True  # Confirmer seulement après exécution
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1  # Une tâche à la fois par worker
+
+# ============================================================================
+# Système de Rappels de Tâches - Configuration
+# ============================================================================
+
+# Nombre de jours avant l'échéance pour le rappel (défaut: 3 jours)
+REMINDER_DAYS_BEFORE = config('REMINDER_DAYS_BEFORE', default=3, cast=int)
+
+# Nombre d'heures avant l'échéance pour le rappel urgent (défaut: 3 heures)
+REMINDER_HOURS_BEFORE = config('REMINDER_HOURS_BEFORE', default=3, cast=int)
+
+# Heure par défaut pour les rappels quotidiens et tâches sans heure (défaut: 08h00)
+REMINDER_TIME_HOUR = config('REMINDER_TIME_HOUR', default=8, cast=int)
+
+

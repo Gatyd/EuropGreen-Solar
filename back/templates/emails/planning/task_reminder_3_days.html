@@ -1,0 +1,123 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Rappel : Tâche dans 3 jours - EuropGreen Solar{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 32px;">
+    <h1 style="color: #1f2937; font-size: 24px; font-weight: 600; margin: 0 0 8px 0;">
+        📅 Rappel : Tâche à venir
+    </h1>
+    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+        Votre tâche arrive à échéance dans <strong>3 jours</strong>
+    </p>
+</div>
+
+<!-- Carte de la tâche -->
+<div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+    
+    <!-- Titre et priorité -->
+    <div style="margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <h2 style="color: #1f2937; font-size: 20px; font-weight: 600; margin: 0;">
+                {{ task.title }}
+            </h2>
+            {% if task.priority == 'urgent' %}
+            <span style="background-color: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                🔴 Urgente
+            </span>
+            {% elif task.priority == 'high' %}
+            <span style="background-color: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                🟠 Haute priorité
+            </span>
+            {% elif task.priority == 'normal' %}
+            <span style="background-color: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                🔵 Normale
+            </span>
+            {% else %}
+            <span style="background-color: #e5e7eb; color: #374151; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                ⚪ Basse
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if task.description %}
+    <!-- Description -->
+    <div style="margin-bottom: 16px;">
+        <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">{{ task.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Date d'échéance -->
+    <div style="margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: #92400e; font-size: 13px; font-weight: 500;">⏰ Date d'échéance :</span>
+            <span style="color: #1f2937; font-size: 16px; font-weight: 700;">
+                {{ task.due_date|date:"l d F Y" }}
+                {% if task.due_time %}
+                à {{ task.due_time|time:"H:i" }}
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    {% if task.related_installation %}
+    <!-- Installation liée -->
+    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #fbbf24;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <span style="color: #92400e; font-size: 13px; font-weight: 500;">🏠 Installation liée</span>
+            <a href="{{ frontend_url }}/home/installations/{{ task.related_installation.id }}" 
+               style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; transition: background-color 0.2s;">
+                Voir l'installation
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Message d'encouragement -->
+<div style="background-color: #eff6ff; border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
+    <p style="color: #1e40af; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">
+        <strong>💡 Conseil :</strong> Commencez à planifier cette tâche dès maintenant pour éviter toute urgence de dernière minute.
+    </p>
+    <p style="color: #6b7280; font-size: 13px; margin: 0;">
+        Nous vous enverrons un autre rappel <strong>3 heures avant</strong> l'échéance si la tâche n'est pas encore terminée.
+    </p>
+</div>
+
+<!-- Bouton d'action -->
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ frontend_url }}/home/calendar" 
+       style="display: inline-block; background-color: #f59e0b; color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.4);">
+        📋 Voir mes tâches
+    </a>
+</div>
+
+<!-- Informations supplémentaires -->
+<div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin-top: 24px; border-left: 4px solid #6b7280;">
+    <p style="color: #4b5563; font-size: 13px; line-height: 1.5; margin: 0;">
+        <strong>📌 Note :</strong> Ce rappel est envoyé automatiquement 3 jours avant l'échéance de vos tâches. 
+        Vous pouvez marquer cette tâche comme terminée à tout moment depuis votre calendrier.
+    </p>
+</div>
+
+{% endblock %}
+
+{% block footer_content %}
+<div style="margin-bottom: 16px;">
+    <p style="color: #1f2937; font-weight: 500; font-size: 14px; margin-bottom: 4px; margin-top: 0;">
+        EuropGreen Solar
+    </p>
+    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+        Système de rappels automatiques
+    </p>
+</div>
+
+<div style="border-top: 1px solid #d1d5db; padding-top: 16px;">
+    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+        Ce rappel est envoyé automatiquement pour vous aider à gérer vos tâches efficacement.<br>
+        Pour toute question, contactez votre administrateur.
+    </p>
+</div>
+{% endblock %}
