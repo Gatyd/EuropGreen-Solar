@@ -25,6 +25,10 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # Découvrir automatiquement les tâches dans tous les fichiers tasks.py des apps
 app.autodiscover_tasks()
 
+# Importer explicitement les tâches du projet (hors apps)
+# Nécessaire car autodiscover_tasks() ne cherche que dans INSTALLED_APPS
+app.autodiscover_tasks(['EuropGreenSolar'])
+
 # Configuration des tâches périodiques
 # Note: L'heure du rappel quotidien est prise depuis REMINDER_TIME_HOUR
 app.conf.beat_schedule = {

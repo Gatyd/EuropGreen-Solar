@@ -43,6 +43,82 @@ def _build_from_display(for_mailgun: bool, from_email: Optional[str]) -> str:
     return f"{display} <{address}>"
 
 
+def _serialize_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """
+    Sérialise le contexte pour qu'il soit JSON serializable (pour Celery).
+    Convertit les objets Django en dictionnaires simples.
+    """
+    if not context:
+        return context
+    
+    import json
+    from django.db import models
+    from django.core.serializers.json import DjangoJSONEncoder
+    
+    def serialize_value(value):
+        """Sérialise une valeur récursivement."""
+        # None, bool, int, float, str : déjà sérialisables
+        if value is None or isinstance(value, (bool, int, float, str)):
+            return value
+        
+        # Listes et tuples
+        if isinstance(value, (list, tuple)):
+            return [serialize_value(item) for item in value]
+        
+        # Dictionnaires
+        if isinstance(value, dict):
+            return {k: serialize_value(v) for k, v in value.items()}
+        
+        # Modèles Django : extraire les champs principaux
+        if isinstance(value, models.Model):
+            # Construire un dict avec les champs du modèle
+            serialized = {
+                '__model__': f"{value._meta.app_label}.{value._meta.model_name}",
+                '__pk__': value.pk,
+            }
+            
+            # Ajouter les champs simples (non-relations)
+            for field in value._meta.fields:
+                field_name = field.name
+                try:
+                    field_value = getattr(value, field_name)
+                    
+                    # Ignorer les fichiers/images (non JSON serializable)
+                    if isinstance(field, (models.FileField, models.ImageField)):
+                        if field_value:
+                            serialized[field_name] = str(field_value)
+                        else:
+                            serialized[field_name] = None
+                    # Relations (ForeignKey, etc.) : stocker l'ID
+                    elif isinstance(field, models.ForeignKey):
+                        if field_value:
+                            serialized[field_name] = {
+                                'id': field_value.pk,
+                                '__str__': str(field_value)
+                            }
+                        else:
+                            serialized[field_name] = None
+                    else:
+                        # Autres champs : sérialiser directement
+                        serialized[field_name] = serialize_value(field_value)
+                except Exception:
+                    # En cas d'erreur, ignorer le champ
+                    pass
+            
+            return serialized
+        
+        # Autres objets : convertir en string
+        try:
+            # Tenter de sérialiser avec DjangoJSONEncoder
+            json.dumps(value, cls=DjangoJSONEncoder)
+            return value
+        except (TypeError, ValueError):
+            # Fallback : convertir en string
+            return str(value)
+    
+    return {k: serialize_value(v) for k, v in context.items()}
+
+
 def send_mail(
     template: str,
     context: Optional[Dict[str, Any]],
@@ -54,6 +130,7 @@ def send_mail(
     timeout: int = 30,
     attachments: Optional[Iterable[Union[str, Tuple[str, bytes, str]]]] = None,
     save_to_log: bool = True,
+    async_send: bool = True,
 ) -> Tuple[bool, str]:
     """
     Envoie un email en tentant d'abord Mailgun puis SMTP en fallback.
@@ -69,9 +146,62 @@ def send_mail(
     - attachments: optionnel, liste de pièces jointes (chemins ou tuples).
     - save_to_log: si True (défaut), enregistre l'email dans EmailLog après envoi réussi.
                    Passer False pour les emails contenant des données sensibles.
+    - async_send: si True (défaut), envoie l'email en arrière-plan via Celery.
+                  Si False, envoie synchrone immédiat (bloque la requête).
 
     Retourne: (success: bool, message: str)
+    
+    Note: Si async_send=True, retourne (True, "Email mis en file d'attente") immédiatement
+          sans attendre l'envoi réel. L'email sera envoyé par un worker Celery.
     """
+    # Si envoi asynchrone demandé, déléguer à Celery
+    if async_send:
+        try:
+            print(f"[EMAIL] Tentative d'envoi asynchrone vers {to}")
+            # Import ici pour éviter les dépendances circulaires
+            from EuropGreenSolar.tasks import send_email_async
+            
+            # Normaliser les destinataires en liste pour sérialisation JSON
+            to_list = _normalize_recipients(to)
+            
+            # Sérialiser le contexte pour qu'il soit JSON serializable
+            serializable_context = _serialize_context(context)
+            print(f"[EMAIL] Contexte sérialisé, envoi à Celery...")
+            
+            # Convertir les attachments en format sérialisable si nécessaire
+            serializable_attachments = None
+            if attachments:
+                serializable_attachments = []
+                for att in attachments:
+                    if isinstance(att, str):
+                        # Chemin de fichier - garder tel quel
+                        serializable_attachments.append(att)
+                    else:
+                        # Tuple (filename, bytes, mimetype) - garder tel quel
+                        serializable_attachments.append(att)
+            
+            # Envoyer la tâche à Celery
+            result = send_email_async.delay(
+                template=template,
+                context=serializable_context,
+                subject=subject,
+                to=to_list,
+                from_email=from_email,
+                text_template=text_template,
+                timeout=timeout,
+                attachments=serializable_attachments,
+                save_to_log=save_to_log,
+            )
+            print(f"[EMAIL] Tâche Celery créée avec ID: {result.id}")
+            
+            return True, "Email mis en file d'attente pour envoi asynchrone"
+        
+        except Exception as e:
+            # Si Celery n'est pas disponible, fallback sur envoi synchrone
+            print(f"Celery non disponible, envoi synchrone: {e}")
+            # Continue avec l'envoi synchrone ci-dessous
+    
+    # Envoi synchrone (si async_send=False ou si Celery a échoué)
     to_list = _normalize_recipients(to)
 
     # Enrichir le contexte avec des valeurs par défaut utiles
