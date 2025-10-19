@@ -1,6 +1,6 @@
 ## Installation
- 
-Pour travailler ou utiliser ce référentiel, suivez les étapes ci-dessous :
+
+### Développement local (sans Docker)
 
 1. Ouvrir le dossier dans un terminal
 
@@ -29,16 +29,20 @@ pip install -r requirements.txt
 python manage.py runserver
 ```
 
-## PDF des devis
+### Production (avec Docker) - **RECOMMANDÉ**
 
-Les PDF sont générés lors de la création d’un devis. Le backend tente d’abord un rendu fidèle via Playwright en ouvrant la page front `/print/quotes/:id` et en exportant en PDF. En cas d’échec (navigateur non installé, etc.), un rendu minimal via ReportLab est utilisé.
+```bash
+# Voir le guide complet : DEPLOYMENT_GUIDE.md
+docker-compose up -d
+```
 
-Configuration:
-- FRONTEND_BASE_URL: URL du front (ex: http://localhost:3000)
-- Installation Playwright/Chromium dans l’environnement Python:
-	- pip install playwright
-	- python -m playwright install chromium
+## 📚 Documentation
 
-Notes:
-- L’auth est gérée par cookie JWT déposé dans le contexte Playwright si le créateur du devis est connu.
-- Le PDF est stocké dans le champ `Quote.pdf` et nommé d’après `Quote.number`.
+**📘 [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Guide complet (déploiement, configuration, sécurité, dépannage)
+
+**Quick Start Docker :**
+```bash
+cp .env.example .env
+nano .env  # Configurer REDIS_PASSWORD, DB_*, etc.
+docker-compose up -d
+```

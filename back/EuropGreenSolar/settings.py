@@ -229,8 +229,17 @@ MAILGUN_DOMAIN = config('MAILGUN_DOMAIN', default='')
 # Celery Configuration
 # ============================================================================
 
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://redis:6379/0')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://redis:6379/0')
+# Mot de passe Redis pour sécurité
+REDIS_PASSWORD = config('REDIS_PASSWORD', default='changeme_redis_password')
+
+# Construction de l'URL Redis avec authentification
+REDIS_HOST = config('REDIS_HOST', default='redis')
+REDIS_PORT = config('REDIS_PORT', default='6379')
+REDIS_DB = config('REDIS_DB', default='0')
+
+# Format: redis://:password@host:port/db
+CELERY_BROKER_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+CELERY_RESULT_BACKEND = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
 
 # Sérialisation JSON pour plus de sécurité
 CELERY_ACCEPT_CONTENT = ['json']

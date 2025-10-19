@@ -270,6 +270,8 @@ class FormViewSet(viewsets.ModelViewSet):
 			except Exception:
 				pass
 		# 2) Créer un compte client si nécessaire et envoyer l'email d'initiation
+		# Rafraîchir l'offre depuis la DB pour avoir les dernières valeurs
+		offer.refresh_from_db()
 		client_email = offer.email
 		client_first = offer.first_name
 		client_last = offer.last_name

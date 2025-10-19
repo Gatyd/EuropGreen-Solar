@@ -104,6 +104,10 @@ class FormSerializer(serializers.ModelSerializer):
 	offer = OfferBaseSerializer(read_only=True)
 	offer_id = serializers.PrimaryKeyRelatedField(source='offer', queryset=Offer.objects.all(), write_only=True)
 	
+	# Champs pour mise à jour de l'offre (write_only, ne seront pas retournés)
+	client_first_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+	client_last_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+	
 	class Meta:
 		model = Form
 		fields = [
@@ -111,9 +115,32 @@ class FormSerializer(serializers.ModelSerializer):
 			'installation_power', 'installation_type', 'status',
 			'commission_amount', 'commission_paid',
 			'sales_commission_amount', 'sales_commission_paid',
-			'created_by', 'created_at', 'updated_at', 'offer_id'
+			'created_by', 'created_at', 'updated_at', 'offer_id',
+			'client_first_name', 'client_last_name'
 		]
 		read_only_fields = ['id', 'created_by', 'commission_amount', 'sales_commission_amount', 'created_at', 'updated_at']
+	
+	def create(self, validated_data):
+		# Extraire les champs qui ne vont pas dans le modèle Form
+		client_first_name = validated_data.pop('client_first_name', None)
+		client_last_name = validated_data.pop('client_last_name', None)
+		
+		# Récupérer l'offre
+		offer = validated_data.get('offer')
+		
+		# Mettre à jour l'offre avec les nouvelles valeurs si fournies
+		if offer:
+			if client_first_name is not None:
+				offer.first_name = client_first_name
+			if client_last_name is not None:
+				offer.last_name = client_last_name
+			# Mettre à jour l'adresse aussi si elle diffère
+			if 'client_address' in validated_data and validated_data['client_address'] != offer.address:
+				offer.address = validated_data['client_address']
+			offer.save(update_fields=['first_name', 'last_name', 'address', 'updated_at'])
+		
+		# Créer la fiche d'installation normalement
+		return super().create(validated_data)
 
 class FormDetailSerializer(serializers.ModelSerializer):
 	created_by = UserMiniSerializer(read_only=True)

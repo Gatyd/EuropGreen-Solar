@@ -2,7 +2,11 @@ version: '3.9'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
@@ -10,38 +14,75 @@ services:
       - /var/www/mon_projet/media:/app/media
     env_file:
       - .env
+    # Limite mémoire (ajustez selon votre serveur, ex: 512m, 1g, 2g)
+    # Commentez cette ligne pour ne pas limiter
+    # mem_limit: ${WEB_MEM_LIMIT:-1g}
     depends_on:
       - db
       - redis
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
+    # NE PAS exposer Redis sur Internet - retiré le mapping de port
+    # ports:
+    #   - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    # Limite mémoire conteneur (ajustez selon votre serveur)
+    # Commentez pour ne pas limiter
+    # mem_limit: ${REDIS_CONTAINER_MEM_LIMIT:-512m}
+    # Sécurisation Redis: bind localhost, requirepass, désactiver commandes dangereuses
+    command: >
+      redis-server
+      --appendonly yes
+      --bind 0.0.0.0
+      --requirepass ${REDIS_PASSWORD:-changeme_redis_password}
+      --rename-command FLUSHDB ""
+      --rename-command FLUSHALL ""
+      --rename-command CONFIG ""
+      --maxmemory ${REDIS_MAXMEMORY:-256mb}
+      --maxmemory-policy allkeys-lru
 
   celery-worker:
-    build: .
-    command: celery -A EuropGreenSolar worker -l info
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    command: celery -A EuropGreenSolar worker -l info --concurrency=${CELERY_CONCURRENCY:-4} --max-tasks-per-child=1000
     volumes:
       - .:/app
       - /var/www/mon_projet/media:/app/media
     env_file:
       - .env
+    # Limite mémoire (ajustez selon votre serveur et le nombre de workers)
+    # Règle approximative: 150-200MB par worker concurrent
+    # Commentez pour ne pas limiter
+    # mem_limit: ${CELERY_WORKER_MEM_LIMIT:-768m}
     depends_on:
       - db
       - redis
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A EuropGreenSolar inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   celery-beat:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
     command: celery -A EuropGreenSolar beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - .:/app
       - /var/www/mon_projet/media:/app/media
     env_file:
       - .env
+    # Limite mémoire (beat est léger, 128-256MB suffisent généralement)
+    # Commentez pour ne pas limiter
+    # mem_limit: ${CELERY_BEAT_MEM_LIMIT:-256m}
     depends_on:
       - db
       - redis

@@ -29,7 +29,8 @@ const filteredItems = computed<InstallationForm[]>(() => {
     const start = dateRange.value.start || null
     const end = dateRange.value.end || null
     return allItems.value.filter((it) => {
-        const hay = `${it.client_first_name} ${it.client_last_name} ${it.client_address}`.toLowerCase()
+        const clientName = it.client ? `${it.client.first_name || ''} ${it.client.last_name || ''}` : ''
+        const hay = `${clientName} ${it.client_address}`.toLowerCase()
         const textOk = term ? hay.includes(term) : true
         const createdDate = (it.created_at || '').slice(0, 10)
         const startOk = start ? createdDate >= start : true
