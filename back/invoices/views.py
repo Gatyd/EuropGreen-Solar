@@ -15,7 +15,7 @@ from .serializers import InvoiceSerializer, PaymentSerializer, InstallmentSerial
 from authentication.permissions import IsAdmin, HasRequestsAccess, HasAdministrativeAccess
 
 
-class InvoiceViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class InvoiceViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Invoice.objects.all().select_related("installation", "quote")
     serializer_class = InvoiceSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -111,40 +111,6 @@ class InvoiceViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def update(self, request, *args, **kwargs):
-        """Mettre à jour une facture (standalone uniquement)."""
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        
-        if not instance.is_standalone:
-            return Response(
-                {"detail": "Seules les factures standalone peuvent être modifiées."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        if instance.status not in (Invoice.Status.DRAFT, Invoice.Status.ISSUED):
-            return Response(
-                {"detail": "Impossible de modifier une facture payée ou annulée."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Gérer les lignes séparément si fournies
-        lines_data = request.data.pop("lines", None)
-        
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        
-        # Mettre à jour les lignes si fournies
-        if lines_data is not None:
-            self._update_invoice_lines(instance, lines_data)
-        
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-
     def _create_invoice_lines(self, invoice: Invoice, lines_data: list) -> None:
         """Créer les lignes de facture et recalculer les totaux."""
         with transaction.atomic():
@@ -182,15 +148,6 @@ class InvoiceViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.
             tax_amount = subtotal * (invoice.tax_rate / 100)
             invoice.total = subtotal + tax_amount
             invoice.save(update_fields=["subtotal", "total", "updated_at"])
-
-    def _update_invoice_lines(self, invoice: Invoice, lines_data: list) -> None:
-        """Remplacer toutes les lignes de facture et recalculer les totaux."""
-        with transaction.atomic():
-            # Supprimer anciennes lignes
-            invoice.lines.all().delete()
-            
-            # Créer nouvelles lignes
-            self._create_invoice_lines(invoice, lines_data)
 
 
 class InstallmentViewSet(viewsets.ModelViewSet):

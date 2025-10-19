@@ -105,7 +105,7 @@ const columns: TableColumn<Invoice>[] = [{
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => {
-        const buttons = [
+        return h('div', { class: 'flex items-center gap-1' }, [
             h(UTooltip, { text: 'Aperçu', delayDuration: 0 }, () =>
                 h(UButton, {
                     icon: 'i-heroicons-eye',
@@ -113,25 +113,7 @@ const columns: TableColumn<Invoice>[] = [{
                     variant: 'ghost',
                     onClick: () => openPreview(row.original)
                 })
-            )
-        ]
-        
-        // Bouton Modifier (seulement si draft ou issued)
-        if (row.original.status === 'draft' || row.original.status === 'issued') {
-            buttons.push(
-                h(UTooltip, { text: 'Modifier', delayDuration: 0 }, () =>
-                    h(UButton, {
-                        icon: 'i-heroicons-pencil',
-                        color: 'neutral',
-                        variant: 'ghost',
-                        onClick: () => openEdit(row.original)
-                    })
-                )
-            )
-        }
-        
-        // Bouton Gérer les paiements (toujours visible)
-        buttons.push(
+            ),
             h(UTooltip, { text: 'Gérer paiements', delayDuration: 0 }, () =>
                 h(UButton, {
                     icon: 'i-heroicons-banknotes',
@@ -140,9 +122,7 @@ const columns: TableColumn<Invoice>[] = [{
                     onClick: () => openManage(row.original)
                 })
             )
-        )
-        
-        return h('div', { class: 'flex items-center gap-1' }, buttons)
+        ])
     }
 }]
 
@@ -168,12 +148,6 @@ function openCreateModal() {
 function openPreview(invoice: Invoice) {
     selectedInvoice.value = invoice
     modalAction.value = 'preview'
-    showModal.value = true
-}
-
-function openEdit(invoice: Invoice) {
-    selectedInvoice.value = invoice
-    modalAction.value = 'manage'
     showModal.value = true
 }
 

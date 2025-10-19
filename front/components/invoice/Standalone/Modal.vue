@@ -86,7 +86,7 @@ function openPrint() {
             </div>
         </template>
         <template #body>
-            <div class="p-2 lg:p-4" :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4' : ''">
+            <div class="" :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4' : ''">
                 <InvoiceStandaloneForm v-if="action !== 'preview'" class="xl:basis-1/2" :draft="draft" :invoice="invoice" 
                     @created="onCreated" @updated="onUpdated" />
                 <InvoiceStandalonePreview 
