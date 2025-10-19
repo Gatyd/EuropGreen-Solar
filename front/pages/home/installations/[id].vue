@@ -201,7 +201,7 @@ const steps = computed(() => {
         </div>
 
         <div class="px-4 md:px-6 lg:px-8">
-            <InstallationHeader :item="item" :loading="loading" @submit="fetchOne" />
+            <InstallationHeader v-if="loading || item" :item="item" :loading="loading" @submit="fetchOne" />
             <div class="xl:me-40 mt-8">
                 <template v-if="loading">
                     <div class="flex flex-col gap-6">
@@ -218,7 +218,7 @@ const steps = computed(() => {
                         </div>
                     </div>
                 </template>
-                <template v-else>
+                <template v-else-if="item">
                     <UTimeline :items="steps" size="xl" icon="i-heroicons-check-circle" :ui="{ date: 'text-gray-500' }"
                         orientation="vertical">
                         <!-- Slots personnalisés pour la visite technique -->
@@ -382,6 +382,13 @@ const steps = computed(() => {
                             </div>
                         </template>
                     </UTimeline>
+                </template>
+                <template v-else>
+                    <div class="py-20 text-center text-gray-500">
+                        <i class="i-heroicons-exclamation-triangle-solid text-6xl mb-4"></i>
+                        <div class="text-xl font-medium">Installation non trouvée.</div>
+                        <div class="mt-2">L'installation que vous recherchez n'existe pas ou a été supprimée.</div>
+                    </div>
                 </template>
             </div>
             <InstallationTechnicalVisitModal v-model="openTechnicalVisit" :form-id="item?.id" @submit="fetchOne"
