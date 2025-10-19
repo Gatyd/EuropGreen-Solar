@@ -38,29 +38,6 @@ onMounted(async () => {
         })
     }
 })
-
-const draft = computed(() => {
-    if (!invoice.value) return null
-    return {
-        custom_recipient_name: invoice.value.custom_recipient_name || '',
-        custom_recipient_company: invoice.value.custom_recipient_company || '',
-        custom_recipient_address: invoice.value.custom_recipient_address || '',
-        custom_recipient_siret: invoice.value.custom_recipient_siret || '',
-        title: invoice.value.title || '',
-        notes: invoice.value.notes || '',
-        tax_rate: typeof invoice.value.tax_rate === 'string' ? parseFloat(invoice.value.tax_rate) : (invoice.value.tax_rate || 20),
-        lines: (invoice.value.lines || []).map((l: any) => ({
-            productId: '',
-            name: l.name,
-            description: l.description,
-            unit_price: parseFloat(l.unit_price),
-            cost_price: l.cost_price ? parseFloat(l.cost_price) : 0,
-            product_type: l.product_type,
-            quantity: parseFloat(l.quantity),
-            discount_rate: l.discount_rate ? parseFloat(l.discount_rate) : 0,
-        }))
-    }
-})
 </script>
 
 <template>
@@ -68,7 +45,7 @@ const draft = computed(() => {
         <UIcon name="i-heroicons-arrow-path" class="animate-spin size-12" />
     </div>
 
-    <InvoiceStandalonePreview v-else-if="draft && invoice" :draft="draft" :invoice="invoice" />
+    <InvoicePreview v-else-if="invoice" :invoice="invoice" />
 
     <div v-else class="flex items-center justify-center min-h-screen">
         <p class="text-gray-600">Facture introuvable</p>

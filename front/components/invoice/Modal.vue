@@ -14,10 +14,11 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'submit'): void }>()
 
 function openPrint() {
-    if (!props.formId) return
-    const url = `/print/installation-form/${props.formId}/invoice?auto=1`
-    // Ouvre une nouvelle fenêtre contrôlée (meilleur pour impression propre)
-    const w = window.open(url, '_blank', 'noopener,width=1024,height=800')
+    if (!props.invoice) return
+    
+    // Utiliser la page d'impression unifiée pour toutes les factures
+    const url = `/print/invoice/${props.invoice.id}?auto=1`
+    window.open(url, '_blank', 'noopener,width=1024,height=800')
 }
 </script>
 
@@ -28,8 +29,8 @@ function openPrint() {
             <div class="flex items-center justify-between w-full pr-2">
                 <span class="font-semibold">{{ action === 'manage' ? 'Gestion' : 'Aperçu' }} de la facture</span>
                 <div class="flex items-center gap-2" v-if="props.invoice">
-                    <UButton v-if="props.formId" size="sm" icon="i-heroicons-printer" @click="openPrint"
-                        color="primary">Imprimer</UButton>
+                    <!-- Bouton imprimer disponible pour toutes les factures -->
+                    <UButton size="sm" icon="i-heroicons-printer" @click="openPrint" color="primary">Imprimer</UButton>
                     <UButton icon="i-lucide-x" @click="model = false" color="neutral" variant="ghost" />
                 </div>
             </div>

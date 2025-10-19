@@ -26,7 +26,9 @@ class InvoiceViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.
 
     def get_permissions(self):
         """Safe methods: IsAuthenticated, sinon HasAdministrativeAccess."""
-        if self.action in permissions.SAFE_METHODS or self.action in ('list', 'retrieve'):
+        if self.action == 'retrieve':
+            return [permissions.AllowAny()]
+        if self.action in permissions.SAFE_METHODS:
             return [permissions.IsAuthenticated()]
         return [HasAdministrativeAccess()]
 
@@ -48,7 +50,7 @@ class InvoiceViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.
             invoice = serializer.save(
                 created_by=request.user,
                 updated_by=request.user,
-                status=Invoice.Status.DRAFT,
+                status=Invoice.Status.ISSUED,
             )
             
             # Gérer les lignes si fournies
@@ -249,14 +251,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
         """
         base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000').rstrip('/')
         
-        # Adapter l'URL selon le type de facture
-        if invoice.is_standalone:
-            url = f"{base_url}/print/standalone-invoice/{invoice.id}"
-        else:
-            if not invoice.installation_id:
-                return None
-            form_id = str(invoice.installation_id)
-            url = f"{base_url}/print/installation-form/{form_id}/invoice"
+        # Utiliser la page d'impression unifiée pour toutes les factures
+        url = f"{base_url}/print/invoice/{invoice.id}"
 
         async def _async_render() -> bytes:
             from playwright.async_api import async_playwright  # type: ignore

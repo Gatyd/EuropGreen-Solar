@@ -20,16 +20,15 @@ const showModal = ref(false)
 const showCreateModal = ref(false)
 const selectedInvoice = ref<Invoice | undefined>(undefined)
 const modalAction = ref<'preview' | 'manage'>('preview')
-
 const table = useTemplateRef('table')
 
 const statusItems = ref([
     { value: 'all', label: 'Tous les statuts' },
-    { value: 'draft', label: 'Brouillon' },
+    // { value: 'draft', label: 'Brouillon' },
     { value: 'issued', label: 'Émise' },
     { value: 'partially_paid', label: 'Partiellement payée' },
     { value: 'paid', label: 'Payée' },
-    { value: 'cancelled', label: 'Annulée' },
+    // { value: 'cancelled', label: 'Annulée' },
 ])
 const filters = reactive({
     status: 'all',
@@ -107,9 +106,9 @@ const columns: TableColumn<Invoice>[] = [{
     header: 'Actions',
     cell: ({ row }) => {
         return h('div', { class: 'flex items-center gap-1' }, [
-            h(UTooltip, { text: 'Aperçu', delayDuration: 0 }, () =>
+            h(UTooltip, { text: row.original.pdf ? 'PDF' : 'Aperçu', delayDuration: 0 }, () =>
                 h(UButton, {
-                    icon: 'i-heroicons-eye',
+                    icon: row.original.pdf ? 'i-heroicons-document-text' : 'i-heroicons-eye',
                     color: 'neutral',
                     variant: 'ghost',
                     onClick: () => openPreview(row.original)
@@ -131,8 +130,18 @@ async function fetchInvoices() {
     try {
         loading.value = true
         // Filtrage côté backend pour les factures standalone uniquement
-        const res = await $fetch<Invoice[]>('/api/invoices/?installation__isnull=true', { credentials: 'include' })
+        const res = await apiRequest<Invoice[]>(
+            () => $fetch<Invoice[]>('/api/invoices/?installation__isnull=true', { credentials: 'include' }),
+            toast
+        )
         invoices.value = res || []
+        if (selectedInvoice.value) {
+            // Mettre à jour la facture sélectionnée si elle est ouverte dans le modal
+            const updated = invoices.value.find(i => i.id === selectedInvoice.value?.id)
+            if (updated) {
+                selectedInvoice.value = updated
+            }
+        }
     } catch (e: any) {
         toast.add({ title: 'Erreur', description: 'Impossible de charger les factures', color: 'error' })
     } finally {
@@ -145,9 +154,14 @@ function openCreateModal() {
 }
 
 function openPreview(invoice: Invoice) {
-    selectedInvoice.value = invoice
-    modalAction.value = 'preview'
-    showModal.value = true
+    if (invoice.pdf) {
+        // Ouvrir le PDF dans un nouvel onglet si disponible
+        window.open(invoice.pdf, '_blank')
+    } else {
+        selectedInvoice.value = invoice
+        modalAction.value = 'preview'
+        showModal.value = true
+    }
 }
 
 function openManage(invoice: Invoice) {
@@ -164,8 +178,9 @@ onMounted(() => {
 <template>
     <div>
         <!-- Modal de création (avec draft) -->
-        <InvoiceStandaloneModal v-model="showCreateModal" @created="(invoice) => { fetchInvoices(); showCreateModal = false }" />
-        
+        <InvoiceStandaloneModal v-model="showCreateModal"
+            @created="(invoice) => { fetchInvoices(); showCreateModal = false }" />
+
         <!-- Modal de gestion/aperçu (factures existantes - compatible standalone et normales) -->
         <InvoiceModal v-model="showModal" :invoice="selectedInvoice" :action="modalAction" @submit="fetchInvoices" />
 
