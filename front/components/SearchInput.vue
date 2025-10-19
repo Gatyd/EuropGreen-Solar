@@ -4,6 +4,7 @@ const model = defineModel({
     type: String,
     default: ''
 })
+defineProps<{ placeholder?: string }>()
 const inputRef = ref();
 
 onMounted(() => {
@@ -28,7 +29,7 @@ onMounted(() => {
 </script>
 <template>
     <UInput ref="inputRef" v-model="model" icon="i-heroicons-magnifying-glass" autocomplete="off"
-        placeholder="Rechercher..." class="" @keydown.esc="$event.target.blur()">
+        :placeholder="placeholder || 'Rechercher...'" class="" @keydown.esc="$event.target.blur()">
         <template #trailing>
             <UKbd value="/" />
         </template>

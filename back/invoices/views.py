@@ -1,7 +1,8 @@
 from rest_framework import viewsets, permissions, mixins, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
-from django.db import models
+from django.db import models, transaction
 from decimal import Decimal
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
@@ -11,29 +12,54 @@ import re
 
 from .models import Invoice, InvoiceLine, Installment, Payment
 from .serializers import InvoiceSerializer, PaymentSerializer, InstallmentSerializer
-from authentication.permissions import IsAdmin, HasRequestsAccess
+from authentication.permissions import IsAdmin, HasRequestsAccess, HasAdministrativeAccess
 
 
-class InvoiceViewSet(mixins.CreateModelMixin,
-                     mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
-                     viewsets.GenericViewSet):
-    # Réponses plus légères; les échéances/paiements seront récupérés via endpoints dédiés filtrés par facture
+class InvoiceViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Invoice.objects.all().select_related("installation", "quote")
     serializer_class = InvoiceSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {
+        'installation': ['isnull'],
+    }
+
+    def get_permissions(self):
+        """Safe methods: IsAuthenticated, sinon HasAdministrativeAccess."""
+        if self.action in permissions.SAFE_METHODS or self.action in ('list', 'retrieve'):
+            return [permissions.IsAuthenticated()]
+        return [HasAdministrativeAccess()]
 
     def create(self, request, *args, **kwargs):
-        """Créer une facture à partir de la fiche d'installation.
+        """Créer une facture.
 
-        - Body attendu: { installation: <uuid> }
-        - Si une facture existe déjà pour cette fiche, la retourner.
-        - Sinon, trouver le dernier devis ACCEPTÉ de l'offre liée à la fiche et copier ses lignes/totaux.
+        Deux modes:
+        1. Facture normale (process client): { installation: <uuid> }
+        2. Facture standalone: { custom_recipient_name: "...", lines: [...], ... } (pas d'installation)
         """
         installation_id = request.data.get("installation")
+        
+        # Mode standalone: pas d'installation fournie
         if not installation_id:
-            return Response({"detail": "Paramètre 'installation' requis."}, status=status.HTTP_400_BAD_REQUEST)
-
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Créer la facture
+            invoice = serializer.save(
+                created_by=request.user,
+                updated_by=request.user,
+                status=Invoice.Status.DRAFT,
+            )
+            
+            # Gérer les lignes si fournies
+            lines_data = request.data.get("lines", [])
+            if lines_data:
+                self._create_invoice_lines(invoice, lines_data)
+            
+            serializer = self.get_serializer(invoice)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        # Mode normal: à partir d'une installation
         from installations.models import Form as InstallationForm
         from billing.models import Quote
 
@@ -44,12 +70,10 @@ class InvoiceViewSet(mixins.CreateModelMixin,
             serializer = self.get_serializer(existing)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        # Dernier devis accepté de l'offre liée à la fiche
         quote = Quote.objects.filter(offer=installation.offer, status="accepted").order_by("-created_at", "-version").first()
         if not quote:
             return Response({"detail": "Aucun devis accepté trouvé pour cette fiche."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Créer la facture en copiant les totaux principaux
         invoice = Invoice.objects.create(
             installation=installation,
             quote=quote,
@@ -61,10 +85,10 @@ class InvoiceViewSet(mixins.CreateModelMixin,
             total=quote.total,
             created_by=request.user if request.user and request.user.is_authenticated else None,
             updated_by=request.user if request.user and request.user.is_authenticated else None,
-            status=Invoice.Status.ISSUED,  # émise directement (peut être ajusté plus tard)
+            status=Invoice.Status.ISSUED,
         )
 
-        # Copier les lignes
+        # Copier les lignes du devis
         quote_lines = quote.lines.all().order_by("position", "created_at")
         bulk_lines = []
         for ql in quote_lines:
@@ -86,6 +110,87 @@ class InvoiceViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(invoice)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        """Mettre à jour une facture (standalone uniquement)."""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        if not instance.is_standalone:
+            return Response(
+                {"detail": "Seules les factures standalone peuvent être modifiées."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if instance.status not in (Invoice.Status.DRAFT, Invoice.Status.ISSUED):
+            return Response(
+                {"detail": "Impossible de modifier une facture payée ou annulée."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Gérer les lignes séparément si fournies
+        lines_data = request.data.pop("lines", None)
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        # Mettre à jour les lignes si fournies
+        if lines_data is not None:
+            self._update_invoice_lines(instance, lines_data)
+        
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def _create_invoice_lines(self, invoice: Invoice, lines_data: list) -> None:
+        """Créer les lignes de facture et recalculer les totaux."""
+        with transaction.atomic():
+            subtotal = Decimal("0")
+            bulk_lines = []
+            
+            for idx, line_data in enumerate(lines_data):
+                unit_price = Decimal(str(line_data.get("unit_price", 0)))
+                quantity = Decimal(str(line_data.get("quantity", 1)))
+                discount_rate = Decimal(str(line_data.get("discount_rate", 0)))
+                
+                line_subtotal = unit_price * quantity
+                discount_amount = line_subtotal * (discount_rate / 100)
+                line_total = line_subtotal - discount_amount
+                
+                bulk_lines.append(InvoiceLine(
+                    invoice=invoice,
+                    product_type=line_data.get("product_type", "other"),
+                    name=line_data.get("name", ""),
+                    description=line_data.get("description", ""),
+                    unit_price=unit_price,
+                    cost_price=Decimal(str(line_data.get("cost_price", 0))),
+                    quantity=quantity,
+                    discount_rate=discount_rate,
+                    line_total=line_total,
+                    position=idx,
+                ))
+                subtotal += line_total
+            
+            if bulk_lines:
+                InvoiceLine.objects.bulk_create(bulk_lines)
+            
+            # Mettre à jour totaux
+            invoice.subtotal = subtotal
+            tax_amount = subtotal * (invoice.tax_rate / 100)
+            invoice.total = subtotal + tax_amount
+            invoice.save(update_fields=["subtotal", "total", "updated_at"])
+
+    def _update_invoice_lines(self, invoice: Invoice, lines_data: list) -> None:
+        """Remplacer toutes les lignes de facture et recalculer les totaux."""
+        with transaction.atomic():
+            # Supprimer anciennes lignes
+            invoice.lines.all().delete()
+            
+            # Créer nouvelles lignes
+            self._create_invoice_lines(invoice, lines_data)
 
 
 class InstallmentViewSet(viewsets.ModelViewSet):
@@ -185,9 +290,16 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
         Retourne les bytes du PDF ou None si échec.
         """
-        form_id = str(invoice.installation_id)
         base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000').rstrip('/')
-        url = f"{base_url}/print/installation-form/{form_id}/invoice"
+        
+        # Adapter l'URL selon le type de facture
+        if invoice.is_standalone:
+            url = f"{base_url}/print/standalone-invoice/{invoice.id}"
+        else:
+            if not invoice.installation_id:
+                return None
+            form_id = str(invoice.installation_id)
+            url = f"{base_url}/print/installation-form/{form_id}/invoice"
 
         async def _async_render() -> bytes:
             from playwright.async_api import async_playwright  # type: ignore

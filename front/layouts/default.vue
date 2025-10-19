@@ -88,6 +88,11 @@ const links = [
                 to: "/home/products",
             },
             {
+                label: "Facturation",
+                icon: "i-heroicons-document-currency-euro",
+                to: "/home/invoices",
+            },
+            {
                 label: "Commissions",
                 icon: "i-heroicons-currency-euro",
                 to: "/home/commissions",

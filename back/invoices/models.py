@@ -16,15 +16,21 @@ class Invoice(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     number = models.CharField(max_length=32, unique=True, blank=True)
 
-    # Lier la facture à la fiche d'installation (pas à l'offre)
+    # Lier la facture à la fiche d'installation (optionnel pour factures standalone)
     installation = models.OneToOneField(
-        "installations.Form", on_delete=models.CASCADE, related_name="invoice"
+        "installations.Form", on_delete=models.CASCADE, related_name="invoice", null=True, blank=True
     )
 
     # Optionnel: référence au devis accepté qui l'a générée
     quote = models.OneToOneField(
         "billing.Quote", on_delete=models.SET_NULL, null=True, blank=True, related_name="generated_invoice"
     )
+
+    # Informations destinataire pour factures standalone (hors process client)
+    custom_recipient_name = models.CharField(max_length=255, blank=True, help_text="Nom du destinataire (facture standalone)")
+    custom_recipient_company = models.CharField(max_length=255, blank=True, help_text="Entreprise du destinataire")
+    custom_recipient_address = models.TextField(blank=True, help_text="Adresse complète du destinataire")
+    custom_recipient_siret = models.CharField(max_length=50, blank=True, help_text="SIRET de l'entreprise")
 
     title = models.CharField(max_length=255, blank=True)
     notes = models.TextField(blank=True)
@@ -59,12 +65,17 @@ class Invoice(models.Model):
         ordering = ["-issue_date", "-created_at"]
         verbose_name = "Facture"
         verbose_name_plural = "Factures"
-        constraints = [
-            models.UniqueConstraint(fields=["installation", "number"], name="uq_invoice_installation_number"),
-        ]
+
+    @property
+    def is_standalone(self) -> bool:
+        """Retourne True si la facture est standalone (sans installation)."""
+        return self.installation is None
 
     def __str__(self) -> str:
-        client_name = self.installation.client.get_full_name() if self.installation.client else "Client inconnu"
+        if self.is_standalone:
+            recipient = self.custom_recipient_name or self.custom_recipient_company or "Destinataire inconnu"
+            return f"Facture {self.number} - {recipient}"
+        client_name = self.installation.client.get_full_name() if self.installation and self.installation.client else "Client inconnu"
         return f"Facture {self.number} - {client_name}"
 
     @property

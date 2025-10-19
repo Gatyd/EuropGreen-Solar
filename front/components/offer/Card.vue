@@ -238,7 +238,7 @@ async function refreshOfferNotes() {
 						<span class="font-medium">Version:</span> v{{ item.last_quote.version }}
 					</div>
 					<div class="text-gray-700 dark:text-gray-200">
-						<span class="font-medium">Total:</span> {{ item.last_quote.total }} €
+						<span class="font-medium">Total:</span> {{ formatPrice(item.last_quote.total) }} €
 					</div>
 				</div>
 				<!-- Si le devis est signé (signature présente), afficher l'aperçu au lieu du PDF -->

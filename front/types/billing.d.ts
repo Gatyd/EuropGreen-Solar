@@ -76,8 +76,16 @@ export type InvoiceStatus = "draft" | "issued" | "partially_paid" | "paid" | "ca
 export interface Invoice {
     id: string;
     number: string;
-    installation: string; // UUID
+    installation?: string | null; // UUID (nullable pour factures standalone)
     quote?: string | null; // UUID
+    
+    // Champs destinataire pour factures standalone
+    custom_recipient_name?: string;
+    custom_recipient_company?: string;
+    custom_recipient_address?: string;
+    custom_recipient_siret?: string;
+    is_standalone?: boolean; // read-only
+    
     title?: string;
     notes?: string;
     currency: string; // e.g. EUR
