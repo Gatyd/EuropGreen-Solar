@@ -5,6 +5,7 @@ const model = defineModel({ type: Boolean })
 
 const props = defineProps<{
     invoice?: Invoice
+    action?: 'preview' | 'manage'
 }>()
 
 const emit = defineEmits<{ (e: 'created', invoice: Invoice): void; (e: 'updated'): void }>()
@@ -61,15 +62,35 @@ function onUpdated() {
     emit('updated')
     model.value = false
 }
+
+function openPrint() {
+    if (!props.invoice) return
+    const url = `/print/standalone-invoice/${props.invoice.id}?auto=1`
+    const w = window.open(url, '_blank', 'noopener,width=1024,height=800')
+}
 </script>
 
 <template>
-    <UModal v-model:open="model" :title="`${invoice ? 'Modification' : 'Création'} de Facture`" fullscreen>
+    <UModal v-model:open="model" 
+        :fullscreen="action !== 'preview'"
+        :ui="{ content: action !== 'preview' ? 'max-w-screen' : 'max-w-5xl' }">
+        <template #header>
+            <div class="flex items-center justify-between w-full pr-2">
+                <span class="font-semibold">
+                    {{ action === 'preview' ? 'Aperçu' : (invoice ? 'Modification' : 'Création') }} de la facture
+                </span>
+                <div class="flex items-center gap-2">
+                    <UButton v-if="props.invoice" size="sm" icon="i-heroicons-printer" @click="openPrint" color="primary">Imprimer</UButton>
+                    <UButton icon="i-lucide-x" @click="model = false" color="neutral" variant="ghost" />
+                </div>
+            </div>
+        </template>
         <template #body>
-            <div class="flex flex-col xl:flex-row gap-4">
-                <InvoiceStandaloneForm class="xl:basis-1/2" :draft="draft" :invoice="invoice" @created="onCreated"
-                    @updated="onUpdated" />
-                <InvoiceStandalonePreview class="xl:basis-1/2 shadow-md rounded-lg border border-default bg-white"
+            <div class="p-2 lg:p-4" :class="action !== 'preview' ? 'flex flex-col xl:flex-row gap-4' : ''">
+                <InvoiceStandaloneForm v-if="action !== 'preview'" class="xl:basis-1/2" :draft="draft" :invoice="invoice" 
+                    @created="onCreated" @updated="onUpdated" />
+                <InvoiceStandalonePreview 
+                    :class="action !== 'preview' ? 'xl:basis-1/2 shadow-md rounded-lg border border-default bg-white' : ''"
                     :draft="draft" :invoice="invoice" />
             </div>
         </template>

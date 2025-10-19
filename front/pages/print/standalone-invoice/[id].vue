@@ -8,6 +8,7 @@ definePageMeta({
 const route = useRoute()
 const invoice = ref<Invoice | null>(null)
 const loading = ref(true)
+const auto = computed(() => route.query.auto === '1' || route.query.auto === 'true')
 
 onMounted(async () => {
     try {
@@ -16,18 +17,25 @@ onMounted(async () => {
             headers: useRequestHeaders(['cookie'])
         })
         invoice.value = res
-
-        // Auto-print si paramètre auto=1
-        if (route.query.auto === '1') {
-            await nextTick()
-            setTimeout(() => {
-                window.print()
-            }, 500)
-        }
     } catch (e) {
         console.error('Erreur chargement facture:', e)
     } finally {
         loading.value = false
+        if (auto.value && invoice.value) {
+            // Impression seulement si auto demandé et données prêtes
+            nextTick(() => {
+                setTimeout(() => {
+                    window.print()
+                }, 80)
+            })
+        }
+    }
+    if (auto.value) {
+        window.addEventListener('afterprint', () => {
+            // Revenir à l'appli : focus onglet parent si existe puis fermer
+            try { window.opener?.focus?.() } catch { }
+            window.close()
+        })
     }
 })
 
@@ -60,7 +68,7 @@ const draft = computed(() => {
         <UIcon name="i-heroicons-arrow-path" class="animate-spin size-12" />
     </div>
 
-    <InvoiceStandaloneInvoicePreview v-else-if="draft && invoice" :draft="draft" :invoice="invoice" />
+    <InvoiceStandalonePreview v-else-if="draft && invoice" :draft="draft" :invoice="invoice" />
 
     <div v-else class="flex items-center justify-center min-h-screen">
         <p class="text-gray-600">Facture introuvable</p>

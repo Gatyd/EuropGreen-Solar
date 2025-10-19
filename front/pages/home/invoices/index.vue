@@ -11,12 +11,14 @@ definePageMeta({
 
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
+const UTooltip = resolveComponent('UTooltip')
 
 const toast = useToast()
 const invoices = ref<Invoice[]>([])
 const loading = ref(false)
-const showCreateModal = ref(false)
+const showModal = ref(false)
 const selectedInvoice = ref<Invoice | undefined>(undefined)
+const modalAction = ref<'preview' | 'manage'>('preview')
 
 const table = useTemplateRef('table')
 
@@ -101,25 +103,46 @@ const columns: TableColumn<Invoice>[] = [{
     }
 }, {
     id: 'actions',
+    header: 'Actions',
     cell: ({ row }) => {
-        return h(
-            'div',
-            { class: 'flex items-center gap-1' },
-            [
+        const buttons = [
+            h(UTooltip, { text: 'Aperçu', delayDuration: 0 }, () =>
                 h(UButton, {
                     icon: 'i-heroicons-eye',
                     color: 'neutral',
                     variant: 'ghost',
-                    onClick: () => viewDetails(row.original)
-                }),
-                (row.original.status === 'draft' || row.original.status === 'issued') ? h(UButton, {
-                    icon: 'i-heroicons-pencil',
+                    onClick: () => openPreview(row.original)
+                })
+            )
+        ]
+        
+        // Bouton Modifier (seulement si draft ou issued)
+        if (row.original.status === 'draft' || row.original.status === 'issued') {
+            buttons.push(
+                h(UTooltip, { text: 'Modifier', delayDuration: 0 }, () =>
+                    h(UButton, {
+                        icon: 'i-heroicons-pencil',
+                        color: 'neutral',
+                        variant: 'ghost',
+                        onClick: () => openEdit(row.original)
+                    })
+                )
+            )
+        }
+        
+        // Bouton Gérer les paiements (toujours visible)
+        buttons.push(
+            h(UTooltip, { text: 'Gérer paiements', delayDuration: 0 }, () =>
+                h(UButton, {
+                    icon: 'i-heroicons-banknotes',
                     color: 'neutral',
                     variant: 'ghost',
-                    onClick: () => openEditModal(row.original)
-                }) : null
-            ].filter(Boolean)
+                    onClick: () => openManage(row.original)
+                })
+            )
         )
+        
+        return h('div', { class: 'flex items-center gap-1' }, buttons)
     }
 }]
 
@@ -138,24 +161,36 @@ async function fetchInvoices() {
 
 function openCreateModal() {
     selectedInvoice.value = undefined
-    showCreateModal.value = true
+    modalAction.value = 'manage'
+    showModal.value = true
 }
 
-function openEditModal(invoice: Invoice) {
+function openPreview(invoice: Invoice) {
     selectedInvoice.value = invoice
-    showCreateModal.value = true
+    modalAction.value = 'preview'
+    showModal.value = true
+}
+
+function openEdit(invoice: Invoice) {
+    selectedInvoice.value = invoice
+    modalAction.value = 'manage'
+    showModal.value = true
+}
+
+function openManage(invoice: Invoice) {
+    selectedInvoice.value = invoice
+    modalAction.value = 'manage'
+    showModal.value = true
 }
 
 function onInvoiceCreated(invoice: Invoice) {
-    navigateTo(`/home/invoices/${invoice.id}`)
+    fetchInvoices()
+    showModal.value = false
 }
 
 function onInvoiceUpdated() {
     fetchInvoices()
-}
-
-function viewDetails(invoice: Invoice) {
-    navigateTo(`/home/invoices/${invoice.id}`)
+    showModal.value = false
 }
 
 onMounted(() => {
@@ -165,8 +200,8 @@ onMounted(() => {
 
 <template>
     <div>
-        <InvoiceStandaloneModal v-model="showCreateModal" :invoice="selectedInvoice" @created="onInvoiceCreated"
-            @updated="onInvoiceUpdated" />
+        <InvoiceStandaloneModal v-model="showModal" :invoice="selectedInvoice" :action="modalAction" 
+            @created="onInvoiceCreated" @updated="onInvoiceUpdated" />
 
         <div class="sticky top-0 z-50 bg-white">
             <UDashboardNavbar title="Facturation" class="lg:text-2xl font-semibold"

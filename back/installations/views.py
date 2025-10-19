@@ -41,8 +41,9 @@ class FormViewSet(viewsets.ModelViewSet):
 			return None
 
 	def _get_client_name(self, form: Form) -> str:
-		first = getattr(form, 'client_first_name', '')
-		last = getattr(form, 'client_last_name', '')
+		client = getattr(form, 'client', None)
+		first = getattr(client, 'first_name', '')
+		last = getattr(client, 'last_name', '')
 		return f"{first} {last}".strip()
 
 	def _send_mail_safe(self, *, template: str, context: dict, subject: str, to: str, attachments=None, save_to_log=True):
