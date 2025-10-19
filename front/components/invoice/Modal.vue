@@ -5,7 +5,7 @@ import type { Offer } from '~/types/offers'
 const model = defineModel({ type: Boolean })
 
 const props = defineProps<{
-    offer: Offer
+    offer?: Offer
     formId?: string
     invoice?: Invoice | null
     action?: 'preview' | 'manage'
@@ -28,7 +28,8 @@ function openPrint() {
             <div class="flex items-center justify-between w-full pr-2">
                 <span class="font-semibold">{{ action === 'manage' ? 'Gestion' : 'Aperçu' }} de la facture</span>
                 <div class="flex items-center gap-2" v-if="props.invoice">
-                    <UButton size="sm" icon="i-heroicons-printer" @click="openPrint" color="primary">Imprimer</UButton>
+                    <UButton v-if="props.formId" size="sm" icon="i-heroicons-printer" @click="openPrint"
+                        color="primary">Imprimer</UButton>
                     <UButton icon="i-lucide-x" @click="model = false" color="neutral" variant="ghost" />
                 </div>
             </div>

@@ -17,6 +17,7 @@ const toast = useToast()
 const invoices = ref<Invoice[]>([])
 const loading = ref(false)
 const showModal = ref(false)
+const showCreateModal = ref(false)
 const selectedInvoice = ref<Invoice | undefined>(undefined)
 const modalAction = ref<'preview' | 'manage'>('preview')
 
@@ -140,9 +141,7 @@ async function fetchInvoices() {
 }
 
 function openCreateModal() {
-    selectedInvoice.value = undefined
-    modalAction.value = 'manage'
-    showModal.value = true
+    showCreateModal.value = true
 }
 
 function openPreview(invoice: Invoice) {
@@ -157,16 +156,6 @@ function openManage(invoice: Invoice) {
     showModal.value = true
 }
 
-function onInvoiceCreated(invoice: Invoice) {
-    fetchInvoices()
-    showModal.value = false
-}
-
-function onInvoiceUpdated() {
-    fetchInvoices()
-    showModal.value = false
-}
-
 onMounted(() => {
     fetchInvoices()
 })
@@ -174,8 +163,11 @@ onMounted(() => {
 
 <template>
     <div>
-        <InvoiceStandaloneModal v-model="showModal" :invoice="selectedInvoice" :action="modalAction" 
-            @created="onInvoiceCreated" @updated="onInvoiceUpdated" />
+        <!-- Modal de création (avec draft) -->
+        <InvoiceStandaloneModal v-model="showCreateModal" @created="(invoice) => { fetchInvoices(); showCreateModal = false }" />
+        
+        <!-- Modal de gestion/aperçu (factures existantes - compatible standalone et normales) -->
+        <InvoiceModal v-model="showModal" :invoice="selectedInvoice" :action="modalAction" @submit="fetchInvoices" />
 
         <div class="sticky top-0 z-50 bg-white">
             <UDashboardNavbar title="Facturation" class="lg:text-2xl font-semibold"

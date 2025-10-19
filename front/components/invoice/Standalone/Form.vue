@@ -22,7 +22,6 @@ const props = defineProps<{
             discount_rate: number
         }>
     }
-    invoice?: Invoice
 }>()
 
 const products = ref<Product[]>([])
@@ -114,7 +113,6 @@ const validate = (state: any) => {
 
 const emit = defineEmits<{
     (e: 'created', invoice: Invoice): void
-    (e: 'updated', invoice: Invoice): void
 }>()
 
 async function onSubmit() {
@@ -144,14 +142,9 @@ async function onSubmit() {
     }
 
     loading.value = true
-    const isEdit = !!props.invoice
-
-    // Création ou mise à jour : un seul appel PATCH/POST
-    const method = isEdit ? 'PATCH' : 'POST'
-    const url = isEdit ? `/api/invoices/${props.invoice!.id}/` : '/api/invoices/'
     
-    const res = await apiRequest<Invoice>(() => $fetch(url, {
-        method,
+    const res = await apiRequest<Invoice>(() => $fetch('/api/invoices/', {
+        method: 'POST',
         body: payload,
         credentials: 'include'
     }), toast)
@@ -159,15 +152,11 @@ async function onSubmit() {
     loading.value = false
     if (res) {
         toast.add({ 
-            title: isEdit ? 'Facture mise à jour' : 'Facture créée', 
+            title: 'Facture créée', 
             color: 'success', 
             icon: 'i-heroicons-check-circle' 
         })
-        if (isEdit) {
-            emit('updated', res)
-        } else {
-            emit('created', res)
-        }
+        emit('created', res)
     }
 }
 </script>
@@ -286,7 +275,7 @@ async function onSubmit() {
                 <template #footer>
                     <div class="flex justify-end">
                         <UButton type="submit" color="primary" :loading="loading" icon="i-heroicons-check-circle"
-                            :label="invoice ? 'Modifier la facture' : 'Créer la facture'" />
+                            label="Créer la facture" />
                     </div>
                 </template>
             </UCard>

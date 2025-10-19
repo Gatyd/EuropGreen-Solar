@@ -2,7 +2,7 @@
 import type { Invoice, Installment, Payment } from '~/types/billing'
 import type { Offer } from '~/types/offers'
 
-const props = defineProps<{ offer: Offer; invoice?: Invoice | null }>()
+const props = defineProps<{ offer?: Offer; invoice?: Invoice | null }>()
 
 const emit = defineEmits<{ (e: 'refresh'): void }>()
 

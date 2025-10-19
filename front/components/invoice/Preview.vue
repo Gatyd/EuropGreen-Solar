@@ -3,7 +3,7 @@ import type { Invoice, Installment, Payment, QuoteLine } from '~/types/billing'
 import type { Offer } from '~/types/offers'
 import { formatPrice } from '~/utils/formatPrice'
 
-const props = defineProps<{ offer: Offer; invoice: Invoice | null }>()
+const props = defineProps<{ offer?: Offer; invoice: Invoice | null }>()
 
 const company = {
     name: "Europ'Green Solar",
@@ -49,11 +49,26 @@ const balanceDue = computed(() => (props.invoice ? parseFloat(props.invoice.bala
         </div>
 
         <div class="text-[12px] flex justify-between items-start mb-6">
-            <!-- Infos client -->
+            <!-- Infos client/destinataire -->
             <div class="mb-4">
                 <p class="font-semibold mb-1">Facturé à :</p>
-                <p class="font-medium">{{ props.offer.first_name }} {{ props.offer.last_name }}</p>
-                <p>{{ props.offer.address }}</p>
+                <!-- Facture normale (avec offer) -->
+                <template v-if="props.offer">
+                    <p class="font-medium">{{ props.offer.first_name }} {{ props.offer.last_name }}</p>
+                    <p>{{ props.offer.address }}</p>
+                </template>
+                <!-- Facture standalone (custom_recipient) -->
+                <template v-else-if="invoice">
+                    <p v-if="invoice.custom_recipient_company" class="font-medium">{{ invoice.custom_recipient_company
+                        }}</p>
+                    <p v-if="invoice.custom_recipient_company" class="text-gray-600">Représenté par : {{
+                        invoice.custom_recipient_name }}</p>
+                    <p v-else class="font-medium">{{ invoice.custom_recipient_name }}</p>
+                    <p v-if="invoice.custom_recipient_siret" class="mt-1 text-gray-600">SIRET: {{
+                        invoice.custom_recipient_siret }}</p>
+                    <p v-if="invoice.custom_recipient_address" class="whitespace-pre-line">{{
+                        invoice.custom_recipient_address }}</p>
+                </template>
             </div>
             <div>
                 <p><span class="text-gray-500">Facture N° :</span> <span class="font-semibold">{{ invoice?.number || '—'
