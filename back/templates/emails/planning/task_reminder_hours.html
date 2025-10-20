@@ -5,7 +5,7 @@
 {% block content %}
 <div style="margin-bottom: 32px;">
     <h1 style="color: #dc2626; font-size: 24px; font-weight: 600; margin: 0 0 8px 0;">
-        ⚠️ Rappel urgent : Tâche imminente
+        Rappel urgent : Tâche imminente
     </h1>
     <p style="color: #6b7280; font-size: 14px; margin: 0;">
         Votre tâche commence dans <strong style="color: #dc2626;">{{ hours_remaining }} heure{{ hours_remaining|pluralize }}</strong>
@@ -23,19 +23,19 @@
             </h2>
             {% if task.priority == 'urgent' %}
             <span style="background-color: #991b1b; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                🔴 Urgente
+                Urgente
             </span>
             {% elif task.priority == 'high' %}
             <span style="background-color: #ea580c; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                🟠 Haute priorité
+                Haute priorité
             </span>
             {% elif task.priority == 'normal' %}
             <span style="background-color: #2563eb; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                🔵 Normale
+                Normale
             </span>
             {% else %}
             <span style="background-color: #6b7280; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                ⚪ Basse
+                Basse
             </span>
             {% endif %}
         </div>
@@ -51,7 +51,7 @@
     <!-- Heure exacte -->
     <div style="background-color: #ffffff; border-radius: 6px; padding: 16px; margin-bottom: 12px;">
         <div style="text-align: center;">
-            <span style="color: #dc2626; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">⏰ Heure de début</span>
+            <span style="color: #dc2626; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Heure de début</span>
             <span style="color: #1f2937; font-size: 24px; font-weight: 700;">
                 {{ task.due_time|time:"H:i" }}
             </span>
@@ -65,7 +65,7 @@
     <!-- Installation liée -->
     <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #fca5a5;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-            <span style="color: #991b1b; font-size: 13px; font-weight: 500;">🏠 Installation liée</span>
+            <span style="color: #991b1b; font-size: 13px; font-weight: 500;">Installation liée</span>
             <a href="{{ frontend_url }}/home/installations/{{ task.related_installation.id }}" 
                style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; transition: background-color 0.2s;">
                 Voir l'installation
@@ -91,14 +91,14 @@
 <div style="text-align: center; margin: 32px 0;">
     <a href="{{ frontend_url }}/home/calendar" 
        style="display: inline-block; background-color: #dc2626; color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.4);">
-        🚀 Accéder à la tâche
+        Accéder à la tâche
     </a>
 </div>
 
 <!-- Informations supplémentaires -->
 <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin-top: 24px; border-left: 4px solid #6b7280;">
     <p style="color: #4b5563; font-size: 13px; line-height: 1.5; margin: 0;">
-        <strong>📌 Note :</strong> Ce rappel est envoyé automatiquement 3 heures avant l'échéance. 
+        <strong>Note :</strong> Ce rappel est envoyé automatiquement 3 heures avant l'échéance. 
         Une fois la tâche terminée, pensez à la marquer comme complétée dans votre calendrier.
     </p>
 </div>
