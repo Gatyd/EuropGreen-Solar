@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { format, isSameMonth, isToday, isSameDay } from 'date-fns';
+import { useAuthStore } from '~/store/auth';
 
 const props = defineProps<{
     date: Date
@@ -9,7 +10,7 @@ const props = defineProps<{
     hoveredDay: Date | null
     isSmallScreen: boolean
 }>()
-
+const auth = useAuthStore();
 const emit = defineEmits<{
     (e: 'click', date: Date): void
     (e: 'mouseenter', date: Date): void
@@ -17,6 +18,9 @@ const emit = defineEmits<{
     (e: 'openTask', task: any): void
     (e: 'createTask', date: Date): void
 }>()
+
+// Contrôle de l'état du popover (pour mobile)
+const popoverOpen = ref(false);
 
 // Obtenir les tâches du jour
 const dayTasks = computed(() => {
@@ -69,33 +73,16 @@ const getPriorityEmoji = (priority: string) => {
     return emojis[priority] || emojis.normal;
 };
 
-// Afficher le tooltip
-const showTooltip = computed(() => {
-    return hasTasks.value && isSameMonth(props.date, props.currentDate) &&
-        ((props.isSmallScreen && props.selectedDay && isSameDay(props.date, props.selectedDay)) ||
-            (!props.isSmallScreen && props.hoveredDay && isSameDay(props.date, props.hoveredDay)));
-});
+// Configuration du popover selon le type d'écran
+const popoverMode = computed(() => props.isSmallScreen ? 'click' : 'hover');
 
-// Positionner le tooltip en fonction du jour de la semaine pour éviter le débordement
-const tooltipPositionClasses = computed(() => {
-    const dayOfWeek = props.date.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
-
-    // Convertir en format européen (0 = Lundi, 6 = Dimanche)
-    const europeanDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-    // Pour les 3 premiers jours (Lun, Mar) : aligner à gauche
-    if (europeanDay <= 1) {
-        return 'left-0';
-    }
-    // Pour les 2 derniers jours (Sam, Dim) : aligner à droite
-    else if (europeanDay >= 5) {
-        return 'right-0';
-    }
-    // Pour les jours du milieu (Mer, Jeu, Ven) : centrer
-    else {
-        return 'left-1/2 -translate-x-1/2';
-    }
-});
+// Configuration du contenu du popover pour gestion automatique du positionnement
+const popoverContentConfig = computed(() => ({
+    side: 'bottom' as const,
+    align: 'start' as const,
+    sideOffset: 8,
+    collisionPadding: 8
+}));
 
 // Classes CSS pour le jour
 const dayClasses = computed(() => ({
@@ -118,84 +105,110 @@ const handleClick = () => {
     // Si le jour n'a pas de tâches et est dans le mois actuel, ouvrir le modal de création
     if (!hasTasks.value && isSameMonth(props.date, props.currentDate)) {
         emit('createTask', props.date)
+        popoverOpen.value = false;
     } else {
         emit('click', props.date)
+        // Ouvrir le popover si on a des tâches et qu'on est sur mobile
+        if (hasTasks.value && props.isSmallScreen) {
+            popoverOpen.value = true;
+        }
     }
 };
 const handleMouseEnter = () => !props.isSmallScreen && emit('mouseenter', props.date);
 const handleMouseLeave = () => !props.isSmallScreen && emit('mouseleave');
-const handleTaskClick = (task: any) => emit('openTask', task);
-const handleCreateTask = () => emit('createTask', props.date);
+const handleTaskClick = (task: any) => {
+    emit('openTask', task);
+    popoverOpen.value = false;
+};
+const handleCreateTask = () => {
+    emit('createTask', props.date);
+    popoverOpen.value = false;
+};
 </script>
 
 <template>
-    <div class="relative min-h-[80px] md:min-h-[110px] p-1 md:p-2 cursor-pointer transition-colors" :class="dayClasses"
-        @click="handleClick" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+    <UPopover v-if="hasTasks && isSameMonth(date, currentDate)" v-model:open="popoverOpen" :mode="popoverMode"
+        :content="popoverContentConfig">
+        <!-- Trigger : le jour du calendrier -->
+        <div class="relative min-h-[80px] md:min-h-[110px] p-1 md:p-2 cursor-pointer transition-colors"
+            :class="dayClasses" @click="handleClick" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+            <!-- Numéro du jour -->
+            <div class="flex justify-between mb-1">
+                <span class="text-xs md:text-sm font-medium" :class="dayNumberClasses">
+                    {{ format(date, 'd') }}
+                </span>
+
+                <!-- Indicateur de tâches -->
+                <div class="flex flex-col items-end gap-0.5">
+                    <!-- Afficher un indicateur par priorité avec son emoji et nombre -->
+                    <template v-for="priority in ['urgent', 'high', 'normal', 'low']" :key="priority">
+                        <div v-if="tasksByPriority[priority as 'urgent' | 'high' | 'normal' | 'low'] > 0"
+                            class="flex items-center gap-1 text-[10px] md:text-xs">
+                            <span>{{ getPriorityEmoji(priority) }}</span>
+                            <span class="font-medium text-gray-700">
+                                {{ tasksByPriority[priority as 'urgent' | 'high' | 'normal' | 'low'] }}
+                            </span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content : aperçu des tâches -->
+        <template #content>
+            <div class="w-64 md:w-80 bg-white rounded-lg shadow-md">
+                <!-- Bouton Nouvelle tâche en haut -->
+                <div v-if="auth.user?.is_superuser" class="p-2 border-b border-gray-200">
+                    <UButton label="Nouvelle tâche" icon="i-heroicons-plus" color="primary" size="xs" block
+                        @click.stop="handleCreateTask" />
+                </div>
+
+                <!-- Zone scrollable pour les tâches -->
+                <div class="overflow-y-auto max-h-[250px] pb-1 md:max-h-[300px]">
+                    <div class="space-y-2 p-3 pb-3">
+                        <div v-for="task in dayTasks" :key="task.id"
+                            class="p-2 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition-colors"
+                            @click.stop="handleTaskClick(task)">
+                            <div class="flex items-start justify-between gap-2 mb-1">
+                                <h4 class="text-sm font-semibold text-gray-900 flex-1">
+                                    {{ task.title }}
+                                </h4>
+                                <UBadge
+                                    :label="task.priority === 'urgent' ? 'Urgente' : task.priority === 'high' ? 'Haute' : task.priority === 'low' ? 'Basse' : 'Normale'"
+                                    :color="getPriorityColorClass(task.priority)" size="xs" variant="subtle" />
+                            </div>
+                            <p v-if="task.description" class="text-xs text-gray-600 mb-1 line-clamp-2">
+                                {{ task.description }}
+                            </p>
+                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                <UIcon name="i-heroicons-user" class="w-3 h-3" />
+                                <span>{{ task.assigned_to_name }}</span>
+                                <span v-if="task.due_time" class="flex items-center gap-1">
+                                    <UIcon name="i-heroicons-clock" class="w-3 h-3" />
+                                    {{ task.due_time.substring(0, 5) }}
+                                </span>
+                            </div>
+                            <div class="mt-1">
+                                <UBadge
+                                    :label="task.status === 'pending' ? 'En attente' : task.status === 'in_progress' ? 'En cours' : task.status === 'completed' ? 'Terminée' : 'Annulée'"
+                                    :color="(task.status === 'completed' ? 'success' : task.status === 'in_progress' ? 'info' : task.status === 'cancelled' ? 'error' : 'neutral')"
+                                    size="xs" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </UPopover>
+
+    <!-- Jour sans tâches : affichage simple -->
+    <div v-else class="relative min-h-[80px] md:min-h-[110px] p-1 md:p-2 cursor-pointer transition-colors"
+        :class="dayClasses" @click="handleClick" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
         <!-- Numéro du jour -->
         <div class="flex justify-between mb-1">
             <span class="text-xs md:text-sm font-medium" :class="dayNumberClasses">
                 {{ format(date, 'd') }}
             </span>
-
-            <!-- Indicateur de tâches -->
-            <div v-if="hasTasks && isSameMonth(date, currentDate)" class="flex flex-col items-end gap-0.5">
-                <!-- Afficher un indicateur par priorité avec son emoji et nombre -->
-                <template v-for="priority in ['urgent', 'high', 'normal', 'low']" :key="priority">
-                    <div v-if="tasksByPriority[priority as 'urgent' | 'high' | 'normal' | 'low'] > 0"
-                        class="flex items-center gap-1 text-[10px] md:text-xs">
-                        <span>{{ getPriorityEmoji(priority) }}</span>
-                        <span class="font-medium text-gray-700">
-                            {{ tasksByPriority[priority as 'urgent' | 'high' | 'normal' | 'low'] }}
-                        </span>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Aperçu des tâches sur hover (desktop) ou clic (mobile) -->
-        <div v-if="showTooltip"
-            class="absolute top-full z-20 w-64 md:w-80 bg-white rounded-lg shadow-xl border border-gray-200"
-            :class="tooltipPositionClasses">
-            <!-- Bouton Nouvelle tâche en haut -->
-            <div class="p-2 border-b border-gray-200">
-                <UButton label="Nouvelle tâche" icon="i-heroicons-plus" color="primary" size="xs" block
-                    @click.stop="handleCreateTask" />
-            </div>
-
-            <!-- Zone scrollable pour les tâches -->
-            <div class="overflow-y-auto max-h-[250px] pb-1 md:max-h-[300px]">
-                <div class="space-y-2 p-3 pb-3">
-                    <div v-for="task in dayTasks" :key="task.id"
-                        class="p-2 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition-colors"
-                        @click.stop="handleTaskClick(task)">
-                        <div class="flex items-start justify-between gap-2 mb-1">
-                            <h4 class="text-sm font-semibold text-gray-900 flex-1">
-                                {{ task.title }}
-                            </h4>
-                            <UBadge
-                                :label="task.priority === 'urgent' ? 'Urgente' : task.priority === 'high' ? 'Haute' : task.priority === 'low' ? 'Basse' : 'Normale'"
-                                :color="getPriorityColorClass(task.priority)" size="xs" variant="subtle" />
-                        </div>
-                        <p v-if="task.description" class="text-xs text-gray-600 mb-1 line-clamp-2">
-                            {{ task.description }}
-                        </p>
-                        <div class="flex items-center gap-2 text-xs text-gray-500">
-                            <UIcon name="i-heroicons-user" class="w-3 h-3" />
-                            <span>{{ task.assigned_to_name }}</span>
-                            <span v-if="task.due_time" class="flex items-center gap-1">
-                                <UIcon name="i-heroicons-clock" class="w-3 h-3" />
-                                {{ task.due_time.substring(0, 5) }}
-                            </span>
-                        </div>
-                        <div class="mt-1">
-                            <UBadge
-                                :label="task.status === 'pending' ? 'En attente' : task.status === 'in_progress' ? 'En cours' : task.status === 'completed' ? 'Terminée' : 'Annulée'"
-                                :color="(task.status === 'completed' ? 'success' : task.status === 'in_progress' ? 'info' : task.status === 'cancelled' ? 'error' : 'neutral')"
-                                size="xs" />
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </template>

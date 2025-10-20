@@ -90,7 +90,7 @@ const signatureImageUrl = computed(() => {
             <!-- Infos devis -->
             <div class="mb-6 w-60">
                 <p class="flex justify-between font-medium">Devis N° :<span class="font-bold"> {{ quote?.number || '—'
-                        }}</span></p>
+                }}</span></p>
                 <p class="flex justify-between font-medium">Date :<span class="font-bold"> {{ today }}</span></p>
                 <p class="flex justify-between font-medium">Valide jusqu’au :<span class="font-bold"> {{
                     props.draft.valid_until ? new Date(props.draft.valid_until).toLocaleDateString('fr-FR') : '—'
@@ -124,8 +124,32 @@ const signatureImageUrl = computed(() => {
             </tbody>
         </table>
 
+        <!-- Notes -->
+        <div v-if="draft.notes" class="mt-8">
+            <div class="text-sm font-semibold text-zinc-700 mb-2">Notes</div>
+            <div
+                class="border border-zinc-200 rounded-md bg-zinc-50 p-4 text-sm leading-relaxed text-zinc-800 whitespace-pre-line">
+                {{ draft.notes }}
+            </div>
+        </div>
+
         <!-- Totaux -->
-        <div class="mt-6 text-sm flex justify-end">
+        <div class="mt-8 text-sm flex" :class="signature ? 'justify-between' : 'justify-end'">
+            <!-- Signature -->
+            <div v-if="signature">
+                <div class="text-xs text-gray-600 mb-1">Signature du client</div>
+                <div class="border rounded-md p-3 inline-flex flex-col items-start gap-2">
+                    <img v-if="signatureImageUrl" :src="signatureImageUrl" alt="Signature"
+                        class="h-20 object-contain bg-white" />
+                    <div v-else class="text-gray-500 italic">Signature enregistrée</div>
+                    <div class="text-[11px] text-gray-700">
+                        Signé par <span class="font-semibold">{{ signature.signer_name || '—' }}</span>
+                        <span v-if="signature.signer_email" class="text-gray-500">({{ signature.signer_email }})</span>
+                        <span v-if="signature.signed_at"> • le {{ new Date(signature.signed_at).toLocaleString('fr-FR')
+                            }}</span>
+                    </div>
+                </div>
+            </div>
             <div class="w-64">
                 <div class="flex justify-between border-t py-1">
                     <span class="font-semibold">TOTAL H.T. :</span>
@@ -138,30 +162,6 @@ const signatureImageUrl = computed(() => {
                 <div class="flex justify-between border-t font-bold py-1">
                     <span>TOTAL (EUR) :</span>
                     <span>{{ formatPrice(totalTTC, true) }} €</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Notes -->
-        <div v-if="draft.notes" class="mt-8">
-            <div class="text-sm font-semibold text-zinc-700 mb-2">Notes</div>
-            <div class="border border-zinc-200 rounded-md bg-zinc-50 p-4 text-sm leading-relaxed text-zinc-800 whitespace-pre-line">
-                {{ draft.notes }}
-            </div>
-        </div>
-
-        <!-- Signature -->
-        <div v-if="signature" class="mt-8">
-            <div class="text-xs text-gray-600 mb-1">Signature du client</div>
-            <div class="border rounded-md p-3 inline-flex flex-col items-start gap-2">
-                <img v-if="signatureImageUrl" :src="signatureImageUrl" alt="Signature"
-                    class="h-20 object-contain bg-white" />
-                <div v-else class="text-gray-500 italic">Signature enregistrée</div>
-                <div class="text-[11px] text-gray-700">
-                    Signé par <span class="font-semibold">{{ signature.signer_name || '—' }}</span>
-                    <span v-if="signature.signer_email" class="text-gray-500">({{ signature.signer_email }})</span>
-                    <span v-if="signature.signed_at"> • le {{ new Date(signature.signed_at).toLocaleString('fr-FR')
-                        }}</span>
                 </div>
             </div>
         </div>

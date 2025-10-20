@@ -43,6 +43,7 @@ const previewDraft = computed(() => {
 		title: q.title || '',
 		valid_until: q.valid_until || null,
 		tax_rate: Number(q.tax_rate ?? 20),
+		notes: q.notes || '',
 		lines: (q.lines || []).map((l: any) => ({
 			productId: l.product || l.product_id || '',
 			name: l.name,
