@@ -1,0 +1,61 @@
+# ============================================================================
+# Docker Compose PRODUCTION - Overrides du fichier docker-compose.yml
+# ============================================================================
+# 
+# Ce fichier NE REMPLACE PAS docker-compose.yml, il le COMPLÈTE.
+# Docker Compose fusionne les deux fichiers dans l'ordre.
+#
+# USAGE en production:
+#   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Ce qui est HÉRITÉ de docker-compose.yml:
+#   - build, ports, restart, depends_on
+#   - env_file (.env est TOUJOURS lu)
+#   - configuration de base de tous les services
+#
+# Ce qui est AJOUTÉ/ÉCRASÉ ici pour la production:
+#   - Volumes media externes (persistance hors conteneur)
+#   - Variables d'environnement (DEBUG=False écrase le .env)
+#   - Limites mémoire activées
+#   - Volume PostgreSQL externe
+# ============================================================================
+
+version: '3.9'
+
+services:
+  web:
+    # VOLUMES: Ajout du volume media externe (s'ajoute à .:/app du fichier de base)
+    volumes:
+      - /var/www/mon_projet/media:/app/media
+    
+    # ENVIRONNEMENT: Ces variables ÉCRASENT celles du .env
+    environment:
+      - DEBUG=False                                    # Force DEBUG à False
+    
+    # MÉMOIRE: Active la limite (commentée dans le fichier de base)
+    mem_limit: ${WEB_MEM_LIMIT:-1g}
+
+  celery-worker:
+    # VOLUMES: Même volume media que web
+    volumes:
+      - /var/www/mon_projet/media:/app/media
+    
+    # MÉMOIRE: Active la limite
+    mem_limit: ${CELERY_WORKER_MEM_LIMIT:-768m}
+
+  celery-beat:
+    # VOLUMES: Même volume media que web
+    volumes:
+      - /var/www/mon_projet/media:/app/media
+    
+    # MÉMOIRE: Active la limite
+    mem_limit: ${CELERY_BEAT_MEM_LIMIT:-256m}
+
+  redis:
+    # MÉMOIRE: Active la limite
+    mem_limit: ${REDIS_CONTAINER_MEM_LIMIT:-512m}
+
+  db:
+    # VOLUMES: Persister PostgreSQL hors conteneur (remplace le volume nommé)
+    volumes:
+      - /var/www/mon_projet/pgdata:/var/lib/postgresql/data

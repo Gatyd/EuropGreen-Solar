@@ -11,7 +11,8 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-      - /var/www/mon_projet/media:/app/media
+      # Volume media pour production Linux - commenté pour dev local
+      # - /var/www/mon_projet/media:/app/media
     env_file:
       - .env
     # Limite mémoire (ajustez selon votre serveur, ex: 512m, 1g, 2g)
@@ -52,7 +53,8 @@ services:
     command: celery -A EuropGreenSolar worker -l info --concurrency=${CELERY_CONCURRENCY:-4} --max-tasks-per-child=1000
     volumes:
       - .:/app
-      - /var/www/mon_projet/media:/app/media
+      # Volume media pour production Linux - commenté pour dev local
+      # - /var/www/mon_projet/media:/app/media
     env_file:
       - .env
     # Limite mémoire (ajustez selon votre serveur et le nombre de workers)
@@ -77,7 +79,8 @@ services:
     command: celery -A EuropGreenSolar beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - .:/app
-      - /var/www/mon_projet/media:/app/media
+      # Volume media pour production Linux - commenté pour dev local
+      # - /var/www/mon_projet/media:/app/media
     env_file:
       - .env
     # Limite mémoire (beat est léger, 128-256MB suffisent généralement)
