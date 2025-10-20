@@ -212,7 +212,7 @@ const submit = async () => {
     )
     if (res) {
         toast.add({ title: `Demande ${props.modelValue ? 'modifiée' : 'créée'} avec succès`, color: 'success', icon: 'i-heroicons-check-circle' })
-        emit('submit', form)
+        emit('submit', res)
     }
     loading.value = false
 }

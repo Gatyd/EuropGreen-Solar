@@ -83,7 +83,7 @@ const loadTasks = async () => {
         headers: useRequestHeaders(['cookie']),
     }), toast);
     if (response) {
-        tasks.value = response.results;
+        tasks.value = response;
     } else {
         tasks.value = [];
     }

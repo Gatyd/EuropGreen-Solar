@@ -3,8 +3,6 @@ import type { ProspectRequest, ProspectStatus } from '~/types/requests'
 import DetailsModal from '@/components/request/DetailsModal.vue'
 import apiRequest from '~/utils/apiRequest'
 
-definePageMeta({ layout: 'default' })
-
 const toast = useToast()
 const creating = ref(false)
 const search = ref('')
@@ -111,9 +109,10 @@ const onDrop = async (payload: { to: ProspectStatus, item: ProspectRequest }) =>
     }
 }
 
-const submitFromModal = async (form: FormData) => {
+const submitFromModal = async (item: ProspectRequest) => {
     creating.value = false
     await fetchAll()
+    selected.value = item
 }
 
 const newRequest = () => {
