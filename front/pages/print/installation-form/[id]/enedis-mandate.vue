@@ -68,7 +68,7 @@ const draft = computed(() => {
         <div v-if="pending" class="text-center text-gray-500">Chargement…</div>
         <div v-else-if="error" class="text-center text-red-600">{{ error }}</div>
         <AdministrativeEnedisMandatePreview v-else-if="form?.representation_mandate" :form="form" :draft="draft"
-            class="mx-auto" mode="print" />
+            class="mx-auto" mode="preview" />
     </div>
 
 </template>

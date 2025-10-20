@@ -37,11 +37,9 @@ const selectNewProduct = (product: Product) => {
 
 // Charger le catalogue produits
 onMounted(async () => {
-    try {
-        const res = await $fetch<Product[]>(`/api/products/`, { credentials: 'include' })
+    const res = await apiRequest<Product[]>(() => $fetch(`/api/products/`, { credentials: 'include' }), toast)
+    if (res) {
         products.value = res.filter(p => p.is_active)
-    } catch (e) {
-        // noop UI toast ailleurs
     }
 })
 
@@ -319,9 +317,9 @@ async function submitReplyCurrent() {
                 </UFormField>
                 <template #footer>
                     <div class="flex flex-col sm:flex-row justify-end gap-2">
-                        <UButton v-if="quote && quote.status === 'pending'" color="primary"
-                            variant="soft" :loading="loadingReply" icon="i-heroicons-paper-airplane"
-                            @click="submitReplyCurrent" label="Envoyer la réponse (version actuelle)" />
+                        <UButton v-if="quote && quote.status === 'pending'" color="primary" variant="soft"
+                            :loading="loadingReply" icon="i-heroicons-paper-airplane" @click="submitReplyCurrent"
+                            label="Envoyer la réponse (version actuelle)" />
                         <UButton type="submit" color="primary" :loading="loading" icon="i-heroicons-check-circle"
                             :label="quote ? quote.status === 'pending' || quote.status === 'sent' ? 'Envoyer (nouvelle version)' : 'Modifier le brouillon' : 'Valider le brouillon'" />
                     </div>

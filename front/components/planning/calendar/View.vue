@@ -6,6 +6,7 @@ import { fr } from 'date-fns/locale';
 const emit = defineEmits<{
     (e: 'createTask', date: string): void
 }>()
+const toast = useToast();
 
 // État du calendrier
 const currentDate = ref(new Date());
@@ -76,24 +77,17 @@ const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 // Charger les tâches du mois
 const loadTasks = async () => {
     loading.value = true;
-    try {
-        const monthParam = format(currentDate.value, 'yyyy-MM');
-        const response = await $fetch(`/api/tasks/?month=${monthParam}`, {
-            credentials: 'include',
-            headers: useRequestHeaders(['cookie']),
-        });
-        tasks.value = response as any[];
-    } catch (error) {
-        console.error('Erreur lors du chargement des tâches:', error);
-        useToast().add({
-            title: 'Erreur',
-            description: 'Impossible de charger les tâches du mois.',
-            color: 'error',
-            icon: 'i-heroicons-x-circle',
-        });
-    } finally {
-        loading.value = false;
+    const monthParam = format(currentDate.value, 'yyyy-MM');
+    const response = await apiRequest<any>(() => $fetch(`/api/tasks/?month=${monthParam}`, {
+        credentials: 'include',
+        headers: useRequestHeaders(['cookie']),
+    }), toast);
+    if (response) {
+        tasks.value = response.results;
+    } else {
+        tasks.value = [];
     }
+    loading.value = false;
 };
 
 // Navigation entre les mois

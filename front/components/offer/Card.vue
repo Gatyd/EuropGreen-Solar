@@ -7,6 +7,7 @@ const props = defineProps<{ item: Offer }>()
 const emit = defineEmits<{
 	(e: 'submit-quote'): void
 }>()
+const toast = useToast()
 
 const showInstallationModal = ref(false)
 const quoteModal = ref(false)
@@ -126,12 +127,10 @@ const showNotesChronology = ref(false)
 const showAddNote = ref(false)
 
 async function refreshOfferNotes() {
-	// Refetch offer detail (public endpoint retrieve) then update local item.notes
-	try {
-		const data = await $fetch(`/api/offers/${props.item.id}/`, { credentials: 'include' }) as Offer
-		// @ts-ignore mutate prop object (Card is ephemeral UI container)
-		props.item.notes = data.notes || []
-	} catch (e) { /* ignore */ }
+	const data = await apiRequest<Offer>(() => $fetch(`/api/offers/${props.item.id}/`, { credentials: 'include' }), toast)
+	if (data) {
+		props.item.notes = data.notes
+	}
 }
 </script>
 
