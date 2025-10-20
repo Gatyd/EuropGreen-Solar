@@ -6,20 +6,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://europgreen-solar.gatyd.tech/statics/favicon.ico" />
     <title>{% block title %}EuropGreen Solar{% endblock %}</title>
+    <style type="text/css">
+        /* Styles responsive pour mobile */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+            }
+            .email-content {
+                padding: 20px !important;
+            }
+            .email-header {
+                padding: 16px !important;
+            }
+            .email-footer {
+                padding: 20px !important;
+            }
+            .logo-img {
+                max-width: 160px !important;
+            }
+            h1 {
+                font-size: 18px !important;
+            }
+            p {
+                font-size: 14px !important;
+            }
+            .button-link {
+                padding: 10px 20px !important;
+                font-size: 14px !important;
+            }
+        }
+    </style>
 </head>
 <body style="background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0;">
-    <div style="max-width: 672px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 8px; margin-top: 20px; margin-bottom: 20px; overflow: hidden;">
+    <div class="email-container" style="max-width: 672px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 8px; margin-top: 20px; margin-bottom: 20px; overflow: hidden;">
         
         <!-- Header avec logo -->
-        <div style="background-color: #1f2937; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center; padding: 20px;">
+        <div class="email-header" style="background-color: #1f2937; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center; padding: 20px;">
             <img src="https://europgreen-solar.gatyd.tech/statics/images/logo.png" 
                  alt="EuropGreen Solar" 
+                 class="logo-img"
                  style="height: auto; width: auto; margin: 0 auto; max-width: 200px;"
                  onerror="this.style.display='none'; this.parentElement.nextElementSibling.style.display='block';">
         </div>
 
         <!-- Contenu principal -->
-        <div style="padding: 32px;">
+        <div class="email-content" style="padding: 32px;">
             {% block content %}
             <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
                 Contenu de l'email...
@@ -28,7 +61,7 @@
         </div>
 
         <!-- Pied de page professionnel -->
-        <div style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 32px;">
+        <div class="email-footer" style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 32px;">
             <div style="text-align: center;">
                 {% block footer_content %}
                 <div style="margin-bottom: 16px;">

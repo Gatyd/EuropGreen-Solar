@@ -13,57 +13,64 @@
   </p>
 
   <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px; background:#f9fafb; margin:16px 0;">
-    <p style="color:#111827; font-weight:600; font-size:14px; margin:0 0 8px 0;">Détails du prospect</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
-      <tr>
-        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Nom</td>
-        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.last_name }} {{ prospect.first_name }}</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Email</td>
-        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.email }}</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Téléphone</td>
-        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.phone }}</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Adresse</td>
-        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.address }}</td>
-      </tr>
-      {% if prospect.housing_type %}
-      <tr>
-        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Type d'habitat</td>
-        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.housing_type }}</td>
-      </tr>
-      {% endif %}
-      {% if prospect.appointment_date %}
-      <tr>
-        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Rendez-vous</td>
-        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.appointment_date|date:'d/m/Y H:i' }}</td>
-      </tr>
-      {% endif %}
-      <tr>
-        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Statut</td>
-        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.get_status_display }}</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 0; color:#6b7280; font-size:14px;">Source</td>
-        <td style="padding:4px 0; color:#111827; font-size:14px; text-align:right;">{{ prospect.get_source_display }}</td>
-      </tr>
-    </table>
+    <p style="color:#111827; font-weight:600; font-size:14px; margin:0 0 12px 0;">Détails du prospect</p>
+    
+    <!-- Ligne par ligne pour meilleur responsive -->
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Nom :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.last_name }} {{ prospect.first_name }}</span>
+    </div>
+    
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Email :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px; word-break:break-word;">{{ prospect.email }}</span>
+    </div>
+    
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Téléphone :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.phone }}</span>
+    </div>
+    
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Adresse :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.address }}</span>
+    </div>
+    
+    {% if prospect.housing_type %}
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Type d'habitat :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.housing_type }}</span>
+    </div>
+    {% endif %}
+    
+    {% if prospect.appointment_date %}
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Rendez-vous :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.appointment_date|date:'d/m/Y à H:i' }}</span>
+    </div>
+    {% endif %}
+    
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Statut :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.get_status_display }}</span>
+    </div>
+    
+    <div style="margin-bottom:0;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Source :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.get_source_type_display }}</span>
+    </div>
   </div>
 
   {% if created_by %}
   <p style="color:#374151; font-size:14px; line-height:1.6; margin:16px 0 0 0;">
-    Créée par: {{ created_by.first_name }} {{ created_by.last_name }} ({{ created_by.email }})
+    Créée par : {{ created_by.first_name }} {{ created_by.last_name }} ({{ created_by.email }})
   </p>
   {% endif %}
 
   <!-- Bouton d'accès à la demande -->
-  <div style="text-align: center; margin: 24px 0;">
-    <a href="{{ frontend_url }}/home/requests?prospect_id={{ prospect.id }}" target="_blank"
-       style="display: inline-block; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-weight: 600; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-size: 16px; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);">
+  <div style="text-align:center; margin:24px 0;">
+    <a href="{{ frontend_url }}/home/requests?prospect_id={{ prospect.id }}" target="_blank" class="button-link"
+       style="display:inline-block; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:white; font-weight:600; padding:12px 28px; border-radius:12px; text-decoration:none; font-size:16px; box-shadow:0 4px 12px rgba(29, 78, 216, 0.3);">
       Voir la demande
     </a>
   </div>
@@ -74,16 +81,16 @@
 {% endblock %}
 
 {% block footer_content %}
-  <div style="margin-bottom: 16px;">
-    <p style="color: #1f2937; font-weight: 500; font-size: 14px; margin-bottom: 4px; margin-top: 0;">
+  <div style="margin-bottom:16px;">
+    <p style="color:#1f2937; font-weight:500; font-size:14px; margin-bottom:4px; margin-top:0;">
       EuropGreen Solar
     </p>
-    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+    <p style="color:#6b7280; font-size:12px; margin:0;">
       Notification automatique • Ne pas répondre à cet email
     </p>
   </div>
-  <div style="border-top: 1px solid #d1d5db; padding-top: 16px;">
-    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+  <div style="border-top:1px solid #d1d5db; padding-top:16px;">
+    <p style="color:#6b7280; font-size:12px; margin:0;">
       Vous recevez cet email car vous êtes administrateur de la plateforme.
     </p>
   </div>

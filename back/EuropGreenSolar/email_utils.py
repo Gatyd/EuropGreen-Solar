@@ -101,6 +101,17 @@ def _serialize_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, 
                     else:
                         # Autres champs : sérialiser directement
                         serialized[field_name] = serialize_value(field_value)
+                    
+                    # Si le champ a des choices, ajouter aussi get_*_display
+                    if hasattr(field, 'choices') and field.choices:
+                        display_method = f'get_{field_name}_display'
+                        if hasattr(value, display_method):
+                            try:
+                                display_value = getattr(value, display_method)()
+                                serialized[display_method] = display_value
+                            except Exception:
+                                pass
+                                
                 except Exception:
                     # En cas d'erreur, ignorer le champ
                     pass

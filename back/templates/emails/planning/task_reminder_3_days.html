@@ -17,24 +17,24 @@
     
     <!-- Titre et priorité -->
     <div style="margin-bottom: 16px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-            <h2 style="color: #1f2937; font-size: 20px; font-weight: 600; margin: 0;">
-                {{ task.title }}
-            </h2>
+        <h2 style="color: #1f2937; font-size: 20px; font-weight: 600; margin: 0 0 8px 0;">
+            {{ task.title }}
+        </h2>
+        <div style="text-align: left;">
             {% if task.priority == 'urgent' %}
-            <span style="background-color: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            <span style="display: inline-block; background-color: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                 Urgente
             </span>
             {% elif task.priority == 'high' %}
-            <span style="background-color: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            <span style="display: inline-block; background-color: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                 Haute priorité
             </span>
             {% elif task.priority == 'normal' %}
-            <span style="background-color: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            <span style="display: inline-block; background-color: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                 Normale
             </span>
             {% else %}
-            <span style="background-color: #e5e7eb; color: #374151; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            <span style="display: inline-block; background-color: #e5e7eb; color: #374151; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                 Basse
             </span>
             {% endif %}
@@ -50,27 +50,25 @@
 
     <!-- Date d'échéance -->
     <div style="margin-bottom: 8px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="color: #92400e; font-size: 13px; font-weight: 500;">Date d'échéance :</span>
-            <span style="color: #1f2937; font-size: 16px; font-weight: 700;">
-                {{ task.due_date|date:"l d F Y" }}
-                {% if task.due_time %}
-                à {{ task.due_time|time:"H:i" }}
-                {% endif %}
-            </span>
-        </div>
+        <span style="color: #92400e; font-size: 13px; font-weight: 500;">Date d'échéance :</span>
+        <span style="color: #1f2937; font-size: 16px; font-weight: 700; margin-left: 8px;">
+            {{ task.due_date|date:"l d F Y" }}
+            {% if task.due_time %}
+            à {{ task.due_time|time:"H:i" }}
+            {% endif %}
+        </span>
     </div>
 
     {% if task.related_installation %}
     <!-- Installation liée -->
-    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #fbbf24;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+    <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #fbbf24;">
+        <div style="margin-bottom: 8px;">
             <span style="color: #92400e; font-size: 13px; font-weight: 500;">Installation liée</span>
-            <a href="{{ frontend_url }}/home/installations/{{ task.related_installation.id }}" 
-               style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; transition: background-color 0.2s;">
-                Voir l'installation
-            </a>
         </div>
+        <a href="{{ frontend_url }}/home/installations/{{ task.related_installation.id }}" class="button-link"
+           style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;">
+            Voir l'installation
+        </a>
     </div>
     {% endif %}
 
