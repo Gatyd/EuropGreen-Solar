@@ -229,6 +229,8 @@ MAILGUN_DOMAIN = config('MAILGUN_DOMAIN', default='')
 # Celery Configuration
 # ============================================================================
 
+from urllib.parse import quote_plus
+
 # Mot de passe Redis pour sécurité
 REDIS_PASSWORD = config('REDIS_PASSWORD', default='changeme_redis_password')
 
@@ -237,9 +239,12 @@ REDIS_HOST = config('REDIS_HOST', default='redis')
 REDIS_PORT = config('REDIS_PORT', default='6379')
 REDIS_DB = config('REDIS_DB', default='0')
 
+# ⚠️ IMPORTANT: URL-encoder le mot de passe pour échapper les caractères spéciaux (@, :, etc.)
+REDIS_PASSWORD_ENCODED = quote_plus(REDIS_PASSWORD)
+
 # Format: redis://:password@host:port/db
-CELERY_BROKER_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
-CELERY_RESULT_BACKEND = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+CELERY_BROKER_URL = f'redis://:{REDIS_PASSWORD_ENCODED}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+CELERY_RESULT_BACKEND = f'redis://:{REDIS_PASSWORD_ENCODED}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
 
 # Sérialisation JSON pour plus de sécurité
 CELERY_ACCEPT_CONTENT = ['json']
