@@ -2,8 +2,11 @@
 definePageMeta({ layout: 'public' })
 
 useSeoMeta({
-  title: 'Plateforme Client - EUROP\' GREEN SOLAR',
+  title: 'APPLICATION - EUROP\' GREEN SOLAR',
   description: 'Suivez votre installation solaire, accédez à vos documents, contactez notre SAV et bénéficiez du programme de parrainage.',
+  ogTitle: 'APPLICATION - EUROP\' GREEN SOLAR',
+  ogDescription: 'Suivez votre installation solaire, accédez à vos documents, contactez notre SAV et bénéficiez du programme de parrainage.',
+  ogImage: '/logo_icon.png',
 })
 
 const scrollToSection = (id: string) => {

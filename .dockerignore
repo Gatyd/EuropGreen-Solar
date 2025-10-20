@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Environnement
+.env
+.env.local
+.env.production
+venv/
+node_modules/
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.nuxt/
+.output/
+dist/
+
+# Données locales
+db.sqlite3
+media/
+statics/
