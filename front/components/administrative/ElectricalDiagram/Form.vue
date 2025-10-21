@@ -52,7 +52,7 @@ const submit = async () => {
                 description="PNG, JPG, JPEG ou PDF" accept="image/*,.pdf" />
         </UFormField>
         <div class="flex items-center justify-end mt-4">
-            <UButton type="submit">Enregistrer</UButton>
+            <UButton :loading="loading" type="submit">Enregistrer</UButton>
         </div>
     </UForm>
 </template>

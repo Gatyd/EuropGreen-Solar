@@ -738,7 +738,7 @@ class FormViewSet(viewsets.ModelViewSet):
 				'form': form, 'client_name': self._get_client_name(form),
 				'link_installation': f"/home/installations/{form.id}",
 			}
-			subject = "Raccordement ENEDIS validé"
+			subject = "Mise en service effectuée"
 			self._send_mail_safe(
 				template='emails/installation/commissioning.html',
 				context=ctx, subject=subject, to=client_email,
