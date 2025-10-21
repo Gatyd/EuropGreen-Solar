@@ -108,8 +108,8 @@ const handleClick = () => {
         popoverOpen.value = false;
     } else {
         emit('click', props.date)
-        // Ouvrir le popover si on a des tâches et qu'on est sur mobile
-        if (hasTasks.value && props.isSmallScreen) {
+        // Ouvrir le popover si on a des tâches
+        if (hasTasks.value) {
             popoverOpen.value = true;
         }
     }

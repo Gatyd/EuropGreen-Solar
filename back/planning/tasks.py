@@ -49,8 +49,7 @@ def send_reminder_days_before():
             # Préparer le contexte pour le template
             context = {
                 'task': task,
-                'days_remaining': days_before,
-                'frontend_url': '',  # Sera rempli par email_utils
+                'days_remaining': days_before
             }
             
             # Envoyer l'email (sans emoji dans le sujet)
@@ -136,8 +135,7 @@ def send_reminder_hours_before():
             # Préparer le contexte pour le template
             context = {
                 'task': task,
-                'hours_remaining': int(hours_remaining),
-                'frontend_url': '',  # Sera rempli par email_utils
+                'hours_remaining': int(hours_remaining)
             }
             
             # Envoyer l'email (sans emoji dans le sujet)
@@ -223,8 +221,7 @@ def send_deadline_notification():
             
             # Préparer le contexte pour le template
             context = {
-                'task': task,
-                'frontend_url': '',  # Sera rempli par email_utils
+                'task': task
             }
             
             # Envoyer l'email (sans emoji dans le sujet)

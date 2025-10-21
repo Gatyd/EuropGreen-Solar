@@ -16,7 +16,8 @@ const emit = defineEmits<{
 
 const { user } = storeToRefs(useAuthStore())
 const toast = useToast()
-const loading = ref(false)
+const inProgressLoading = ref(false)
+const completedLoading = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 
@@ -60,7 +61,11 @@ const getPriorityDisplay = (priority: string) => {
 
 // Changer le statut (pour l'utilisateur assigné)
 const updateStatus = async (newStatus: string) => {
-    loading.value = true
+    if(newStatus === 'in_progress') {
+        inProgressLoading.value = true
+    } else if(newStatus === 'completed') {
+        completedLoading.value = true
+    }
     const res = await apiRequest<any>(
         () => $fetch(`/api/tasks/${props.task.id}/`, {
             method: 'PATCH',
@@ -79,7 +84,11 @@ const updateStatus = async (newStatus: string) => {
         currentStatus.value = newStatus
         emit('updated')
     }
-    loading.value = false
+    if(newStatus === 'in_progress') {
+        inProgressLoading.value = false
+    } else if(newStatus === 'completed') {
+        completedLoading.value = false
+    }
 }
 
 // Gérer la fermeture du modal d'édition
@@ -206,18 +215,18 @@ watch(() => props.task, (newTask) => {
                              - Si completed : montrer in_progress (pour rouvrir)
                         -->
                         <template v-if="currentStatus === 'pending'">
-                            <UButton label="En cours" color="info" variant="outline" size="sm" :loading="loading"
+                            <UButton label="En cours" color="info" variant="outline" size="sm" :loading="inProgressLoading"
                                 @click="updateStatus('in_progress')" />
-                            <UButton label="Terminée" color="success" variant="outline" size="sm" :loading="loading"
+                            <UButton label="Terminée" color="success" variant="outline" size="sm" :loading="completedLoading"
                                 @click="updateStatus('completed')" />
                         </template>
                         <template v-else-if="currentStatus === 'in_progress'">
-                            <UButton label="Terminée" color="success" variant="outline" size="sm" :loading="loading"
+                            <UButton label="Terminée" color="success" variant="outline" size="sm" :loading="completedLoading"
                                 @click="updateStatus('completed')" />
                         </template>
                         <template v-else-if="currentStatus === 'completed'">
                             <UButton label="Rouvrir (En cours)" color="info" variant="outline" size="sm"
-                                :loading="loading" @click="updateStatus('in_progress')" />
+                                :loading="inProgressLoading" @click="updateStatus('in_progress')" />
                         </template>
                     </div>
                 </div>

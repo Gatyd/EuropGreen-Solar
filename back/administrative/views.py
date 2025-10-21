@@ -221,7 +221,12 @@ class Cerfa16702ViewSet(GenericViewSet):
                     c = getattr(f, 'cerfa16702', None)
                     if not c:
                         return
+                    # Construire le payload avec TOUS les champs nécessaires
                     cerfa_payload = {fld: getattr(c, fld, "") for fld in CERFA_FIELD_MAPPING.keys()}
+                    # Ajouter les champs critiques qui ne sont pas dans CERFA_FIELD_MAPPING
+                    cerfa_payload['declarant_type'] = getattr(c, 'declarant_type', '')
+                    cerfa_payload['first_name'] = getattr(c, 'first_name', '')
+                    cerfa_payload['last_name'] = getattr(c, 'last_name', '')
                     if getattr(c, 'declarant_signature', None):
                         cerfa_payload['signer_name'] = c.declarant_signature.signer_name
                     data_local = build_pdf_data_from_payload(cerfa_payload)
@@ -230,8 +235,8 @@ class Cerfa16702ViewSet(GenericViewSet):
                     if pdf_bytes:
                         filename = f"cerfa16702_{form_id}.pdf"
                         f.cerfa16702.pdf.save(filename, ContentFile(pdf_bytes), save=True)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Erreur lors de la génération du PDF CERFA: {e}")
             
             transaction.on_commit(lambda fid=str(form.id): _gen_cerfa_pdf_after_commit(fid))
         except Exception:
@@ -294,9 +299,13 @@ class Cerfa16702ViewSet(GenericViewSet):
             form_id = str(cerfa.form_id)
             pdf_bytes = render_cerfa16702_attachments_pdf(form_id, request=request)
             if pdf_bytes:
+                print("pdf_bytes generated for attachments")
                 filename = f"cerfa16702_attachments_{cerfa.id}.pdf"
                 cerfa.attachements_pdf.save(filename, ContentFile(pdf_bytes), save=True)
-        except Exception:
+            else:
+                print("Not pdf_bytes generated for attachments")
+        except Exception as e:
+            print(f"Erreur lors de la génération du PDF des pièces jointes: {e}")
             pass
 
         serializer = Cerfa16702Serializer(cerfa, context={'request': request})
