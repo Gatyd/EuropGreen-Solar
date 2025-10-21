@@ -131,6 +131,7 @@ async function fetchPreview(immediate = false) {
         }
     } catch (e: any) {
         error.value = e?.data?.message || e?.message || 'Erreur de chargement'
+        console.log(error.value)
     } finally {
         loading.value = false
     }
@@ -258,9 +259,9 @@ async function renderSinglePage(pageNumber: number) {
                 <span>Génération de l’aperçu…</span>
             </div>
         </div>
-        <div v-if="error" class="absolute inset-0 flex items-center justify-center text-red-600">
+        <!-- <div v-if="error" class="absolute inset-0 flex items-center justify-center text-red-600">
             {{ error }}
-        </div>
+        </div> -->
         <div ref="viewerRef" class="w-full flex-1 overflow-auto px-4">
             <div v-if="!error" class="mx-auto max-w-[1100px] flex flex-col items-center gap-6">
                 <div v-for="n in pages" :key="n" class="relative bg-white shadow-xl">
