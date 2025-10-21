@@ -159,11 +159,16 @@ class Cerfa16702ViewSet(GenericViewSet):
             defaults={'created_by': request.user}
         )
         field_list = [
-            'declarant_type', 'last_name', 'first_name', 'birth_date', 'birth_place', 'birth_department', 'birth_country', 'company_denomination', 'company_reason', 'company_siret',
-            'address_street', 'address_number', 'address_lieu_dit', 'address_locality', 'address_postal_code', 'address_bp', 'address_cedex', 'phone_country_code', 'phone', 'email', 'email_consent',
-            'land_street', 'land_number', 'land_lieu_dit', 'land_locality', 'land_postal_code', 'cadastral_prefix', 'cadastral_section', 'cadastral_number', 'cadastral_surface_m2',
-            'project_new_construction', 'project_existing_works', 'project_description', 'destination_primary_residence', 'destination_secondary_residence', 'agrivoltaic_project',
-            'electrical_power_text', 'peak_power_text', 'energy_destination', 'protection_site_patrimonial', 'protection_site_classe_or_instance', 'protection_monument_abords',
+            'declarant_type', 'last_name', 'first_name', 'birth_date', 'birth_place', 'birth_department', 'birth_country', 
+            'company_denomination', 'company_reason', 'company_siret', 'company_type',
+            'address_street', 'address_number', 'address_lieu_dit', 'address_locality', 'address_postal_code', 'address_bp', 'address_cedex', 
+            'phone_country_code', 'phone', 'email', 'email_consent',
+            'land_street', 'land_number', 'land_lieu_dit', 'land_locality', 'land_postal_code', 
+            'cadastral_prefix', 'cadastral_section', 'cadastral_number', 'cadastral_surface_m2',
+            'project_new_construction', 'project_existing_works', 'project_description', 
+            'destination_primary_residence', 'destination_secondary_residence', 'agrivoltaic_project',
+            'electrical_power_text', 'peak_power_text', 'energy_destination', 
+            'protection_site_patrimonial', 'protection_site_classe_or_instance', 'protection_monument_abords',
             'engagement_city', 'engagement_date', 'dpc11_notice_materiaux'
         ]
 

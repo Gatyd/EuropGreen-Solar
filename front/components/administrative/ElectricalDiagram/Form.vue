@@ -48,7 +48,7 @@ const submit = async () => {
 <template>
     <UForm :state="state" :validate="validate" @submit="submit">
         <UFormField name="file" required>
-            <UFileUpload v-model="state.file" icon="i-heroicons-arrow-up-tray-16-solid" label="Importer une image"
+            <UFileUpload v-model="state.file" icon="i-heroicons-arrow-up-tray-16-solid" label="Importer un fichier"
                 description="PNG, JPG, JPEG ou PDF" accept="image/*,.pdf" />
         </UFormField>
         <div class="flex items-center justify-end mt-4">

@@ -41,7 +41,15 @@ function timeSince(d?: Date | null) {
 async function fetchPreview(immediate = false) {
     if (debounceTimer && !immediate) clearTimeout(debounceTimer)
     if (!immediate) { debounceTimer = setTimeout(() => fetchPreview(true), 4000); return }
-    if (abortController) abortController.abort()
+    // Annuler la requête précédente si elle existe
+    if (abortController) {
+        try {
+            abortController.abort()
+        } catch (e) {
+            // Ignorer les erreurs d'abort
+        }
+    }
+    // Créer un nouveau controller pour cette requête
     abortController = new AbortController()
     loading.value = true
     error.value = null
@@ -76,8 +84,11 @@ async function fetchPreview(immediate = false) {
             updateLastUpdated()
         }
     } catch (e: any) {
-        error.value = e?.data?.message || e?.message || 'Erreur de chargement'
-        console.log(error.value)
+        // Ne pas afficher d'erreur si c'est un abort volontaire
+        if (e?.name !== 'AbortError') {
+            error.value = e?.data?.message || e?.message || 'Erreur de chargement'
+            console.log(error.value)
+        }
     } finally {
         loading.value = false
     }
