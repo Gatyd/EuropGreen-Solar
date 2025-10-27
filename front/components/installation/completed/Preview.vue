@@ -43,7 +43,7 @@ const props = defineProps<{
                 }}</p> -->
                 <p>18 rue de Berlin, 68000 Colmar GES, France</p>
                 <p class="mb-1">N° SIREN: 932 121 536 <span class="mx-2">|</span> N° TVA: FR23932121536</p>
-                <p >Dirigeant: (+33) 09 70 70 26 56<span class="mx-2">|</span> (+33) 07 61 30 37 95</p>
+                <p>Numéro de téléphone: (+33) 09 70 70 26 56</p>
             </div>
         </div>
 
