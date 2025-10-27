@@ -6,13 +6,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // Routes publiques (où ce middleware ne doit pas rediriger)
   const publicRoutes = [
     "login",
-    "register",
-    "auth",
     "forgot-password",
     "reset-password",
-    "terms",
-    "privacy",
-    "evolution"
   ];
   
   // Si on vient d'une route publique, on n'interfère pas

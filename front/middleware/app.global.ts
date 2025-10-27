@@ -24,13 +24,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // Routes publiques qui ne nécessitent pas d'authentification
   const publicRoutes = [
     "login",
-    "register",
-    "auth",
     "forgot-password",
     "reset-password",
-    "terms",
-    "privacy",
-    "evolution",
     "print",
     "offers"
   ];
