@@ -211,8 +211,8 @@ onMounted(() => {
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <UButton to="mailto:contact@egs-solaire.fr" variant="outline" color="neutral"
                             icon="i-heroicons-envelope" label="contact@egs-solaire.fr" external size="lg" />
-                        <UButton to="tel:+33123456789" variant="outline" color="neutral" icon="i-heroicons-phone"
-                            label="01 23 45 67 89" external size="lg" />
+                        <UButton to="tel:+33970702656" variant="outline" color="neutral" icon="i-heroicons-phone"
+                            label="09 70 70 26 56" external size="lg" />
                     </div>
                 </div>
             </div>
