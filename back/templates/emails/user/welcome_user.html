@@ -27,7 +27,7 @@
             <div style="margin-bottom: 8px;">
                 <strong style="color: #4a5568; font-size: 14px;">Adresse email :</strong>
             </div>
-            <div style="background-color: #ffffff; padding: 12px 16px; border: 1px solid #cbd5e0; border-radius: 8px; font-family: 'Courier New', Monaco, monospace; font-size: 15px; color: #2d3748; word-break: break-all;">
+            <div style="background-color: #ffffff; padding: 12px 16px; border: 1px solid #cbd5e0; border-radius: 8px; font-family: 'SF Mono', Consolas, 'Ubuntu Mono', 'Roboto Mono', monospace; font-size: 15px; color: #2d3748; word-break: break-all;">
                 {{ user.email }}
             </div>
         </div>
@@ -37,9 +37,12 @@
             <div style="margin-bottom: 8px;">
                 <strong style="color: #4a5568; font-size: 14px;">Mot de passe temporaire :</strong>
             </div>
-            <div style="background-color: #fff5f5; padding: 12px 16px; border: 2px solid #feb2b2; border-radius: 8px; font-family: 'Courier New', Monaco, monospace; font-size: 15px; color: #c53030; word-break: break-all; font-weight: bold;">
+            <div style="background-color: #fff5f5; padding: 14px 18px; border: 2px solid #feb2b2; border-radius: 8px; font-family: 'SF Mono', Consolas, 'Ubuntu Mono', 'Roboto Mono', monospace; font-size: 17px; color: #c53030; word-break: break-all; font-weight: 600; letter-spacing: 0.5px; line-height: 1.6;">
                 {{ password }}
             </div>
+            <p style="color: #718096; font-size: 12px; margin: 8px 0 0 0; font-style: italic;">
+                ⚠️ Attention à bien distinguer : lettre O et chiffre 0, lettre l (L minuscule) et chiffre 1
+            </p>
         </div>
         
         <!-- Fonction -->
@@ -48,7 +51,7 @@
                 <strong style="color: #4a5568; font-size: 14px;">Fonction :</strong>
             </div>
             <div style="background-color: #edf2f7; padding: 12px 16px; border-radius: 8px; font-size: 15px; color: #2d3748; font-weight: 500;">
-                {{ user.get_role_display }}
+                {{ role_display }}
             </div>
         </div>
     </div>
@@ -81,7 +84,7 @@
             <div style="padding: 8px 0;">✅ Configuration et paramétrage du système</div>
         </div>
     </div>
-    {% elif user.useraccess %}
+    {% elif user_access %}
     <div style="background: linear-gradient(135deg, #f0fff4, #c6f6d5); border: 2px solid #9ae6b4; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
         <h4 style="color: #22543d; font-weight: 700; margin-bottom: 16px; margin-top: 0; font-size: 18px; text-align: center;">
             Vos droits d'accès
@@ -90,22 +93,22 @@
             Votre profil vous donne accès aux modules suivants :
         </p>
         <div style="font-size: 14px;">
-            {% if user.useraccess.installation %}
+            {% if user_access.installation %}
             <div style="margin-bottom: 8px; padding: 8px 0; color: #2f855a;">
                 ✅ Gestion des installations
             </div>
             {% endif %}
-            {% if user.useraccess.offers %}
+            {% if user_access.offers %}
             <div style="margin-bottom: 8px; padding: 8px 0; color: #2f855a;">
                 ✅ Gestion des devis
             </div>
             {% endif %}
-            {% if user.useraccess.requests %}
+            {% if user_access.requests %}
             <div style="margin-bottom: 8px; padding: 8px 0; color: #2f855a;">
                 ✅ Traitement des demandes
             </div>
             {% endif %}
-            {% if user.useraccess.administrative_procedures %}
+            {% if user_access.administrative_procedures %}
             <div style="padding: 8px 0; color: #2f855a;">
                 ✅ Procédures administratives
             </div>

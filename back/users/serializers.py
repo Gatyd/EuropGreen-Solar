@@ -120,15 +120,32 @@ class AdminUserSerializer(serializers.ModelSerializer):
         if user.role not in [User.UserRoles.CUSTOMER, User.UserRoles.ADMIN]:
             UserAccess.objects.create(user=user, **access)
 
+        # Préparer les données d'accès pour l'email (sérialisation compatible)
+        try:
+            user_access = user.useraccess
+            access_data = {
+                'installation': user_access.installation,
+                'offers': user_access.offers,
+                'requests': user_access.requests,
+                'administrative_procedures': user_access.administrative_procedures,
+            }
+        except UserAccess.DoesNotExist:
+            access_data = None
+
         # Envoi de l'email de bienvenue en arrière-plan avec les identifiants
         # L'email contient le mot de passe donc n'est PAS enregistré dans l'historique
+        email_context = {
+            'user': user,
+            'password': password,
+            'frontend_url': settings.FRONTEND_URL,
+            'role_display': user.get_role_display(),  # Pré-calculer pour éviter la perte lors de la sérialisation
+        }
+        if access_data:
+            email_context['user_access'] = access_data
+        
         send_mail(
             template='emails/user/welcome_user.html',
-            context={
-                'user': user,
-                'password': password,
-                'frontend_url': settings.FRONTEND_URL,
-            },
+            context=email_context,
             subject="Bienvenue chez EuropGreen Solar - Vos identifiants de connexion",
             to=user.email,
             save_to_log=False,  # Ne pas enregistrer car contient le mot de passe

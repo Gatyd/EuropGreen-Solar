@@ -62,6 +62,8 @@ class ProspectRequestViewSet(
 			"prospect": instance,
 			"assignee": assignee,
 			"created_by": instance.created_by,
+			"status_display": instance.get_status_display(),
+			"source_type_display": instance.get_source_type_display(),
 		}
 		subject = f"Nouvelle demande assignée – {instance.last_name} {instance.first_name}"
 		return send_project_mail(
@@ -156,6 +158,8 @@ class ProspectRequestViewSet(
 				context = {
 					"prospect": instance,
 					"created_by": instance.created_by,
+					"status_display": instance.get_status_display(),
+					"source_type_display": instance.get_source_type_display(),
 				}
 				subject = f"Nouvelle demande créée – {instance.last_name} {instance.first_name}"
 				# Envoyer à tous les admins en un seul email groupé
