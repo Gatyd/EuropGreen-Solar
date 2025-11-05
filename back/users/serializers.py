@@ -90,9 +90,30 @@ class AdminUserSerializer(serializers.ModelSerializer):
             user.is_superuser = False
         
     def generate_secure_password(self):
-        """Génère un mot de passe sécurisé"""
-        alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-        password = ''.join(secrets.choice(alphabet) for _ in range(12))
+        """Génère un mot de passe sécurisé sans caractères ambigus
+        
+        Caractères exclus pour éviter toute confusion visuelle :
+        - l (L minuscule), I (i majuscule), 1 (un) : trop similaires
+        - O (o majuscule), 0 (zéro) : trop similaires
+        - S, 5 : peuvent se confondre selon la police
+        - Z, 2 : peuvent se confondre selon la police
+        - B, 8 : peuvent se confondre dans certains cas
+        """
+        # Ensemble de base
+        letters = string.ascii_letters  # a-z, A-Z
+        digits = string.digits          # 0-9
+        special = "!@#$%^&*"
+        
+        # Retirer les caractères ambigus
+        ambiguous_chars = "lIO01SZ2B8"  # l, I, O, 0, 1, S, Z, 2, B, 8
+        
+        # Construire l'alphabet filtré
+        safe_letters = ''.join(c for c in letters if c not in ambiguous_chars)
+        safe_digits = ''.join(c for c in digits if c not in ambiguous_chars)
+        safe_alphabet = safe_letters + safe_digits + special
+        
+        # Générer le mot de passe (12 caractères)
+        password = ''.join(secrets.choice(safe_alphabet) for _ in range(12))
         return password
         
     def create(self, validated_data):
