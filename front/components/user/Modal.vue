@@ -140,6 +140,9 @@ watch(() => props.user, (newUser) => {
             selectedRole.value = createRoleFromUser(newUser)
         }
         // Sinon, ce sera fait dans handleRolesLoaded
+    } else {
+        resetForm()
+        selectedRole.value = null
     }
 }, { immediate: true })
 
@@ -165,6 +168,7 @@ const submit = async () => {
         })
         emit('submit', res);
         closeModal();
+        resetForm();
     }
     loading.value = false
 }
