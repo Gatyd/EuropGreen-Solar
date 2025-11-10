@@ -185,12 +185,10 @@ const logout = async () => {
     navigateTo('/login', { replace: true });
 };
 
-// Suppression du modal SAV (désormais page dédiée /home/sav)
-
 </script>
 
 <template>
-    <UDashboardGroup>
+    <UDashboardGroup v-if="user">
         <UDashboardSidebar collapsible resizable :min-size="15" :default-size="17.5" :max-size="20" :ui="{
             footer: 'block',
             header: 'h-auto lg:pt-2',

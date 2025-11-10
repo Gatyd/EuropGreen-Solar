@@ -26,7 +26,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         if (import.meta.client) {
           try {
             await auth.fetchUser();
-            return navigateTo('/home');
+            auth.redirectUser();
           } catch (e) {
             console.warn("fetchUser failed even after refresh");
             console.log(e);
@@ -37,6 +37,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       }
     }
   } else {
-    return navigateTo('/home');
+    auth.redirectUser();
   }
 });

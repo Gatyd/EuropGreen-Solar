@@ -57,8 +57,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
           }
         }
       } catch {
-        // await auth.logout();
-        if (to.name?.toString().split("-")[0] === "home") {
+        // Ne pas forcer une redirection serveur -> login pour éviter le flash SSR.
+        // Laisser le client gérer la redirection si nécessaire.
+        if (import.meta.client && to.name?.toString().split("-")[0] === "home") {
           return navigateTo(`/login?from=${to.path}`);
         }
       }
