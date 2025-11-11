@@ -2,12 +2,10 @@
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { getPaginationRowModel } from '@tanstack/vue-table'
-import { useAuthStore } from '~/store/auth'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
-const UTooltip = resolveComponent('UTooltip')
 
 interface Commission {
     id: string
@@ -47,7 +45,6 @@ const toast = useToast()
 const loading = ref(true)
 const commissions = ref<Commission[]>([])
 const table = useTemplateRef('table')
-const auth = useAuthStore()
 
 const attributLabels: { [key: string]: string } = {
     client_name: 'Client',
@@ -60,7 +57,7 @@ const attributLabels: { [key: string]: string } = {
     actions: 'Actions'
 }
 
-async function fetchCommissions() {
+async function fetchCommissions(refresh = false) {
     loading.value = true
     const result = await apiRequest<Commission[]>(
         () => $fetch(`/api/installations/commissions/list/`, {
@@ -70,6 +67,13 @@ async function fetchCommissions() {
     )
     commissions.value = result || []
     loading.value = false
+    if (refresh) {
+        toast.add({
+            title: 'Données mises à jour',
+            description: 'La liste des commissions a été rafraîchie avec succès.',
+            color: 'success'
+        })
+    }
 }
 
 async function paySourceCommission(commissionId: string) {
@@ -264,6 +268,7 @@ onMounted(fetchCommissions)
             </template>
 
             <template #right>
+				<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchCommissions(true)">Rafraîchir</UButton>
                 <UDropdownMenu :items="table?.tableApi
                     ?.getAllColumns()
                     .filter((column) => column.getCanHide())

@@ -64,7 +64,7 @@ const items = computed<Record<InstallationStatus, InstallationForm[]>>(() => {
 
 const totalCount = computed(() => filteredItems.value.length)
 
-const fetchAll = async () => {
+const fetchAll = async (refresh = false) => {
     loading.value = true
     const params: Record<string, any> = {}
     const client = (route.query.client as string) || (route.query.client_id as string)
@@ -86,6 +86,13 @@ const fetchAll = async () => {
         allItems.value = data
     }
     loading.value = false
+    if (refresh) {
+        toast.add({
+            title: 'Données mises à jour',
+            description: 'La liste des installations a été rafraîchie avec succès.',
+            color: 'success'
+        })
+    }
 }
 
 onMounted(fetchAll)
@@ -121,7 +128,7 @@ onMounted(fetchAll)
                     <UFormField label="Au">
                         <UInput v-model="dateRange.end" type="date" />
                     </UFormField>
-                    <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchAll">Rafraîchir</UButton>
+                    <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="(true)">Rafraîchir</UButton>
                 </div>
             </UCard>
 

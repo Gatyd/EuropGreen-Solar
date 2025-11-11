@@ -76,7 +76,7 @@ const prospectSourceLabel: Record<ProspectSource, string> = {
 	commercial: 'Commercial'
 }
 
-const fetchProspects = async () => {
+const fetchProspects = async (refresh = false) => {
 	loading.value = true
 	const data = await apiRequest<ProspectRequest[]>(
 		() => $fetch('/api/requests/?scope=prospects', { credentials: 'include' }),
@@ -84,6 +84,13 @@ const fetchProspects = async () => {
 	)
 	items.value = (data || []) as any
 	loading.value = false
+	if (refresh) {
+		toast.add({
+			title: 'Données mises à jour',
+			description: 'La liste des prospects a été rafraîchie avec succès.',
+			color: 'success'
+		})
+	}
 }
 
 onMounted(fetchProspects)
@@ -176,7 +183,7 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 				<SearchInput v-model="q" />
 			</template>
 			<template #right>
-				<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchProspects">Rafraîchir</UButton>
+				<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchProspects(true)">Rafraîchir</UButton>
 			</template>
 		</UDashboardToolbar>
 	</div>

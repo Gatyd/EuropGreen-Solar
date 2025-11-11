@@ -32,7 +32,7 @@ const attributLabels: { [key: string]: string } = {
     actions: 'Actions'
 }
 
-async function fetchUsers() {
+async function fetchUsers(refresh = false) {
     loading.value = true
     const result = await apiRequest<User[]>(
         () => $fetch(`/api/users/?is_staff=true`, {
@@ -42,6 +42,13 @@ async function fetchUsers() {
     );
     users.value = result || undefined
     loading.value = false
+    if (refresh) {
+        toast.add({
+            title: 'Données mises à jour',
+            description: 'La liste des utilisateurs a été rafraîchie avec succès.',
+            color: 'success'
+        })
+    }
 }
 
 function getRowItems(row: Row<User>) {
@@ -262,6 +269,7 @@ onMounted(fetchUsers)
         </template>
 
         <template #right>
+			<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchUsers(true)">Rafraîchir</UButton>
             <UDropdownMenu :items="table?.tableApi
                 ?.getAllColumns()
                 .filter((column) => column.getCanHide())

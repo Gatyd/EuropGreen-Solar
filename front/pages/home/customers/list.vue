@@ -46,7 +46,7 @@ const attributLabels: { [key: string]: string } = {
 	actions: 'Actions'
 }
 
-async function fetchUsers() {
+async function fetchUsers(refresh = false) {
 	loading.value = true
 	const result = await apiRequest<User[]>(
 		() => $fetch(`/api/users/?is_staff=false`, {
@@ -57,6 +57,13 @@ async function fetchUsers() {
 	console.log('Fetched users:', result)
 	users.value = result || undefined
 	loading.value = false
+	if (refresh) {
+		toast.add({
+			title: 'Données mises à jour',
+			description: 'La liste des clients a été rafraîchie avec succès.',
+			color: 'success'
+		})
+	}
 }
 
 const columns: TableColumn<User>[] = [{
@@ -247,7 +254,7 @@ onMounted(fetchUsers)
 			</template>
 
 			<template #right>
-				<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchUsers">Rafraîchir</UButton>
+				<UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchUsers(true)">Rafraîchir</UButton>
 				<UDropdownMenu :items="table?.tableApi
 					?.getAllColumns()
 					.filter((column) => column.getCanHide())

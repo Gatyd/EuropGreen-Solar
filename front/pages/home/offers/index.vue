@@ -59,7 +59,7 @@ const totalCount = computed(() => filteredItems.value.length)
 // Statuts non autorisés au drop direct (processus spécifique)
 const blockedStatuses = new Set<OfferStatus>(['quote_sent', 'quote_signed'])
 
-const fetchAll = async () => {
+const fetchAll = async (refresh = false) => {
     loading.value = true
     const data = await apiRequest<Offer[]>(
         () => $fetch('/api/offers/', { credentials: 'include' }),
@@ -67,6 +67,13 @@ const fetchAll = async () => {
     )
     if (data) allItems.value = data
     loading.value = false
+    if(refresh) {
+        toast.add({
+            title: 'Données mises à jour',
+            description: 'La liste des offres a été rafraîchie avec succès.',
+            color: 'success'
+        })
+    }
 }
 
 onMounted(fetchAll)
@@ -130,7 +137,7 @@ async function submitInlineEdit() {
                 <UFormField label="Au">
                     <UInput v-model="dateRange.end" type="date" />
                 </UFormField>
-                <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchAll">Rafraîchir</UButton>
+                <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchAll(true)">Rafraîchir</UButton>
             </div>
         </UCard>
 
