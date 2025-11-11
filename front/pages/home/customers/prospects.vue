@@ -165,7 +165,7 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 </script>
 
 <template>
-	<RequestDeleteModal v-model="deleteModal" v-if="selectedProspect" :prospect="selectedProspect" @delete="fetchProspects" />
+	<RequestDeleteModal v-model="deleteModal" v-if="selectedProspect" :prospect="selectedProspect" @delete="fetchProspects()" />
 	<div class="sticky top-0 z-50 bg-white">
 		<UDashboardNavbar title="Prospects" class="lg:text-2xl font-semibold"
 			:ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">

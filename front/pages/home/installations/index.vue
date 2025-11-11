@@ -128,7 +128,7 @@ onMounted(fetchAll)
                     <UFormField label="Au">
                         <UInput v-model="dateRange.end" type="date" />
                     </UFormField>
-                    <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="(true)">Rafraîchir</UButton>
+                    <UButton variant="ghost" icon="i-heroicons-arrow-path" @click="fetchAll(true)">Rafraîchir</UButton>
                 </div>
             </UCard>
 

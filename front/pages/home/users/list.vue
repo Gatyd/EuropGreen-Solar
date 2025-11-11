@@ -248,9 +248,9 @@ onMounted(fetchUsers)
 </script>
 
 <template>
-    <UserModal v-model="formModal" :user="selectedUser" @submit="fetchUsers" />
-    <UserDeactivateModal v-model="deactivateModal" v-if="selectedUser" :user="selectedUser" @deactivate="fetchUsers" />
-    <UserDeleteModal v-model="deleteModal" v-if="selectedUser" :user="selectedUser" @delete="fetchUsers" />
+    <UserModal v-model="formModal" :user="selectedUser" @submit="fetchUsers()" />
+    <UserDeactivateModal v-model="deactivateModal" v-if="selectedUser" :user="selectedUser" @deactivate="fetchUsers()" />
+    <UserDeleteModal v-model="deleteModal" v-if="selectedUser" :user="selectedUser" @delete="fetchUsers()" />
     <div class="sticky top-0 z-50 bg-white">
         <UDashboardNavbar title="Utilisateurs" class="lg:text-2xl font-semibold"
             :ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">
