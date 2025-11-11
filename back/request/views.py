@@ -21,17 +21,12 @@ from django.contrib.auth import get_user_model
 	create=extend_schema(summary="Créer une demande"),
 	retrieve=extend_schema(summary="Détails d'une demande"),
 	partial_update=extend_schema(summary="Mettre à jour partiellement une demande"),
+	destroy=extend_schema(summary="Supprimer une demande"),
 )
-class ProspectRequestViewSet(
-	mixins.ListModelMixin,
-	mixins.CreateModelMixin,
-	mixins.RetrieveModelMixin,
-	mixins.UpdateModelMixin,
-	viewsets.GenericViewSet,
-):
+class ProspectRequestViewSet(viewsets.ModelViewSet):
 	queryset = ProspectRequest.objects.select_related("assigned_to", "offer").all()
 	serializer_class = ProspectRequestSerializer
-	http_method_names = ["get", "post", "patch"]
+	http_method_names = ["get", "post", "patch", "delete"]
 	parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 	def get_permissions(self):

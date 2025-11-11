@@ -12,9 +12,14 @@ const toast = useToast()
 const q = ref('')
 const loading = ref(true)
 const creating = ref(false)
+const deleteModal = ref(false)
 const selected = ref<ProspectRequest | null>(null)
+const selectedProspect = ref<ProspectRequest | undefined>(undefined)
 const items = ref<Array<ProspectRequest & { offer?: { id: string; status: import('~/types/offers').OfferStatus } | null }>>([])
 const table = useTemplateRef('table')
+
+const UButton = resolveComponent('UButton')
+const UTooltip = resolveComponent('UTooltip')
 
 const links: NavigationMenuItem[][] = [[{
 	icon: 'i-heroicons-user-plus',
@@ -129,7 +134,23 @@ if (auth.user?.is_superuser) {
 		}, {
 		accessorKey: 'assigned_to', header: "Chargé d'affaire",
 		cell: ({ row }) => row.original.assigned_to ? `${row.original.assigned_to.first_name} ${row.original.assigned_to.last_name}` : 'Non assigné'
+		}, {
+		id: 'actions',
+		header: 'Actions',
+		cell: ({ row }) => {
+			return h(UTooltip, { text: 'Supprimer le prospect', delayDuration: 0 }, () =>
+				h(UButton, {
+					icon: 'i-heroicons-trash',
+					color: 'error',
+					variant: 'ghost',
+					onClick() {
+						selectedProspect.value = row.original
+						deleteModal.value = true
+					}
+				})
+			)
 		}
+	}
 	)
 }
 
@@ -137,6 +158,7 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 </script>
 
 <template>
+	<RequestDeleteModal v-model="deleteModal" v-if="selectedProspect" :prospect="selectedProspect" @delete="fetchProspects" />
 	<div class="sticky top-0 z-50 bg-white">
 		<UDashboardNavbar title="Prospects" class="lg:text-2xl font-semibold"
 			:ui="{ root: 'h-12 lg:h-(--ui-header-height)' }">
