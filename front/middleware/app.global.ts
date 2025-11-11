@@ -40,7 +40,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     try {
       await auth.fetchUser();
       if (haveNotAccess()) {
-        return auth.redirectUser();
+        return navigateTo(auth.redirectUser());
       }
     } catch {
       try {
@@ -49,7 +49,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
           try {
             await auth.fetchUser();
             if (haveNotAccess()) {
-              return auth.redirectUser();
+              return navigateTo(auth.redirectUser());
             }
           } catch (e) {
             console.warn("fetchUser failed even after refresh");
@@ -66,7 +66,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
   } else {
     if (haveNotAccess()) {
-      return auth.redirectUser();
+      return navigateTo(auth.redirectUser());
     }
   }
 });

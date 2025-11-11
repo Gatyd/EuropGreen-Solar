@@ -3,15 +3,16 @@ import { useAuthStore } from "~/store/auth";
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const auth = useAuthStore();
 
-  // Routes publiques (où ce middleware ne doit pas rediriger)
-  const publicRoutes = [
+  // Routes d'authentification (où ce middleware ne doit pas interférer)
+  const authRoutes = [
     "login",
     "forgot-password",
     "reset-password",
   ];
   
-  // Si on vient d'une route publique, on n'interfère pas
-  if (from.name && publicRoutes.includes(from.name as string)) {
+  // Si on vient d'une route d'authentification, on n'interfère pas
+  if (from.name && authRoutes.includes(from.name as string)) {
+    console.log("Coming from auth route, skipping auth middleware.");
     return;
   }
 
@@ -26,17 +27,18 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         if (import.meta.client) {
           try {
             await auth.fetchUser();
-            auth.redirectUser();
+            return navigateTo(auth.redirectUser());
           } catch (e) {
             console.warn("fetchUser failed even after refresh");
             console.log(e);
           }
         }
       } catch {
+        // await auth.logout();
         return;
       }
     }
   } else {
-    auth.redirectUser();
+    return navigateTo(auth.redirectUser());
   }
 });
