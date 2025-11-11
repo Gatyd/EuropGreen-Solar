@@ -55,9 +55,6 @@ type cerfa16702Draft = {
     protection_monument_abords: boolean,
     engagement_city: string,
     engagement_date: string,
-    declarant_signature: { signer_name: string, method: 'draw' | 'upload', dataUrl: string, file: File | null },
-    declarant_signature_image_url: string | null,
-    declarant_signature_signed_at: string | null,
 }
 
 const props = defineProps<{ draft: cerfa16702Draft, formId?: string }>()
@@ -128,6 +125,12 @@ async function onSubmit() {
         if (!payload.declarant_signer_name && (s.first_name || s.last_name)) {
             payload.declarant_signer_name = `${s.first_name || ''} ${s.last_name || ''}`.trim()
         }
+
+        // FIX: Convertir les chaînes vides en null pour les DecimalFields
+        if (payload.cadastral_surface_m2 === '') payload.cadastral_surface_m2 = null
+        if (payload.cadastral_surface_m2_p2 === '') payload.cadastral_surface_m2_p2 = null
+        if (payload.cadastral_surface_m2_p3 === '') payload.cadastral_surface_m2_p3 = null
+
         const res = await $fetch(`/api/administrative/cerfa16702/form/${props.formId}/`, {
             method: 'POST',
             credentials: 'include',

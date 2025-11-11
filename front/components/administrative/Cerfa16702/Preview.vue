@@ -33,6 +33,14 @@ type Cerfa16702Draft = {
     cadastral_section: string
     cadastral_number: string
     cadastral_surface_m2: number | null
+    cadastral_prefix_p2: string
+    cadastral_section_p2: string
+    cadastral_number_p2: string
+    cadastral_surface_m2_p2: number | null
+    cadastral_prefix_p3: string
+    cadastral_section_p3: string
+    cadastral_number_p3: string
+    cadastral_surface_m2_p3: number | null
     project_new_construction: boolean
     project_existing_works: boolean
     project_description: string
@@ -47,15 +55,10 @@ type Cerfa16702Draft = {
     protection_monument_abords: boolean
     engagement_city: string
     engagement_date: string
-    declarant_signature?: { signer_name: string; dataUrl?: string }
 }
 
 const props = defineProps<{
-    draft: Cerfa16702Draft & {
-        generated_at?: string
-        declarant_signature_image_url?: string | null
-        declarant_signature_signed_at?: string | null
-    }
+    draft: Cerfa16702Draft
     mode?: 'print' | 'edit'
 }>()
 

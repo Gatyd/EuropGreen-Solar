@@ -165,6 +165,8 @@ class Cerfa16702ViewSet(GenericViewSet):
             'phone_country_code', 'phone', 'email', 'email_consent',
             'land_street', 'land_number', 'land_lieu_dit', 'land_locality', 'land_postal_code', 
             'cadastral_prefix', 'cadastral_section', 'cadastral_number', 'cadastral_surface_m2',
+            'cadastral_prefix_p2', 'cadastral_section_p2', 'cadastral_number_p2', 'cadastral_surface_m2_p2',
+            'cadastral_prefix_p3', 'cadastral_section_p3', 'cadastral_number_p3', 'cadastral_surface_m2_p3',
             'project_new_construction', 'project_existing_works', 'project_description', 
             'destination_primary_residence', 'destination_secondary_residence', 'agrivoltaic_project',
             'electrical_power_text', 'peak_power_text', 'energy_destination', 
@@ -180,6 +182,10 @@ class Cerfa16702ViewSet(GenericViewSet):
                 if value and isinstance(value, str):
                     value = value.strip().replace('\xa0', '')  # Supprimer espaces insécables
                 if not value or value == '':
+                    value = None
+            # Nettoyer les DecimalFields: convertir chaînes vides en None
+            if field in ['cadastral_surface_m2', 'cadastral_surface_m2_p2', 'cadastral_surface_m2_p3']:
+                if value == '' or value is None:
                     value = None
             setattr(cerfa, field, value)
 

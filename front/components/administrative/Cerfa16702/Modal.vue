@@ -81,9 +81,6 @@ const draft = reactive({
     // Engagement du déclarant
     engagement_city: '',
     engagement_date: new Date().toISOString().slice(0, 10) as string,
-    declarant_signature: { signer_name: '', method: 'draw' as 'draw' | 'upload', dataUrl: '', file: null as File | null },
-    declarant_signature_image_url: null as string | null,
-    declarant_signature_signed_at: null as string | null,
 })
 
 // Hydrate le brouillon depuis le CERFA 16702 existant + la fiche
@@ -151,12 +148,6 @@ watch(
 
         draft.engagement_city = cf.engagement_city || ''
         draft.engagement_date = cf.engagement_date || new Date().toISOString().slice(0, 10) as string
-        const ds = cf.declarant_signature
-        if (ds) {
-            draft.declarant_signature.signer_name = ds.signer_name || ''
-            draft.declarant_signature_image_url = ds.signature_image || (typeof ds.signature_data === 'string' && ds.signature_data.startsWith('data:image/') ? ds.signature_data : null)
-            draft.declarant_signature_signed_at = ds.signed_at || null
-        }
     },
     { immediate: true }
 )
