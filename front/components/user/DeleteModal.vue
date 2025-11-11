@@ -9,7 +9,7 @@
                     </div>
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            Supprimer l'utilisateur {{ `${user.first_name.split(" ")[0]} ${user.last_name.split(" ")[0]}` }}
+                            Supprimer {{ typeLabel }} {{ `${user.first_name.split(" ")[0]} ${user.last_name.split(" ")[0]}` }}
                         </h3>
                     </div>
                 </div>
@@ -30,8 +30,10 @@
                                     Conséquences de la suppression
                                 </h4>
                                 <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
-                                    <li>• L'utilisateur ne pourra plus se connecter sur la plateforme</li>
-                                    <li>• Les projets en cours de cet utilisateur ne serront plus liés à ce dernier</li>
+                                    <li>• {{ typeCapitalized }} ne pourra plus se connecter sur la plateforme</li>
+                                    <li v-if="type === 'staff'">• Les projets en cours de cet utilisateur ne seront plus liés à ce dernier</li>
+                                    <li v-if="type === 'customer'">• Les demandes, offres et installations de ce client resteront accessibles mais ne seront plus liées à son compte</li>
+                                    <li v-if="type === 'customer'">• Les commissions associées à ce client resteront enregistrées</li>
                                     <li>• Cette action est irréversible</li>
                                 </ul>
                             </div>
@@ -48,7 +50,7 @@
 
                     <UButton type="button" color="error" size="lg" :loading="loading" icon="i-heroicons-trash"
                         class="sm:order-2 w-full sm:w-auto" @click="deactivateUser" :disabled="loading">
-                        Supprimer l'utilisateur
+                        Supprimer {{ typeLabel }}
                     </UButton>
                 </div>
             </div>
@@ -64,13 +66,19 @@ const model = defineModel({
     default: false
 })
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     user: User
-}>()
+    type?: 'staff' | 'customer'
+}>(), {
+    type: 'staff'
+})
 
 const emit = defineEmits(['delete'])
 const loading = ref(false)
 const toast = useToast()
+
+const typeLabel = computed(() => props.type === 'customer' ? 'le client' : "l'utilisateur")
+const typeCapitalized = computed(() => props.type === 'customer' ? 'Le client' : "L'utilisateur")
 
 const deactivateUser = async () => {
     if (!props.user) return
@@ -86,7 +94,7 @@ const deactivateUser = async () => {
 
     if (result !== null) {
         toast.add({
-            title: 'Utilisateur supprimé',
+            title: `${props.type === 'customer' ? 'Client' : 'Utilisateur'} supprimé`,
             description: `Le compte de ${props.user.first_name.split(" ")[0]} ${props.user.last_name.split(" ")[0]} a été supprimé avec succès.`,
             icon: 'i-heroicons-trash',
             color: 'success'

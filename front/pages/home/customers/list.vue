@@ -21,6 +21,7 @@ const table = useTemplateRef('table')
 const router = useRouter()
 const auth = useAuthStore()
 const selectedUser = ref<User | undefined>(undefined)
+const deleteModal = ref(false)
 
 const links: NavigationMenuItem[][] = [[{
 	icon: 'i-heroicons-user-plus',
@@ -131,7 +132,18 @@ const columns: TableColumn<User>[] = [{
 					onAssigned: async () => {
 						await fetchUsers()
 					}
-				})
+				}),
+				h(UTooltip, { text: 'Supprimer le client', delayDuration: 0 }, () =>
+					h(UButton, {
+						icon: 'i-heroicons-trash', 
+						color: 'error', 
+						variant: 'ghost',
+						onClick() {
+							selectedUser.value = row.original
+							deleteModal.value = true
+						}
+					})
+				)
 			)
 		}
 		return h('div', { class: 'space-x-2' }, defaultActions)
@@ -219,6 +231,7 @@ onMounted(fetchUsers)
 
 <template>
 	<div>
+		<UserDeleteModal v-model="deleteModal" v-if="selectedUser" :user="selectedUser" type="customer" @delete="fetchUsers" />
 		<div class="sticky top-0 z-50 bg-white">
 			<UDashboardNavbar title="Clients" class="lg:text-2xl font-semibold"
 				:ui="{ root: 'h-12 lg:h-(--ui-header-height)' }" />
