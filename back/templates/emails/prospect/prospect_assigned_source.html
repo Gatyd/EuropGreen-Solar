@@ -1,0 +1,87 @@
+{% extends 'emails/base.html' %}
+{% load static %}
+
+{% block title %}Nouvelle demande vous concernant{% endblock %}
+
+{% block content %}
+  <h1 style="color:#111827; font-size:20px; margin:0 0 16px 0;">Nouvelle demande vous concernant</h1>
+  <p style="color:#374151; font-size:16px; line-height:1.6; margin:0 0 12px 0;">
+    Bonjour {{ source.first_name }} {{ source.last_name }},
+  </p>
+  <p style="color:#374151; font-size:16px; line-height:1.6; margin:0 0 16px 0;">
+    Une demande a été créée vous concernant dans notre système.
+  </p>
+
+  <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px; background:#f9fafb; margin:16px 0;">
+    <p style="color:#111827; font-weight:600; font-size:14px; margin:0 0 12px 0;">Détails de la demande</p>
+    
+    <!-- Ligne par ligne pour meilleur responsive -->
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Nom :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.last_name }} {{ prospect.first_name }}</span>
+    </div>
+    
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Email :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px; word-break:break-word;">{{ prospect.email }}</span>
+    </div>
+    
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Téléphone :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.phone }}</span>
+    </div>
+    
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Adresse :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.address }}</span>
+    </div>
+    
+    {% if prospect.housing_type %}
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Type d'habitat :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.housing_type }}</span>
+    </div>
+    {% endif %}
+    
+    {% if prospect.appointment_date %}
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Rendez-vous :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.appointment_date|date:'d/m/Y à H:i' }}</span>
+    </div>
+    {% endif %}
+    
+    {% if prospect.assigned_to %}
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Chargé d'affaire :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ prospect.assigned_to.first_name }} {{ prospect.assigned_to.last_name }}</span>
+    </div>
+    {% endif %}
+    
+    <div style="margin-bottom:8px;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Statut :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ status_display }}</span>
+    </div>
+    
+    <div style="margin-bottom:0;">
+      <span style="display:inline-block; color:#6b7280; font-size:14px; font-weight:500;">Source :</span>
+      <span style="color:#111827; font-size:14px; margin-left:8px;">{{ source_type_display }}</span>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block footer_content %}
+  <div style="margin-bottom: 16px;">
+    <p style="color: #1f2937; font-weight: 500; font-size: 14px; margin-bottom: 4px; margin-top: 0;">
+      EuropGreen Solar
+    </p>
+    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+      Notification de collaboration • Ne pas répondre à cet email
+    </p>
+  </div>
+  <div style="border-top: 1px solid #d1d5db; padding-top: 16px;">
+    <p style="color: #6b7280; font-size: 12px; margin: 0;">
+      Vous avez reçu cet email car vous êtes référencé comme source de cette demande.
+    </p>
+  </div>
+{% endblock %}

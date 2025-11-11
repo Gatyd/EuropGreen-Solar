@@ -73,6 +73,28 @@ class ProspectRequestViewSet(
 			to=assignee.email,
 		)
 
+	def _send_source_notification_email(self, instance: ProspectRequest, source):
+		"""Envoie l'email de notification à la source de la demande.
+
+		Return: (success: bool, message: str) ou (None, message) si pas d'email.
+		"""
+		if not source or not getattr(source, 'email', None):
+			return None, "Aucune source ou email non défini"
+		context = {
+			"prospect": instance,
+			"source": source,
+			"created_by": instance.created_by,
+			"status_display": instance.get_status_display(),
+			"source_type_display": instance.get_source_type_display(),
+		}
+		subject = f"Nouvelle demande vous concernant – {instance.last_name} {instance.first_name}"
+		return send_project_mail(
+			template='emails/prospect/prospect_assigned_source.html',
+			context=context,
+			subject=subject,
+			to=source.email,
+		)
+
 	def get_queryset(self):
 		# Pour la création, pas besoin de filtrer le queryset
 		if self.action == 'create':
@@ -146,6 +168,15 @@ class ProspectRequestViewSet(
 		except Exception as e:
 			print(f"Erreur lors de l'envoi de l'email d'assignation: {e}")
 
+		# Envoi d'un email à la source si définie et différente de l'utilisateur connecté
+		try:
+			if instance.source and instance.source.id != user.id:
+				success, msg = self._send_source_notification_email(instance, instance.source)
+				if success is False:
+					print(f"Echec envoi email à la source: {msg}")
+		except Exception as e:
+			print(f"Erreur lors de l'envoi de l'email à la source: {e}")
+
 		# Notification aux administrateurs (superusers) à la création
 		try:
 			User = get_user_model()
@@ -176,20 +207,25 @@ class ProspectRequestViewSet(
 
 	def perform_update(self, serializer):
 		"""Envoie un email si l'utilisateur assigné change (None->valeur ou valeur->autre valeur)."""
-		# Mémoriser l'ancien assigné
+		user = self.request.user
+		# Mémoriser l'ancien assigné et l'ancienne source
 		old_assignee_id = None
+		old_source_id = None
 		try:
-			old_assignee_id = (
+			old_values = (
 				ProspectRequest.objects.filter(pk=serializer.instance.pk)
-				.values_list('assigned_to_id', flat=True)
+				.values('assigned_to_id', 'source_id')
 				.first()
 			)
+			if old_values:
+				old_assignee_id = old_values.get('assigned_to_id')
+				old_source_id = old_values.get('source_id')
 		except Exception as e:
-			print(f"Impossible de récupérer l'ancien assigné: {e}")
+			print(f"Impossible de récupérer les anciennes valeurs: {e}")
 
 		instance = serializer.save()
 
-		# Comparer et envoyer si nécessaire
+		# Comparer et envoyer si l'assigné a changé
 		new_assignee = instance.assigned_to
 		new_assignee_id = new_assignee.id if new_assignee else None
 		if new_assignee_id and new_assignee_id != old_assignee_id:
@@ -199,6 +235,17 @@ class ProspectRequestViewSet(
 					print(f"Echec envoi email d'assignation (update): {msg}")
 			except Exception as e:
 				print(f"Erreur lors de l'envoi de l'email d'assignation (update): {e}")
+
+		# Comparer et envoyer si la source a changé et est différente de l'utilisateur connecté
+		new_source = instance.source
+		new_source_id = new_source.id if new_source else None
+		if new_source_id and new_source_id != old_source_id and new_source_id != user.id:
+			try:
+				success, msg = self._send_source_notification_email(instance, new_source)
+				if success is False:
+					print(f"Echec envoi email à la source (update): {msg}")
+			except Exception as e:
+				print(f"Erreur lors de l'envoi de l'email à la source (update): {e}")
 
 	@action(detail=True, methods=['post'], url_path='convert_to_offer')
 	def convert_to_offer(self, request, pk=None):
