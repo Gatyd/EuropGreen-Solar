@@ -143,15 +143,19 @@ class Cerfa16702ViewSet(GenericViewSet):
     def dispatch(self, request, *args, **kwargs):
         """Override dispatch pour logger AVANT toute action."""
         import logging
+        import sys
         logger = logging.getLogger(__name__)
+        print(f"🔴 CERFA DISPATCH: {request.method} {request.path}", file=sys.stderr, flush=True)
+        print(f"🔴 User: {request.user} (authenticated: {request.user.is_authenticated})", file=sys.stderr, flush=True)
+        print(f"🔴 Content-Type: {request.content_type}", file=sys.stderr, flush=True)
         logger.error(f"🔴 CERFA DISPATCH: {request.method} {request.path}")
-        logger.error(f"🔴 User: {request.user} (authenticated: {request.user.is_authenticated})")
-        logger.error(f"🔴 Content-Type: {request.content_type}")
         try:
             return super().dispatch(request, *args, **kwargs)
         except Exception as e:
-            logger.error(f"🔴 EXCEPTION IN DISPATCH: {type(e).__name__}: {e}")
+            print(f"🔴 EXCEPTION IN DISPATCH: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
             import traceback
+            print(f"🔴 TRACEBACK:\n{traceback.format_exc()}", file=sys.stderr, flush=True)
+            logger.error(f"🔴 EXCEPTION IN DISPATCH: {type(e).__name__}: {e}")
             logger.error(f"🔴 TRACEBACK:\n{traceback.format_exc()}")
             raise
 
@@ -159,7 +163,9 @@ class Cerfa16702ViewSet(GenericViewSet):
     def create_cerfa16702(self, request, form_id=None):
         """Créer ou mettre à jour un CERFA 16702 avec signature."""
         import logging
+        import sys
         logger = logging.getLogger(__name__)
+        print(f"✅ INSIDE create_cerfa16702 - form_id: {form_id}", file=sys.stderr, flush=True)
         logger.error(f"✅ INSIDE create_cerfa16702 - form_id: {form_id}")
         
         try:
