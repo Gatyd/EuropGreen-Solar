@@ -65,6 +65,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'EuropGreenSolar.debug_middleware.DebugCerfaMiddleware',  # DEBUG: Middleware de debug CERFA (à retirer après fix)
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -276,3 +277,40 @@ REMINDER_HOURS_BEFORE = config('REMINDER_HOURS_BEFORE', default=3, cast=int)
 
 # Heure par défaut pour les rappels quotidiens et tâches sans heure (défaut: 08h00)
 REMINDER_TIME_HOUR = config('REMINDER_TIME_HOUR', default=8, cast=int)
+
+# ============================================================================
+# Logging Configuration - Debug CERFA
+# ============================================================================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'ERROR',
+    },
+    'loggers': {
+        'administrative': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'authentication': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
+

@@ -140,11 +140,27 @@ class Cerfa16702ViewSet(GenericViewSet):
     serializer_class = Cerfa16702Serializer
     permission_classes = [HasAdministrativeAccess]
 
+    def dispatch(self, request, *args, **kwargs):
+        """Override dispatch pour logger AVANT toute action."""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"🔴 CERFA DISPATCH: {request.method} {request.path}")
+        logger.error(f"🔴 User: {request.user} (authenticated: {request.user.is_authenticated})")
+        logger.error(f"🔴 Content-Type: {request.content_type}")
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"🔴 EXCEPTION IN DISPATCH: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(f"🔴 TRACEBACK:\n{traceback.format_exc()}")
+            raise
+
     @action(detail=False, methods=['post'], url_path='form/(?P<form_id>[^/.]+)')
     def create_cerfa16702(self, request, form_id=None):
         """Créer ou mettre à jour un CERFA 16702 avec signature."""
         import logging
         logger = logging.getLogger(__name__)
+        logger.error(f"✅ INSIDE create_cerfa16702 - form_id: {form_id}")
         
         try:
             form = Form.objects.get(pk=form_id)
