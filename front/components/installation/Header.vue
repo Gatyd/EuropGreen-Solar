@@ -229,10 +229,10 @@ watch([actionParam, () => props.item, () => props.item?.enedis_mandate], () => {
                                     </template>
                                 </UPopover>
                             </div>
-                            <div v-if="(!auth.user?.is_staff && item?.invoice?.pdf) || auth.user?.is_staff"
+                            <div v-if="(!auth.user?.is_staff && item?.invoice) || auth.user?.is_staff"
                                 class="flex flex-row md:flex-col gap-y-2 gap-x-4 md:pr-4 md:border-r-2 md:border-default">
-                                <UButton v-if="!auth.user?.is_staff && item?.invoice?.pdf" color="primary"
-                                    variant="subtle" :to="item?.invoice.pdf" target="_blank"
+                                <UButton v-if="!auth.user?.is_staff && item?.invoice" color="primary"
+                                    variant="subtle" :to="item?.invoice.pdf || undefined" :target="item.invoice ? '_blank' : undefined"
                                     icon="i-heroicons-document-check" label="Facture" block :loading="invoiceLoading"
                                     @click="manageInvoice" />
                                 <UButton v-if="auth.user?.is_staff" block

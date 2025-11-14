@@ -32,7 +32,7 @@ const balanceDue = computed(() => (props.invoice ? parseFloat(props.invoice.bala
 </script>
 
 <template>
-    <div class="inline-block w-full xl:min-h-[1122.66px] xl:mx-auto text-xs px-8 py-6 bg-white">
+    <div class="inline-block w-full min-w-[700px] xl:min-h-[1122.66px] xl:mx-auto text-xs px-8 py-6 bg-white">
         <!-- En-tête classique avec logo et infos facture -->
         <div class="flex justify-between items-start mb-6">
             <div class="flex gap-6">

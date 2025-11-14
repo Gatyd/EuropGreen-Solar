@@ -2,7 +2,7 @@
 
 // definePageMeta({ middleware: 'admin' })
 
-type DocItem = { id: string; pdf: string }
+type DocItem = { id: string; pdf: string; number?: string }
 type DocsPayload = {
   quotes: DocItem[]
   invoices: DocItem[]
@@ -50,6 +50,10 @@ const fetchDocs = async () => {
   loading.value = false
 }
 
+const loadDoc = () => {
+
+}
+
 onMounted(fetchDocs)
 
 const fileName = (path: string) => {
@@ -62,7 +66,9 @@ const fileName = (path: string) => {
   }
 }
 
-const fileUrl = (path: string) => path // déjà proxyfié par le backend statique
+const fileUrl = (doc: DocItem) => {
+  return doc.pdf || `/print/invoice/${doc.id}?auto=1`
+}
 </script>
 
 <template>
@@ -86,10 +92,10 @@ const fileUrl = (path: string) => path // déjà proxyfié par le backend statiq
         <div v-if="(docs?.[sec.key] || []).length" class="relative">
           <div class="grid gap-4 overflow-x-auto pb-2 custom-scroll"
                style="grid-auto-flow: column; grid-template-rows: repeat(1, minmax(0, 1fr));">
-            <a v-for="d in docs?.[sec.key]" :key="d.id" :href="fileUrl(d.pdf)" target="_blank"
+            <a v-for="d in docs?.[sec.key]" :key="d.id" :href="fileUrl(d)" target="_blank"
                class="w-40 min-w-40 h-28 rounded-lg border border-(--ui-border) hover:border-(--ui-primary) transition-colors p-3 flex flex-col items-center justify-between">
               <UIcon name="i-heroicons-document" class="text-4xl text-(--ui-primary)" />
-              <span class="text-xs line-clamp-3 text-center">{{ fileName(d.pdf) }}</span>
+              <span class="text-xs line-clamp-3 text-center">{{ fileName(d.pdf) || d.number }}</span>
             </a>
           </div>
         </div>

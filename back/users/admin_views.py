@@ -112,7 +112,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         if use_client_mode:
             # Documents liés aux fiches du client
             quotes = Quote.objects.filter(offer__installations_form__client=user, pdf__isnull=False).values('id', 'pdf')
-            invoices = Invoice.objects.filter(installation__client=user, pdf__isnull=False).values('id', 'pdf')
+            invoices = Invoice.objects.filter(installation__client=user, pdf__isnull=False).values('id', 'pdf', 'number')
             cerfas = Cerfa16702.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')
             rep_mandates = RepresentationMandate.objects.filter(form__client=user, mandate_pdf__isnull=False).values('id', pdf=F('mandate_pdf'))
             consuels = Consuel.objects.filter(form__client=user, pdf__isnull=False).values('id', 'pdf')

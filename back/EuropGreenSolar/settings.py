@@ -276,5 +276,3 @@ REMINDER_HOURS_BEFORE = config('REMINDER_HOURS_BEFORE', default=3, cast=int)
 
 # Heure par défaut pour les rappels quotidiens et tâches sans heure (défaut: 08h00)
 REMINDER_TIME_HOUR = config('REMINDER_TIME_HOUR', default=8, cast=int)
-
-

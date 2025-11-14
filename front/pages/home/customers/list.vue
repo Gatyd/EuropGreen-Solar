@@ -54,7 +54,6 @@ async function fetchUsers(refresh = false) {
 		}),
 		toast
 	)
-	console.log('Fetched users:', result)
 	users.value = result || undefined
 	loading.value = false
 	if (refresh) {
