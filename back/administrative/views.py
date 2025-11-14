@@ -143,6 +143,9 @@ class Cerfa16702ViewSet(GenericViewSet):
     @action(detail=False, methods=['post'], url_path='form/(?P<form_id>[^/.]+)')
     def create_cerfa16702(self, request, form_id=None):
         """Créer ou mettre à jour un CERFA 16702 avec signature."""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         try:
             form = Form.objects.get(pk=form_id)
         except Form.DoesNotExist:
@@ -244,17 +247,31 @@ class Cerfa16702ViewSet(GenericViewSet):
                     input_pdf = os.path.join(settings.BASE_DIR, "static/pdf/cerfa_16702.pdf")
                     pdf_bytes = fill_pdf_bytes(input_pdf, data_local)
                     if pdf_bytes:
-                        filename = f"cerfa_16702_{str(form_id).split('-')[0]}.pdf"
+                        filename = f"cerfa16702_{str(form_id).split('-')[0]}.pdf"
                         f.cerfa16702.pdf.save(filename, ContentFile(pdf_bytes), save=True)
                 except Exception as e:
                     print(f"Erreur lors de la génération du PDF CERFA: {e}")
             
             transaction.on_commit(lambda fid=str(form.id): _gen_cerfa_pdf_after_commit(fid))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Erreur lors de la planification génération PDF: {e}")
 
-        serializer = Cerfa16702Serializer(cerfa, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Sérialiser et renvoyer la réponse
+        try:
+            serializer = Cerfa16702Serializer(cerfa, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"⚠️ ERREUR SERIALIZER: {e}")
+            logger.error(f"Cerfa ID: {cerfa.id}, Form ID: {form.id}")
+            logger.error(f"Cerfa dict: {cerfa.__dict__}")
+            # Retourner une réponse minimale au lieu de crasher
+            return Response({
+                'id': str(cerfa.id),
+                'form': str(form.id),
+                'created_at': cerfa.created_at.isoformat() if cerfa.created_at else None,
+                'error': 'Le CERFA a été enregistré mais la sérialisation a échoué',
+                'detail': str(e)
+            }, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], url_path='attachments')
     def update_attachments(self, request, pk=None):

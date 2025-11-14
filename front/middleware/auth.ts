@@ -20,7 +20,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   if (!auth.user) {
     try {
       await auth.fetchUser();
-      return navigateTo('/home');
+      return navigateTo(from.query.from ? from.query.from as string : auth.redirectUser());
     } catch {
       try {
         await auth.refreshToken();
@@ -39,6 +39,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       }
     }
   } else {
-    return navigateTo(auth.redirectUser());
+    return navigateTo(from.query.from ? from.query.from as string : auth.redirectUser());
   }
 });
