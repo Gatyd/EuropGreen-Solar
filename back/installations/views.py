@@ -117,25 +117,25 @@ class FormViewSet(viewsets.ModelViewSet):
 			'technical_visit': {
 				'related': 'technical_visit',
 				'renderer': 'render_technical_visit_pdf',
-				'filename': 'technical_visit_{fid}.pdf',
+				'filename': 'visite_technique_{fid}.pdf',
 				'fileattr': 'report_pdf',
 			},
 			'representation_mandate': {
 				'related': 'representation_mandate',
 				'renderer': 'render_representation_mandate_pdf',
-				'filename': 'representation_mandate_{fid}.pdf',
+				'filename': 'mandat_de_representation_{fid}.pdf',
 				'fileattr': 'mandate_pdf',
 			},
 			'enedis_mandate': {
 				'related': 'enedis_mandate',
 				'renderer': 'render_enedis_mandate_pdf',
-				'filename': 'enedis_mandate_{fid}.pdf',
+				'filename': 'mandat_enedis_{fid}.pdf',
 				'fileattr': 'pdf',
 			},
 			'installation_completed': {
 				'related': 'installation_completed',
 				'renderer': 'render_installation_completed_pdf',
-				'filename': 'installation_completed_{fid}.pdf',
+				'filename': 'rapport_installation_{fid}.pdf',
 				'fileattr': 'report_pdf',
 			},
 		}
@@ -163,7 +163,7 @@ class FormViewSet(viewsets.ModelViewSet):
 			except Exception:
 				pass
 
-		transaction.on_commit(lambda fid=str(form.id), related=cfg['related'], renderer=cfg['renderer'], fname=cfg['filename'], fattr=cfg['fileattr']: _gen_pdf_after_commit(fid, related, renderer, fname, fattr))
+		transaction.on_commit(lambda fid=str(str(form.id).split('-')[0]), related=cfg['related'], renderer=cfg['renderer'], fname=cfg['filename'], fattr=cfg['fileattr']: _gen_pdf_after_commit(fid, related, renderer, fname, fattr))
 
 	def get_queryset(self):
 		qs = Form.objects.select_related('offer', 'created_by', 'client')

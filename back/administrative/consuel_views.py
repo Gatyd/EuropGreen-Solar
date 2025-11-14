@@ -401,7 +401,7 @@ class ConsuelViewSet(GenericViewSet):
 					mutable_payload['installer_stamp'] = request.FILES['installer_stamp']
 
 			pdf_bytes = generate_consuel_pdf(mutable_payload, template=template)
-			filename = f"consuel_{consuel.id}.pdf"
+			filename = f"consuel_{consuel.template}_{str(form.id).split('-')[0]}.pdf"
 			consuel.pdf.save(filename, ContentFile(pdf_bytes), save=True)
 		except Exception:
 			pass

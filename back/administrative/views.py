@@ -244,7 +244,7 @@ class Cerfa16702ViewSet(GenericViewSet):
                     input_pdf = os.path.join(settings.BASE_DIR, "static/pdf/cerfa_16702.pdf")
                     pdf_bytes = fill_pdf_bytes(input_pdf, data_local)
                     if pdf_bytes:
-                        filename = f"cerfa16702_{form_id}.pdf"
+                        filename = f"cerfa_16702_{str(form_id).split('-')[0]}.pdf"
                         f.cerfa16702.pdf.save(filename, ContentFile(pdf_bytes), save=True)
                 except Exception as e:
                     print(f"Erreur lors de la génération du PDF CERFA: {e}")

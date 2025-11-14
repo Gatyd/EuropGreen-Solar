@@ -93,9 +93,9 @@ const fileUrl = (doc: DocItem) => {
           <div class="grid gap-4 overflow-x-auto pb-2 custom-scroll"
                style="grid-auto-flow: column; grid-template-rows: repeat(1, minmax(0, 1fr));">
             <a v-for="d in docs?.[sec.key]" :key="d.id" :href="fileUrl(d)" target="_blank"
-               class="w-40 min-w-40 h-28 rounded-lg border border-(--ui-border) hover:border-(--ui-primary) transition-colors p-3 flex flex-col items-center justify-between">
+               class="w-40 min-w-40 h-24 rounded-lg border border-(--ui-border) hover:border-(--ui-primary) transition-colors p-3 flex flex-col items-center justify-between">
               <UIcon name="i-heroicons-document" class="text-4xl text-(--ui-primary)" />
-              <span class="text-xs line-clamp-3 text-center">{{ fileName(d.pdf) || d.number }}</span>
+              <span class="text-xs line-clamp-2 text-center">{{ fileName(d.pdf) || d.number }}</span>
             </a>
           </div>
         </div>
