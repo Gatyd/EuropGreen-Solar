@@ -142,9 +142,23 @@ async function onSubmit() {
             loading.value = false
         }
     } catch (e: any) {
-        const msg = e?.data?.detail || e.message || 'Erreur inconnue'
+        let msg = e?.data?.detail || e.message || 'Erreur inconnue'
+        
+        // Afficher les erreurs de validation de champs
+        if (e?.data?.errors && typeof e.data.errors === 'object') {
+            const fieldErrors = Object.entries(e.data.errors)
+                .map(([field, error]) => `${field}: ${error}`)
+                .join('\n')
+            msg = `${msg}\n\n${fieldErrors}`
+        }
+        
         const toast = useToast()
-        toast.add({ title: 'Échec de soumission', description: String(msg), color: 'error' })
+        toast.add({ 
+            title: 'Échec de soumission', 
+            description: String(msg), 
+            color: 'error',
+            duration: 8000
+        })
         loading.value = false
     }
 }
@@ -244,7 +258,7 @@ const agrivoltaicYN = computed<string>({
                             <UInput v-model="state.address_locality" class="w-full" />
                         </UFormField>
                         <UFormField name="address_postal_code" label="Code postal" required>
-                            <UInput v-model="state.address_postal_code" class="w-full" />
+                            <UInput v-model="state.address_postal_code" maxlength="20" class="w-full" />
                         </UFormField>
                         <UFormField name="address_bp" label="BP">
                             <UInput v-model="state.address_bp" class="w-full" />
@@ -299,7 +313,7 @@ const agrivoltaicYN = computed<string>({
                             <UInput v-model="state.land_locality" class="w-full" />
                         </UFormField>
                         <UFormField name="land_postal_code" label="Code postal" required>
-                            <UInput v-model="state.land_postal_code" class="w-full" />
+                            <UInput v-model="state.land_postal_code" maxlength="20" class="w-full" />
                         </UFormField>
                     </div>
 
@@ -308,13 +322,13 @@ const agrivoltaicYN = computed<string>({
                     <div class="space-y-2">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <UFormField name="cadastral_prefix" label="Préfixe cadastral">
-                                <UInput v-model="state.cadastral_prefix" class="w-full" />
+                                <UInput v-model="state.cadastral_prefix" maxlength="20" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_section" label="Section cadastrale">
-                                <UInput v-model="state.cadastral_section" class="w-full" />
+                                <UInput v-model="state.cadastral_section" maxlength="20" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_number" label="Numéro cadastral">
-                                <UInput v-model="state.cadastral_number" class="w-full" />
+                                <UInput v-model="state.cadastral_number" maxlength="30" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_surface_m2" label="Surface (m²)">
                                 <UInput v-model.number="state.cadastral_surface_m2" type="number" min="0" step="0.01"
@@ -323,13 +337,13 @@ const agrivoltaicYN = computed<string>({
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <UFormField name="cadastral_prefix_p2" label="Préfixe cadastral">
-                                <UInput v-model="state.cadastral_prefix_p2" class="w-full" />
+                                <UInput v-model="state.cadastral_prefix_p2" maxlength="20" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_section_p2" label="Section cadastrale">
-                                <UInput v-model="state.cadastral_section_p2" class="w-full" />
+                                <UInput v-model="state.cadastral_section_p2" maxlength="20" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_number_p2" label="Numéro cadastral">
-                                <UInput v-model="state.cadastral_number_p2" class="w-full" />
+                                <UInput v-model="state.cadastral_number_p2" maxlength="30" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_surface_m2_p2" label="Surface (m²)">
                                 <UInput v-model.number="state.cadastral_surface_m2_p2" type="number" min="0" step="0.01"
@@ -338,13 +352,13 @@ const agrivoltaicYN = computed<string>({
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <UFormField name="cadastral_prefix_p3" label="Préfixe cadastral">
-                                <UInput v-model="state.cadastral_prefix_p3" class="w-full" />
+                                <UInput v-model="state.cadastral_prefix_p3" maxlength="20" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_section_p3" label="Section cadastrale">
-                                <UInput v-model="state.cadastral_section_p3" class="w-full" />
+                                <UInput v-model="state.cadastral_section_p3" maxlength="20" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_number_p3" label="Numéro cadastral">
-                                <UInput v-model="state.cadastral_number_p3" class="w-full" />
+                                <UInput v-model="state.cadastral_number_p3" maxlength="30" class="w-full" />
                             </UFormField>
                             <UFormField name="cadastral_surface_m2_p3" label="Surface (m²)">
                                 <UInput v-model.number="state.cadastral_surface_m2_p3" type="number" min="0" step="0.01"

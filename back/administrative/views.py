@@ -140,44 +140,48 @@ class Cerfa16702ViewSet(GenericViewSet):
     serializer_class = Cerfa16702Serializer
     permission_classes = [HasAdministrativeAccess]
 
-    def dispatch(self, request, *args, **kwargs):
-        """Override dispatch pour logger AVANT toute action."""
-        import logging
-        import sys
-        logger = logging.getLogger(__name__)
-        print(f"🔴 CERFA DISPATCH: {request.method} {request.path}", file=sys.stderr, flush=True)
-        print(f"🔴 User: {request.user} (authenticated: {request.user.is_authenticated})", file=sys.stderr, flush=True)
-        print(f"🔴 Content-Type: {request.content_type}", file=sys.stderr, flush=True)
-        logger.error(f"🔴 CERFA DISPATCH: {request.method} {request.path}")
-        try:
-            return super().dispatch(request, *args, **kwargs)
-        except Exception as e:
-            print(f"🔴 EXCEPTION IN DISPATCH: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
-            import traceback
-            print(f"🔴 TRACEBACK:\n{traceback.format_exc()}", file=sys.stderr, flush=True)
-            logger.error(f"🔴 EXCEPTION IN DISPATCH: {type(e).__name__}: {e}")
-            logger.error(f"🔴 TRACEBACK:\n{traceback.format_exc()}")
-            raise
-
     @action(detail=False, methods=['post'], url_path='form/(?P<form_id>[^/.]+)')
     def create_cerfa16702(self, request, form_id=None):
         """Créer ou mettre à jour un CERFA 16702 avec signature."""
-        import logging
-        import sys
-        logger = logging.getLogger(__name__)
-        print(f"✅ INSIDE create_cerfa16702 - form_id: {form_id}", file=sys.stderr, flush=True)
-        logger.error(f"✅ INSIDE create_cerfa16702 - form_id: {form_id}")
-        
         try:
             form = Form.objects.get(pk=form_id)
         except Form.DoesNotExist:
             return Response({'detail': 'Fiche d\'installation non trouvée.'}, status=status.HTTP_404_NOT_FOUND)
+        
         # safe check: accessing a reverse one-to-one may raise RelatedObjectDoesNotExist
         administrative_validation = getattr(form, 'administrative_validation', None)
         if not administrative_validation:
             AdministrativeValidation.objects.create(form=form, created_by=request.user)
 
         payload = request.data
+        
+        # Validation des longueurs de champs AVANT d'essayer de sauvegarder
+        field_limits = {
+            'address_postal_code': 20,
+            'land_postal_code': 20,
+            'cadastral_prefix': 20,
+            'cadastral_section': 20,
+            'cadastral_number': 30,
+            'cadastral_prefix_p2': 20,
+            'cadastral_section_p2': 20,
+            'cadastral_number_p2': 30,
+            'cadastral_prefix_p3': 20,
+            'cadastral_section_p3': 20,
+            'cadastral_number_p3': 30,
+        }
+        
+        validation_errors = {}
+        for field_name, max_length in field_limits.items():
+            value = payload.get(field_name)
+            if value and isinstance(value, str) and len(value) > max_length:
+                validation_errors[field_name] = f"La valeur est trop longue (maximum {max_length} caractères, {len(value)} fournis)"
+        
+        if validation_errors:
+            return Response({
+                'detail': 'Certains champs dépassent la longueur maximale autorisée',
+                'errors': validation_errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         # Récupérer ou créer l'instance CERFA 16702
         cerfa, created = Cerfa16702.objects.get_or_create(
             form=form,
@@ -272,28 +276,17 @@ class Cerfa16702ViewSet(GenericViewSet):
                         filename = f"cerfa16702_{str(form_id).split('-')[0]}.pdf"
                         f.cerfa16702.pdf.save(filename, ContentFile(pdf_bytes), save=True)
                 except Exception as e:
-                    print(f"Erreur lors de la génération du PDF CERFA: {e}")
+                    import logging
+                    logging.getLogger(__name__).error(f"Erreur lors de la génération du PDF CERFA: {e}")
             
             transaction.on_commit(lambda fid=str(form.id): _gen_cerfa_pdf_after_commit(fid))
         except Exception as e:
-            logger.error(f"Erreur lors de la planification génération PDF: {e}")
+            import logging
+            logging.getLogger(__name__).error(f"Erreur lors de la planification génération PDF: {e}")
 
         # Sérialiser et renvoyer la réponse
-        try:
-            serializer = Cerfa16702Serializer(cerfa, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            logger.error(f"⚠️ ERREUR SERIALIZER: {e}")
-            logger.error(f"Cerfa ID: {cerfa.id}, Form ID: {form.id}")
-            logger.error(f"Cerfa dict: {cerfa.__dict__}")
-            # Retourner une réponse minimale au lieu de crasher
-            return Response({
-                'id': str(cerfa.id),
-                'form': str(form.id),
-                'created_at': cerfa.created_at.isoformat() if cerfa.created_at else None,
-                'error': 'Le CERFA a été enregistré mais la sérialisation a échoué',
-                'detail': str(e)
-            }, status=status.HTTP_201_CREATED)
+        serializer = Cerfa16702Serializer(cerfa, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='attachments')
     def update_attachments(self, request, pk=None):

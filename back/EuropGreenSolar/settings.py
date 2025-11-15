@@ -65,7 +65,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'EuropGreenSolar.debug_middleware.DebugCerfaMiddleware',  # DEBUG: Middleware de debug CERFA (à retirer après fix)
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -198,6 +197,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # Exception handler personnalisé pour logger les stacktraces
+    'EXCEPTION_HANDLER': 'EuropGreenSolar.exception_handler.custom_exception_handler',
 }
 
 SPECTACULAR_SETTINGS = {

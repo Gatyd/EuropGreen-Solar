@@ -77,28 +77,11 @@ class HasAdministrativeAccess(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        import logging
-        import sys
-        logger = logging.getLogger(__name__)
         user = request.user
-        
-        print(f"🔵 HasAdministrativeAccess check for user: {user} (authenticated: {user.is_authenticated})", file=sys.stderr, flush=True)
-        logger.error(f"🔵 HasAdministrativeAccess check for user: {user} (authenticated: {user.is_authenticated})")
-        
         if not user.is_authenticated:
-            print(f"🔵 Permission DENIED: User not authenticated", file=sys.stderr, flush=True)
-            logger.error(f"🔵 Permission DENIED: User not authenticated")
             return False
         # Autorise si l'utilisateur a l'accès administrative ou est superuser
         try:
-            has_access = bool(getattr(user.useraccess, 'administrative_procedures', False)) or bool(user.is_superuser)
-            print(f"🔵 Permission result: {has_access} (is_superuser: {user.is_superuser}, administrative_procedures: {getattr(user.useraccess, 'administrative_procedures', 'N/A')})", file=sys.stderr, flush=True)
-            logger.error(f"🔵 Permission result: {has_access} (is_superuser: {user.is_superuser}, administrative_procedures: {getattr(user.useraccess, 'administrative_procedures', 'N/A')})")
-            return has_access
-        except Exception as e:
-            print(f"🔵 Permission check exception: {e}", file=sys.stderr, flush=True)
-            logger.error(f"🔵 Permission check exception: {e}")
-            result = bool(user.is_superuser)
-            print(f"🔵 Fallback to is_superuser: {result}", file=sys.stderr, flush=True)
-            logger.error(f"🔵 Fallback to is_superuser: {result}")
-            return result
+            return bool(getattr(user.useraccess, 'administrative_procedures', False)) or bool(user.is_superuser)
+        except Exception:
+            return bool(user.is_superuser)

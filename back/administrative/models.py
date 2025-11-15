@@ -38,7 +38,7 @@ class Cerfa16702(models.Model):
     address_number = models.CharField(max_length=30, blank=True)
     address_lieu_dit = models.CharField(max_length=255, blank=True)
     address_locality = models.CharField(max_length=255, blank=True)
-    address_postal_code = models.CharField(max_length=10, blank=True)
+    address_postal_code = models.CharField(max_length=20, blank=True)  # Augmenté de 10 à 20
     address_bp = models.CharField(max_length=20, blank=True)
     address_cedex = models.CharField(max_length=20, blank=True)
 
@@ -52,21 +52,21 @@ class Cerfa16702(models.Model):
     land_number = models.CharField(max_length=30, blank=True)
     land_lieu_dit = models.CharField(max_length=255, blank=True)
     land_locality = models.CharField(max_length=255, blank=True)
-    land_postal_code = models.CharField(max_length=10, blank=True)
+    land_postal_code = models.CharField(max_length=20, blank=True)  # Augmenté de 10 à 20
 
-    cadastral_prefix = models.CharField(max_length=10, blank=True)
-    cadastral_section = models.CharField(max_length=10, blank=True)
-    cadastral_number = models.CharField(max_length=20, blank=True)
+    cadastral_prefix = models.CharField(max_length=20, blank=True)  # Augmenté de 10 à 20
+    cadastral_section = models.CharField(max_length=20, blank=True)  # Augmenté de 10 à 20
+    cadastral_number = models.CharField(max_length=30, blank=True)  # Augmenté de 20 à 30
     cadastral_surface_m2 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
-    cadastral_prefix_p2 = models.CharField(max_length=10, blank=True)
-    cadastral_section_p2 = models.CharField(max_length=10, blank=True)
-    cadastral_number_p2 = models.CharField(max_length=20, blank=True)
+    cadastral_prefix_p2 = models.CharField(max_length=20, blank=True)  # Augmenté de 10 à 20
+    cadastral_section_p2 = models.CharField(max_length=20, blank=True)  # Augmenté de 10 à 20
+    cadastral_number_p2 = models.CharField(max_length=30, blank=True)  # Augmenté de 20 à 30
     cadastral_surface_m2_p2 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
-    cadastral_prefix_p3 = models.CharField(max_length=10, blank=True)
-    cadastral_section_p3 = models.CharField(max_length=10, blank=True)
-    cadastral_number_p3 = models.CharField(max_length=20, blank=True)
+    cadastral_prefix_p3 = models.CharField(max_length=20, blank=True)  # Augmenté de 10 à 20
+    cadastral_section_p3 = models.CharField(max_length=20, blank=True)  # Augmenté de 10 à 20
+    cadastral_number_p3 = models.CharField(max_length=30, blank=True)  # Augmenté de 20 à 30
     cadastral_surface_m2_p3 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     # 4.1 Le projet
