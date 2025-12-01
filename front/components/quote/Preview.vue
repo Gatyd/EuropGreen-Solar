@@ -70,8 +70,8 @@ const signatureImageUrl = computed(() => {
                 <p>n° SIREN: 932 121 536</p>
                 <p class="mb-2">n° TVA: FR23932121536</p>
                 <p>Numéro de téléphone: 0970702656</p>
-                <p>europgreensolar@gmail.com</p>
-                <p>europ-greensolar.fr</p>
+                <p>contact@egs-solaire.fr</p>
+                <p>egs-solaire.fr</p>
             </div>
         </div>
 
