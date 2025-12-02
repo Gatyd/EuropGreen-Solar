@@ -144,6 +144,10 @@ USE_TZ = True
 
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
+# URL de base du site pour les assets dans les emails (favicon, logo, etc.)
+# En prod, utilise le même domaine que FRONTEND_URL car nginx sert les statics
+SITE_URL = config('SITE_URL', default=FRONTEND_URL)
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

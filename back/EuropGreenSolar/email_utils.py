@@ -208,6 +208,7 @@ def send_mail(
     # Enrichir le contexte avec des valeurs par défaut utiles
     ctx: Dict[str, Any] = dict(context or {})
     ctx.setdefault('frontend_url', getattr(settings, 'FRONTEND_URL', ''))
+    ctx.setdefault('site_url', getattr(settings, 'SITE_URL', ''))
 
     # Rendu des templates
     html_message = render_to_string(template, ctx)
