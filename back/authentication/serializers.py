@@ -86,6 +86,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
                 'reset_url': reset_url,
                 'expires_at': token.expires_at,
                 'frontend_url': settings.FRONTEND_URL,
+                'site_url': settings.SITE_URL,
             }
             
             html_message = render_to_string('emails/user/password_reset.html', context)
